@@ -1,0 +1,15 @@
+# 运行内核与浏览器配置目录(构建时获取/运行时生成)
+astbox-decoder/chromium/
+astbox-decoder/chromium-profile/
+
+# 构建产物
+installer/dist/
+installer/stage/
+
+# Python 杂物
+__pycache__/
+*.pyc
+.venv/
+
+# 本地杂项
+*.log

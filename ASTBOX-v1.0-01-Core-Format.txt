@@ -1,0 +1,993 @@
+ASTBOX-v1.0-01-Core-Format.txt
+ASTBOX v1.0
+BINARY ENCRYPTED CONTAINER FORMAT SPECIFICATION
+Document: ASTBOX-v1.0-01-Core-Format.txt
+Part: Core Binary Format
+Status: Final Draft for Cryptographic Specification
+Format Name: ASTBOX
+File Extension: .astbox
+Format Version: 1
+Character Encoding of Protocol Strings: US-ASCII
+Integer Byte Order: Big-endian
+======================================================================
+1. SCOPE
+ASTBOX is an encrypted binary file-container format.
+ASTBOX defines:
+- container identification;
+- binary container layout;
+- header structure;
+- credential slot structure;
+- container identifiers;
+- versioning;
+- fixed protocol constants;
+- byte-level field representation;
+- structural validation requirements.
+Cryptographic processing, key derivation, metadata encoding, data
+records, lifecycle operations, security considerations, and error codes
+are defined in the other ASTBOX v1.0 specification files.
+ASTBOX v1.0 consists of the following normative documents:
+ASTBOX-v1.0-01-Core-Format.txt
+ASTBOX-v1.0-02-Key-Crypto.txt
+ASTBOX-v1.0-03-Data-Container.txt
+ASTBOX-v1.0-04-Lifecycle-Security.txt
+Test vectors and conformance tests are separate documents and are not
+part of these four core specification files.
+======================================================================
+2. NORMATIVE LANGUAGE
+======================================================================
+MUST means an absolute requirement.
+MUST NOT means an absolute prohibition.
+SHOULD means a recommended requirement that may be violated only for a
+documented implementation-specific reason.
+SHOULD NOT means a recommendation against an action.
+MAY means an explicitly permitted option.
+FIXED means that the value or behavior is defined by ASTBOX v1.0 and
+cannot be changed by an implementation or individual container.
+RESERVED means that the field or value has no defined meaning in
+ASTBOX v1.0 and MUST be handled according to the applicable reserved
+field rule.
+======================================================================
+3. STANDARD-FIRST PRINCIPLE
+======================================================================
+ASTBOX uses established cryptographic and encoding standards wherever
+applicable.
+ASTBOX-defined rules specify only the behavior necessary to create an
+unambiguous container format.
+An implementation MUST NOT replace an ASTBOX-defined algorithm,
+encoding rule, byte order, nonce construction, authentication input,
+or key derivation context with an implementation-specific alternative
+while continuing to identify the result as ASTBOX v1.
+======================================================================
+4. BYTE REPRESENTATION
+======================================================================
+All ASTBOX-defined integer fields use unsigned or signed integer
+representations explicitly specified by their field definitions.
+All multi-byte integer fields use network byte order, also called
+big-endian byte order.
+The following primitive field types are defined:
+UINT8:
+    1 byte.
+UINT16:
+    2 bytes, unsigned, big-endian.
+UINT32:
+    4 bytes, unsigned, big-endian.
+UINT64:
+    8 bytes, unsigned, big-endian.
+INT64:
+    8 bytes, signed two's-complement, big-endian.
+BYTE[N]:
+    Exactly N bytes.
+A field described as BYTE[N] has no character encoding.
+Protocol strings explicitly defined as ASCII are encoded as their
+US-ASCII byte values without a terminating NUL byte.
+No implicit NUL terminators are permitted.
+======================================================================
+5. FILE IDENTIFICATION
+======================================================================
+A file is identified as an ASTBOX v1 container only if its binary
+contents satisfy the ASTBOX structural requirements.
+The filename extension alone MUST NOT be treated as proof that a file
+is an ASTBOX container.
+The required filename extension is:
+.astbox
+The extension is a filesystem naming convention and is not included in
+the binary container.
+======================================================================
+6. HEADER MAGIC
+======================================================================
+The first six bytes of every ASTBOX v1 container MUST be:
+41 53 54 42 4F 58
+ASCII representation:
+ASTBOX
+The Magic value is FIXED.
+The Magic field MUST NOT contain a NUL terminator.
+A container whose first six bytes do not equal the required Magic value
+MUST be rejected.
+======================================================================
+7. FOOTER MAGIC
+======================================================================
+The Footer Magic value is defined in
+ASTBOX-v1.0-03-Data-Container.txt.
+Its value is:
+41 53 54 42 4F 58 46 31
+ASCII representation:
+ASTBOXF1
+The Footer Magic value is FIXED.
+======================================================================
+8. FORMAT VERSION
+======================================================================
+ASTBOX v1 uses:
+UINT16 = 0x0001
+Serialized bytes:
+00 01
+The version field identifies the binary interpretation rules.
+A reader supporting only ASTBOX v1 MUST accept Version = 1.
+A reader MUST NOT silently interpret an unsupported version as Version 1.
+Version compatibility and unsupported-version behavior are defined in
+ASTBOX-v1.0-04-Lifecycle-Security.txt.
+======================================================================
+9. CONTAINER HEADER
+======================================================================
+The ASTBOX v1 Header is exactly 128 bytes.
+The Header begins at file offset 0.
+Header layout:
+Offset  Size  Type       Field
+0       6     BYTE[6]    Magic
+6       2     UINT16     Version
+8       4     UINT32     Flags
+12      16    BYTE[16]   VaultID
+28      8     UINT64     Generation
+36      8     UINT64     KeySlotOffset
+44      8     UINT64     KeySlotLength
+52      8     UINT64     MetadataOffset
+60      8     UINT64     MetadataLength
+68      8     UINT64     DataOffset
+76      8     UINT64     DataLength
+84      8     UINT64     FooterOffset
+92      8     UINT64     FooterLength
+100     4     UINT32     KeySlotCount
+104     4     UINT32     HeaderLength
+108     16    BYTE[16]   HeaderMAC
+124     4     BYTE[4]    Reserved
+Total: 128 bytes.
+The exact interpretation and authentication of HeaderMAC are defined
+in ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+10. HEADER MAGIC FIELD
+======================================================================
+Field:
+    Magic
+Offset:
+    0
+Length:
+    6 bytes
+Type:
+    BYTE[6]
+Required value:
+41 53 54 42 4F 58
+ASCII:
+ASTBOX
+The value is FIXED.
+======================================================================
+11. VERSION FIELD
+======================================================================
+Field:
+    Version
+Offset:
+    6
+Length:
+    2 bytes
+Type:
+    UINT16
+Required value:
+0x0001
+Serialized bytes:
+00 01
+The value is FIXED for ASTBOX v1.
+======================================================================
+12. FLAGS FIELD
+======================================================================
+Field:
+    Flags
+Offset:
+    8
+Length:
+    4 bytes
+Type:
+    UINT32
+ASTBOX v1 defines no active flag bits.
+Required value:
+0x00000000
+Serialized bytes:
+00 00 00 00
+All four bytes are RESERVED in v1.
+A non-zero Flags value MUST be rejected.
+No implementation may assign private or vendor-specific meanings to
+currently reserved flag bits while retaining the ASTBOX v1 format
+identifier.
+======================================================================
+13. VAULTID FIELD
+======================================================================
+Field:
+    VaultID
+Offset:
+    12
+Length:
+    16 bytes
+Type:
+    BYTE[16]
+VaultID is a public container identifier.
+VaultID MUST be generated using a cryptographically secure random
+number generator.
+VaultID MUST NOT be derived directly from:
+- TOTP value;
+- filename;
+- filesystem path;
+- VaultKey.
+VaultID is not a secret.
+VaultID is used as an input to cryptographic key derivation as defined
+in ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+14. GENERATION FIELD
+======================================================================
+Field:
+    Generation
+Offset:
+    28
+Length:
+    8 bytes
+Type:
+    UINT64
+A newly created container MUST use:
+Generation = 0
+Serialized value:
+00 00 00 00 00 00 00 00
+Every successful modification MUST increase Generation by exactly one.
+The maximum representable value is:
+0xFFFFFFFFFFFFFFFF
+An implementation MUST NOT wrap Generation from the maximum value to
+zero.
+If the maximum Generation value has been reached, a further
+modification requiring an increment MUST fail.
+Generation is an integrity/version identifier.
+Generation alone does not provide rollback protection.
+======================================================================
+15. KEYSLOT OFFSET
+======================================================================
+Field:
+    KeySlotOffset
+Offset:
+    36
+Length:
+    8 bytes
+Type:
+    UINT64
+Required value:
+128
+Serialized value:
+00 00 00 00 00 00 00 80
+The first Key Slot MUST begin immediately after the 128-byte Header.
+KeySlotOffset is FIXED in ASTBOX v1.
+======================================================================
+16. KEYSLOT LENGTH
+======================================================================
+Field:
+    KeySlotLength
+Offset:
+    44
+Length:
+    8 bytes
+Type:
+    UINT64
+KeySlotLength MUST equal:
+KeySlotCount * 192
+The multiplication MUST be performed with overflow checking.
+The Key Slot region MUST begin at KeySlotOffset and occupy exactly
+KeySlotLength bytes.
+======================================================================
+17. METADATA OFFSET
+======================================================================
+Field:
+    MetadataOffset
+Offset:
+    52
+Length:
+    8 bytes
+Type:
+    UINT64
+MetadataOffset MUST equal:
+KeySlotOffset + KeySlotLength
+The addition MUST be checked for unsigned integer overflow.
+No gap or padding is permitted between the Key Slot region and the
+Metadata region.
+======================================================================
+18. METADATA LENGTH
+======================================================================
+Field:
+    MetadataLength
+Offset:
+    60
+Length:
+    8 bytes
+Type:
+    UINT64
+MetadataLength is the complete physical length of the Metadata Record.
+It includes:
+- MetadataNonce;
+- MetadataCiphertext;
+- Metadata authentication tag.
+The Metadata Record format is defined in
+ASTBOX-v1.0-03-Data-Container.txt.
+MetadataLength MUST be greater than or equal to the minimum physical
+Metadata Record size.
+The implementation MUST validate MetadataLength before allocation or
+memory mapping.
+======================================================================
+19. DATA OFFSET
+======================================================================
+Field:
+    DataOffset
+Offset:
+    68
+Length:
+    8 bytes
+Type:
+    UINT64
+DataOffset MUST equal:
+MetadataOffset + MetadataLength
+The addition MUST be checked for unsigned integer overflow.
+No gap or padding is permitted between Metadata and Data.
+======================================================================
+20. DATA LENGTH
+======================================================================
+Field:
+    DataLength
+Offset:
+    76
+Length:
+    8 bytes
+Type:
+    UINT64
+DataLength is the complete physical length of the Data Record region.
+For a container containing no file data:
+DataLength = 0
+DataLength MUST equal the exact sum of all physical encrypted Chunk
+records.
+The implementation MUST verify the relationship between DataLength,
+the metadata File Entries, and the actual Data Records.
+======================================================================
+21. FOOTER OFFSET
+======================================================================
+Field:
+    FooterOffset
+Offset:
+    84
+Length:
+    8 bytes
+Type:
+    UINT64
+FooterOffset MUST equal:
+DataOffset + DataLength
+The addition MUST be checked for unsigned integer overflow.
+The Footer MUST begin exactly at FooterOffset.
+No padding is permitted between Data and Footer.
+======================================================================
+22. FOOTER LENGTH
+======================================================================
+Field:
+    FooterLength
+Offset:
+    92
+Length:
+    8 bytes
+Type:
+    UINT64
+ASTBOX v1 requires:
+FooterLength = 112
+Serialized value:
+00 00 00 00 00 00 00 70
+FooterLength is FIXED.
+A different FooterLength MUST be rejected by an ASTBOX v1 reader.
+======================================================================
+23. KEYSLOT COUNT
+======================================================================
+Field:
+    KeySlotCount
+Offset:
+    100
+Length:
+    4 bytes
+Type:
+    UINT32
+KeySlotCount specifies the number of Key Slots immediately following
+the Header.
+The following minimum is required:
+KeySlotCount >= 1
+The following maximum is FIXED for ASTBOX v1:
+KeySlotCount <= 16
+Therefore the valid range is:
+1 through 16 inclusive.
+The Key Slot region length is:
+KeySlotLength = KeySlotCount * 192
+A value outside the permitted range MUST be rejected.
+======================================================================
+24. HEADER LENGTH
+======================================================================
+Field:
+    HeaderLength
+Offset:
+    104
+Length:
+    4 bytes
+Type:
+    UINT32
+Required value:
+128
+Serialized value:
+00 00 00 80
+HeaderLength is FIXED.
+A value other than 128 MUST be rejected by an ASTBOX v1 reader.
+======================================================================
+25. HEADER MAC FIELD
+======================================================================
+Field:
+    HeaderMAC
+Offset:
+    108
+Length:
+    16 bytes
+Type:
+    BYTE[16]
+HeaderMAC is the truncated authentication value defined in
+ASTBOX-v1.0-02-Key-Crypto.txt.
+The HeaderMAC field itself is excluded from the HeaderMAC input.
+The Header Reserved field is also excluded from the HeaderMAC input.
+======================================================================
+26. HEADER RESERVED FIELD
+======================================================================
+Field:
+    Reserved
+Offset:
+    124
+Length:
+    4 bytes
+Type:
+    BYTE[4]
+Required value:
+00 00 00 00
+All Reserved bytes MUST be zero.
+A non-zero Reserved byte MUST cause the container to be rejected.
+======================================================================
+27. KEY SLOT REGION
+======================================================================
+The Key Slot region begins at file offset 128.
+Each Key Slot is exactly 192 bytes.
+The Key Slot region contains exactly KeySlotCount Key Slots.
+Therefore:
+KeySlotLength = KeySlotCount * 192
+Key Slot i begins at:
+128 + (i * 192)
+where i is zero-based.
+Valid i values are:
+0 through KeySlotCount - 1.
+No padding exists between Key Slots.
+======================================================================
+28. KEY SLOT STRUCTURE
+======================================================================
+Each Key Slot is exactly 192 bytes.
+Key Slot layout:
+Offset  Size  Type       Field
+0       16    BYTE[16]   SlotID
+16      2     UINT16     CredentialType
+18      1     UINT8      CredentialParameters
+19      1     UINT8      Reserved1
+20      2     UINT16     KDFProfile
+22      2     UINT16     Reserved2
+24      4     UINT32     Argon2MemoryKiB
+28      4     UINT32     Argon2Time
+32      4     UINT32     Argon2Parallelism
+36      32    BYTE[32]   Salt
+68      24    BYTE[24]   WrapNonce
+92      48    BYTE[48]   WrappedVaultKey
+140     16    BYTE[16]   SlotMAC
+156     36    BYTE[36]   Reserved3
+Total: 192 bytes.
+======================================================================
+29. SLOTID
+======================================================================
+Field:
+    SlotID
+Offset within Key Slot:
+    0
+Length:
+    16 bytes
+Type:
+    BYTE[16]
+SlotID MUST be generated using a cryptographically secure random
+number generator.
+SlotID uniquely identifies a Key Slot within the container.
+SlotID MUST NOT be derived from the credential value.
+SlotID MUST be unique among all Key Slots in a container.
+SlotID is not a secret.
+======================================================================
+30. CREDENTIALTYPE
+======================================================================
+Field:
+    CredentialType
+Offset within Key Slot:
+    16
+Length:
+    2 bytes
+Type:
+    UINT16
+Defined values:
+0x0002 = TOTP
+No other CredentialType value is defined by ASTBOX v1.
+TOTP is the sole credential type of ASTBOX v1.
+The legacy value 0x0001 (PASSWORD) is NOT part of ASTBOX v1 and MUST be
+rejected by a conforming reader.
+An unknown CredentialType MUST be rejected.
+======================================================================
+31. CREDENTIALPARAMETERS
+======================================================================
+Field:
+    CredentialParameters
+Offset within Key Slot:
+    18
+Length:
+    1 byte
+Type:
+    UINT8
+For CredentialType TOTP:
+CredentialParameters = 0x06
+or
+CredentialParameters = 0x08
+The value specifies the number of decimal digits expected from the
+TOTP credential.
+ASTBOX v1 therefore supports:
+6-digit TOTP
+8-digit TOTP
+No other digit count is valid in ASTBOX v1.
+The TOTP algorithm and period are fixed by ASTBOX v1 and are not
+encoded as per-container options.
+======================================================================
+32. KEYSLOT RESERVED1
+======================================================================
+Field:
+    Reserved1
+Offset within Key Slot:
+    19
+Length:
+    1 byte
+Required value:
+00
+Any non-zero value MUST be rejected.
+======================================================================
+33. KDFPROFILE
+======================================================================
+Field:
+    KDFProfile
+Offset within Key Slot:
+    20
+Length:
+    2 bytes
+Type:
+    UINT16
+Defined values:
+0x0001 = ARGON2ID_HIGH
+0x0002 = ARGON2ID_MEMORY_CONSTRAINED
+No other KDFProfile values are defined by ASTBOX v1.
+The exact parameters associated with each profile are defined in
+ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+34. KEYSLOT RESERVED2
+======================================================================
+Field:
+    Reserved2
+Offset within Key Slot:
+    22
+Length:
+    2 bytes
+Required value:
+00 00
+Any non-zero value MUST be rejected.
+======================================================================
+35. ARGON2 MEMORY FIELD
+======================================================================
+Field:
+    Argon2MemoryKiB
+Offset within Key Slot:
+    24
+Length:
+    4 bytes
+Type:
+    UINT32
+The field specifies the Argon2id memory parameter in KiB.
+The serialized value MUST exactly correspond to the selected
+KDFProfile.
+The value MUST NOT be independently changed while retaining the same
+KDFProfile.
+An implementation MUST validate the value before allocating memory.
+======================================================================
+36. ARGON2 TIME FIELD
+======================================================================
+Field:
+    Argon2Time
+Offset within Key Slot:
+    28
+Length:
+    4 bytes
+Type:
+    UINT32
+The field specifies the Argon2id time-cost parameter.
+The serialized value MUST exactly correspond to the selected
+KDFProfile.
+======================================================================
+37. ARGON2 PARALLELISM FIELD
+======================================================================
+Field:
+    Argon2Parallelism
+Offset within Key Slot:
+    32
+Length:
+    4 bytes
+Type:
+    UINT32
+The field specifies the Argon2id parallelism parameter.
+The serialized value MUST exactly correspond to the selected
+KDFProfile.
+======================================================================
+38. SALT
+======================================================================
+Field:
+    Salt
+Offset within Key Slot:
+    36
+Length:
+    32 bytes
+Type:
+    BYTE[32]
+Each Key Slot MUST have its own Salt.
+Salt MUST be generated using a cryptographically secure random number
+generator.
+Salt is not secret.
+Salt MUST NOT be reused when creating a new independent Key Slot.
+Credential replacement MUST generate a fresh Salt.
+======================================================================
+39. WRAP NONCE
+======================================================================
+Field:
+    WrapNonce
+Offset within Key Slot:
+    68
+Length:
+    24 bytes
+Type:
+    BYTE[24]
+WrapNonce is used for VaultKey wrapping.
+WrapNonce MUST be generated using a cryptographically secure random
+number generator.
+A fresh WrapNonce MUST be generated whenever a new WrappedVaultKey is
+created.
+The same UnlockKey MUST NOT be used with the same WrapNonce for two
+different VaultKey-wrapping operations.
+======================================================================
+40. WRAPPED VAULTKEY
+======================================================================
+Field:
+    WrappedVaultKey
+Offset within Key Slot:
+    92
+Length:
+    48 bytes
+Type:
+    BYTE[48]
+WrappedVaultKey contains:
+32 bytes:
+    encrypted VaultKey
+16 bytes:
+    XChaCha20-Poly1305 authentication tag
+The complete wrapping procedure is defined in
+ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+41. SLOT MAC
+======================================================================
+Field:
+    SlotMAC
+Offset within Key Slot:
+    140
+Length:
+    16 bytes
+Type:
+    BYTE[16]
+SlotMAC authenticates the Key Slot fields defined by the cryptographic
+specification.
+The exact MAC algorithm, key, input byte sequence, and truncation rule
+are defined in ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+42. KEYSLOT RESERVED3
+======================================================================
+Field:
+    Reserved3
+Offset within Key Slot:
+    156
+Length:
+    36 bytes
+Type:
+    BYTE[36]
+Required value:
+36 zero bytes.
+Serialized value:
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00
+Any non-zero byte MUST cause rejection.
+======================================================================
+43. KEY SLOT ORDER
+======================================================================
+Key Slots are stored consecutively.
+Slot index is determined solely by physical position.
+The first Key Slot has index 0.
+The second Key Slot has index 1.
+The final Key Slot has index:
+KeySlotCount - 1
+Slot ordering has no cryptographic meaning.
+Implementations MUST NOT assume that a particular CredentialType
+occupies a particular slot index.
+======================================================================
+44. KEY SLOT UNIQUENESS
+======================================================================
+Within a single container:
+- SlotID values MUST be unique.
+- Each SlotID MUST contain exactly 16 bytes.
+- No two Key Slots may have the same SlotID.
+Two Key Slots MAY use the same CredentialType.
+For example, a container MAY contain multiple TOTP slots.
+======================================================================
+45. KEY SLOT CREDENTIAL SEMANTICS
+======================================================================
+Each Key Slot independently defines one method of deriving an
+UnlockKey.
+A valid Key Slot allows recovery of the same VaultKey.
+The VaultKey itself is not stored in plaintext.
+The presence of multiple Key Slots does not create multiple VaultKeys.
+All valid Key Slots for a container ultimately unwrap the same
+32-byte VaultKey.
+======================================================================
+46. VAULTKEY LOCATION
+======================================================================
+VaultKey MUST NOT occur in plaintext anywhere in an ASTBOX container.
+VaultKey MUST NOT be stored directly in:
+- Header;
+- Key Slot;
+- Metadata;
+- Data Record;
+- Footer.
+Only its encrypted representation may occur in WrappedVaultKey fields.
+======================================================================
+47. STRUCTURAL REGION ORDER
+======================================================================
+The physical order of the ASTBOX v1 regions is fixed:
+Region 1:
+    Header
+Region 2:
+    Key Slot Array
+Region 3:
+    Metadata Record
+Region 4:
+    Data Record region
+Region 5:
+    Footer
+No region may occur outside this sequence.
+======================================================================
+48. REGION BOUNDARIES
+======================================================================
+The following equations MUST hold:
+KeySlotOffset = 128
+KeySlotLength = KeySlotCount * 192
+MetadataOffset = KeySlotOffset + KeySlotLength
+DataOffset = MetadataOffset + MetadataLength
+FooterOffset = DataOffset + DataLength
+FooterLength = 112
+FileSize = FooterOffset + FooterLength
+Every addition and multiplication MUST be checked for overflow.
+======================================================================
+49. REGION OVERLAP
+======================================================================
+The following regions MUST NOT overlap:
+Header
+Key Slot Array
+Metadata
+Data
+Footer
+Each region begins exactly at the offset calculated from the preceding
+region.
+No hidden gaps are permitted.
+======================================================================
+50. PADDING
+======================================================================
+ASTBOX v1 does not define implicit padding.
+No alignment padding may be inserted between:
+- Header and Key Slot Array;
+- Key Slots;
+- Key Slot Array and Metadata;
+- Metadata and Data;
+- Data and Footer.
+Reserved fields are the only locations where reserved bytes exist.
+======================================================================
+51. END OF FILE
+======================================================================
+The final byte of the physical file MUST be the final byte of the
+Footer.
+No bytes may follow the Footer.
+An implementation MUST reject:
+- trailing padding;
+- trailing comments;
+- trailing signatures;
+- trailing metadata;
+- arbitrary extension records.
+Such extensions require a future ASTBOX format version.
+======================================================================
+52. MAXIMUM STRUCTURAL SIZE
+======================================================================
+ASTBOX v1 uses UINT64 for physical offsets and lengths.
+Therefore the theoretical addressable file size is bounded by the
+UINT64 representation.
+Implementations MAY impose smaller practical limits.
+An implementation-defined practical limit MUST NOT cause integer
+overflow or ambiguous interpretation.
+======================================================================
+53. REQUIRED STRUCTURAL VALIDATION
+======================================================================
+Before processing any variable-length region, a reader MUST validate:
+1. Magic.
+2. Version.
+3. Flags.
+4. HeaderLength.
+5. KeySlotCount.
+6. KeySlotOffset.
+7. KeySlotLength.
+8. MetadataOffset.
+9. MetadataLength.
+10. DataOffset.
+11. DataLength.
+12. FooterOffset.
+13. FooterLength.
+14. all arithmetic relationships.
+15. all region boundaries.
+16. all Reserved fields.
+Only after these checks may the implementation process variable-length
+content.
+======================================================================
+54. FIXED ASTBOX V1 CORE PARAMETERS
+======================================================================
+The following values are FIXED by ASTBOX v1:
+File extension:
+    .astbox
+Header Magic:
+    ASTBOX
+Header Magic length:
+    6 bytes
+Footer Magic:
+    ASTBOXF1
+Footer Magic length:
+    8 bytes
+Version:
+    1
+Header length:
+    128 bytes
+Header byte order:
+    big-endian
+Key Slot size:
+    192 bytes
+Minimum Key Slot count:
+    1
+Maximum Key Slot count:
+    16
+VaultID:
+    16 bytes
+SlotID:
+    16 bytes
+VaultKey:
+    32 bytes
+Salt:
+    32 bytes
+WrapNonce:
+    24 bytes
+WrappedVaultKey:
+    48 bytes
+SlotMAC:
+    16 bytes
+HeaderMAC:
+    16 bytes
+Footer length:
+    112 bytes
+TOTP digit counts:
+    6 or 8
+TOTP period:
+    30 seconds
+TOTP algorithm:
+    HMAC-SHA-1
+Integer encoding:
+    big-endian
+======================================================================
+55. CONTAINER-SPECIFIC VALUES
+======================================================================
+The following values MAY differ between containers:
+- VaultID;
+- Generation;
+- KeySlotCount;
+- SlotID;
+- CredentialType;
+- CredentialParameters;
+- KDFProfile;
+- Argon2 parameters corresponding to that KDFProfile;
+- Salt;
+- WrapNonce;
+- WrappedVaultKey;
+- HeaderMAC;
+- Metadata;
+- Data;
+- Footer authentication values.
+These values are not global protocol constants.
+======================================================================
+56. USER-CONFIGURABLE VALUES
+======================================================================
+The following are user or application-level choices within the
+constraints of ASTBOX v1:
+- credential type;
+- credential value;
+- number of credential slots;
+- selected KDFProfile;
+- container contents;
+- file and directory names;
+- file timestamps.
+The following are NOT user-configurable in ASTBOX v1:
+- TOTP algorithm;
+- TOTP period;
+- permitted TOTP digit counts;
+- AEAD algorithm;
+- hash algorithm;
+- MAC algorithm;
+- HKDF algorithm;
+- HKDF context strings;
+- integer byte order;
+- field sizes;
+- field offsets;
+- chunk size;
+- nonce construction;
+- CBOR rules.
+======================================================================
+57. CORE FORMAT CONFORMANCE
+======================================================================
+An implementation conforms to this document only if it:
+- writes the exact Header structure;
+- writes the exact Key Slot structure;
+- uses the exact field sizes;
+- uses the exact offsets;
+- uses big-endian ASTBOX integer encoding;
+- enforces the defined fixed values;
+- rejects invalid Reserved fields;
+- rejects invalid structural relationships;
+- rejects unsupported Version values;
+- rejects unsupported CredentialType values;
+- rejects invalid TOTP digit counts;
+- enforces the KeySlotCount range;
+- enforces all region boundaries;
+- does not append bytes after the Footer.
+Cryptographic conformance additionally requires compliance with
+ASTBOX-v1.0-02-Key-Crypto.txt.
+Data-container conformance additionally requires compliance with
+ASTBOX-v1.0-03-Data-Container.txt.
+Lifecycle and security conformance additionally requires compliance with
+ASTBOX-v1.0-04-Lifecycle-Security.txt.
+======================================================================
+58. END OF DOCUMENT
+======================================================================
+Document:
+    ASTBOX-v1.0-01-Core-Format.txt
+Format:
+    ASTBOX v1.0
+End of ASTBOX-v1.0-01-Core-Format.txt
