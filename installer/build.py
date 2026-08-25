@@ -488,7 +488,7 @@ def main():
         stage_chromium()
         make_portable_zip("Astbox-portable-Chromium.zip")
         compile_setup(["/DChromiumBuild"])
-        report("AstboxSetup-Chromium-%s.exe" % APP_VERSION)
+        report("AstboxSetup-%s-Chromium.exe" % APP_VERSION)
 
     if not iscc:
         log("安装 EXE：安装 Inno Setup 6 后重跑本脚本，或手动执行 astbox.iss。")
