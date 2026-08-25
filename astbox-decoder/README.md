@@ -164,6 +164,21 @@ python tests/test_roundtrip.py    # 密码学自测 + 创建/解锁/提取/添�
 python tests/test_gui_smoke.py    # GUI 全流程冒烟（导航/提取/封装向导/添加文件）
 ```
 
+## 签名验证
+
+Windows 安装器与便携包内的 `Astbox.cer` 是发布签名公钥
+（`CN=Astbox`，自签名）。导入受信任根后系统会显示已验证发布者：
+
+```bat
+certutil -user -addstore Root Astbox.cer    :: 导入(当前用户)
+certutil -user -delstore Root Astbox        :: 随时撤销
+```
+
+安装器完成页也提供同样的可选勾选项。注意：
+- 证书只证明"文件出自本仓库且未被篡改"，不影响 SmartScreen
+  对新文件的信誉度判断；
+- `.pfx` 私钥永不随包分发。
+
 ## 许可证
 
 本项目以 [Apache License 2.0](../LICENSE) 发布。

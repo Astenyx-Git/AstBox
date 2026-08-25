@@ -38,6 +38,7 @@ Source: "stage\Astbox\*"; DestDir: "{app}"; \
     Flags: recursesubdirs ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\NOTICE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\Astbox.cer"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{userdesktop}\ASTBOX"; \
@@ -111,6 +112,10 @@ Root: HKCU; Subkey: "Software\Astbox\Capabilities\FileAssociations"; \
 Filename: "ms-settings:defaultapps"; \
     Description: "设为 .astbox 默认打开方式（在系统设置中确认）"; \
     Flags: shellexec postinstall skipifsilent
+Filename: "certutil"; \
+    Parameters: "-user -addstore Root ""{app}\Astbox.cer"""; \
+    Description: "信任 ASTBOX 签名证书（让系统显示已验证发布者，可随时用 certutil -user -delstore Root Astbox 撤销）"; \
+    Flags: postinstall unchecked skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\chromium-profile"

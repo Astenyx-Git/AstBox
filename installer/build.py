@@ -256,6 +256,10 @@ def stage_app():
         doc_src = os.path.join(repo_root, doc)
         if os.path.isfile(doc_src):
             shutil.copy2(doc_src, os.path.join(STAGE, doc))
+    # 签名公钥证书(方案A: 随包分发, 用户可选导入受信任根)
+    cer_src = os.path.join(HERE, "assets", "Astbox.cer")
+    if os.path.isfile(cer_src):
+        shutil.copy2(cer_src, os.path.join(STAGE, "Astbox.cer"))
     # chromium 通道目录(与脚本同级，应用按 _HERE/chromium 探测)
     chr_dst = os.path.join(dst_app, "chromium")
     os.makedirs(chr_dst, exist_ok=True)
