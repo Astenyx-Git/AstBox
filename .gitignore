@@ -1,15 +1,32 @@
-# 运行内核与浏览器配置目录(构建时获取/运行时生成)
-astbox-decoder/chromium/
-astbox-decoder/chromium-profile/
-
-# 构建产物
+# ==== 构建产物 / 发布输出 ====
 installer/dist/
 installer/stage/
+.server-publish/
+.cli-publish/
+.tests-publish/
 
-# Python 杂物
+# ==== 离线构建环境缓存(本机,可重建)====
+.dotnet-home/
+.local-feed/
+.nuget-appdata/
+.nuget-packages/
+
+# ==== 便携浏览器内核(417MB 不入库;目录内 README.txt 保留)====
+chromium/*
+!chromium/README.txt
+chromium-profile/
+
+# ==== .NET 中间物 ====
+bin/
+obj/
+*.user
+
+# ==== 日志与临时文件 ====
+*.log
+*.tmp
+.tmp*/
+
+# ==== Python 工具链缓存(scripts/ 下工具脚本仍为 python)====
 __pycache__/
 *.pyc
 .venv/
-
-# 本地杂项
-*.log

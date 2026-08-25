@@ -1,0 +1,44 @@
+{
+  "secret_b32": "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
+  "created": 1700000000,
+  "modified": 1700000100,
+  "container_sha256": "c0386113122a0d454d325e6f4870a134fdcfac291d18d41f0a63f44c4c1487ed",
+  "entries": [
+    {
+      "path": "data",
+      "size": 0,
+      "is_dir": true,
+      "file_id": "c75329e91a446ecbd4b62fca6cbdddf9"
+    },
+    {
+      "path": "data/blob.bin",
+      "size": 1398577,
+      "is_dir": false,
+      "file_id": "917d9b11865e95160841cd130669338a"
+    },
+    {
+      "path": "docs",
+      "size": 0,
+      "is_dir": true,
+      "file_id": "15a3d4bb436548da5452444a762067c5"
+    },
+    {
+      "path": "docs/café.txt",
+      "size": 34,
+      "is_dir": false,
+      "file_id": "a0bf7c278e64b5d8015bacd68177b21d"
+    },
+    {
+      "path": "docs/guide.md",
+      "size": 36,
+      "is_dir": false,
+      "file_id": "b43f22e84736798b001b119d64213f5f"
+    },
+    {
+      "path": "readme.txt",
+      "size": 23,
+      "is_dir": false,
+      "file_id": "70eb0cf89612d791e9ebe35e88b99c3e"
+    }
+  ]
+}

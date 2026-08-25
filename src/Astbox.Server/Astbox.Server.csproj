@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Astbox.Server</RootNamespace>
+    <AssemblyName>astbox-server</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <!-- NFC 归一化(CBOR 规范文本)依赖 ICU,禁止不变全球化 -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- DPAPI (CurrentUser) secrets store -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Astbox.Core\Astbox.Core.csproj" />
+  </ItemGroup>
+
+  <!-- gui 前端零改动复用:构建时从旧实现目录复制为静态资源 -->
+  <ItemGroup>
+    <Content Include="..\..\astbox-decoder\gui\**\*" CopyToOutputDirectory="PreserveNewest" Link="gui\%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
+  </ItemGroup>
+
+</Project>

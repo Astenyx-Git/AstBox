@@ -1,7 +1,0 @@
-# dependencies / build artifacts
-deps/
-wheels/
-tmp/
-__pycache__/
-*.pyc
-.venv/

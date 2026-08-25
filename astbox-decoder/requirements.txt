@@ -1,5 +1,0 @@
-argon2-cffi>=25.0
-pynacl>=1.5
-cffi>=1.16
-qrcode>=8.0
-pypng>=0.20220715
