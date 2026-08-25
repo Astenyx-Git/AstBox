@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """传播包(.passbox)端到端验证(对已安装栈):
 
   P1 模块级: 口令包/快速包 往返 + 篡改拒绝 + 错误口令拒绝

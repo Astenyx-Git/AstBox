@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX 传播包 (.passbox) —— 自携带凭据的容器包裹格式。
 
 布局:

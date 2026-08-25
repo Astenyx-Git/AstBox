@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX 安装包构建脚本(纯标准库)。
 
 产物:

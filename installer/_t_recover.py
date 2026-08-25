@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """旧容器恢复: 用户提供了封装密钥(ASTBOX×26+====)与精确时刻。
 旧机制槽位凭据 = 封装时刻的 8 位验证码 => 直接算出并尝试解锁。
 成功后把内容重封装为"稳定密钥"新容器(*_recovered.astbox)。

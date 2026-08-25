@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX v1.0 container parsing, unlocking and extraction.
 
 Implements the binary layout of ASTBOX-v1.0-01-Core-Format.txt, the

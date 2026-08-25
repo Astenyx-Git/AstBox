@@ -1,3 +1,5 @@
+// Copyright 2026 Astenyx-Git
+// SPDX-License-Identifier: Apache-2.0
 /* ============================================================
    ASTBOX · Liquid Glass Web UI
    交互层：状态渲染 / 菜单 / Sheet / Toast / OTP / 拖放

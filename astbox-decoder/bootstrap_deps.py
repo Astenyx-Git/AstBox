@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """Bootstrap the two native cryptography dependencies for ASTBOX decoder.
 
 Tries `pip install --target deps` first (normal environments).  If pip fails

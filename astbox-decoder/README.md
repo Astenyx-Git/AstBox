@@ -163,3 +163,8 @@ astbox-decoder/
 python tests/test_roundtrip.py    # 密码学自测 + 创建/解锁/提取/添加文件/篡改检测回环
 python tests/test_gui_smoke.py    # GUI 全流程冒烟（导航/提取/封装向导/添加文件）
 ```
+
+## 许可证
+
+本项目以 [Apache License 2.0](../LICENSE) 发布。
+Copyright 2026 Astenyx-Git —— 第三方组件归属见根目录 NOTICE。

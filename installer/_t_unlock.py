@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """解锁链路端到端验证: 持久化 + 时钟偏移窗口(对已安装栈)。
 
 场景:

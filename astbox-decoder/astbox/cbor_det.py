@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """Deterministic (canonical) CBOR encode/decode for ASTBOX v1 metadata.
 
 ASTBOX-v1.0-03-Data-Container.txt section 13-19 requires RFC 8949

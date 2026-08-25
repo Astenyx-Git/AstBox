@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """QR code helpers for TOTP provisioning (otpauth URI).
 
 Uses the pure-Python ``qrcode`` package (no Pillow required):

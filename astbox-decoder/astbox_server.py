@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX v1.0 容器管理器 - Liquid Glass Web UI 本地服务.
 
 用 Python 标准库 http.server 起一个仅监听 127.0.0.1 的本地服务,

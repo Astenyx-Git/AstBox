@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """上传链路端到端验证(对已安装栈):
   T1: ~600MiB 容器经 /api/open_upload 上传 -> 解锁成功 (旧版 512MiB 必失败)
   T2: 超 4GiB 声明体被拒绝时, 客户端能读到 JSON 错误而非连接重置

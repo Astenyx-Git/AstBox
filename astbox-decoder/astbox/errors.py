@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX v1.0 error codes and exception type
 (ASTBOX-v1.0-04-Lifecycle-Security.txt sections 40-50)."""
 

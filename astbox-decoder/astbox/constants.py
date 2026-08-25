@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX v1.0 protocol constants (ASTBOX-v1.0-01-Core-Format.txt and friends)."""
 
 HEADER_MAGIC = b"ASTBOX"

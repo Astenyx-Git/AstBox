@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """ASTBOX v1.0 container modification: add files to an unlocked container.
 
 Implements ASTBOX-v1.0-03-Data-Container.txt sections 67/76/77/79-83:

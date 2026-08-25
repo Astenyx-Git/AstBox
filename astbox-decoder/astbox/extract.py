@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """Extract files from an unlocked ASTBOX container to a local directory.
 
 Path safety: names were already validated at metadata level (no

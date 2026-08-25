@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2026 Astenyx-Git
+# SPDX-License-Identifier: Apache-2.0
 """纯标准库生成 ASTBOX 应用图标 (assets/astbox.ico)。
 
 渲染逻辑与 gui/index.html 的内联 favicon 一致：
