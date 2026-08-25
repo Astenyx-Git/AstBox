@@ -32,7 +32,7 @@ CACHE = os.path.join(HERE, "_cache")
 DIST = os.path.join(HERE, "dist")
 
 PY_VER = "3.14.6"
-APP_VERSION = "V2.0.0"
+APP_VERSION = "V2.0.1"
 EMBED_FILE = "python-%s-embed-amd64.zip" % PY_VER
 EMBED_URLS = [
     "https://registry.npmmirror.com/-/binary/python/%s/%s"
@@ -170,8 +170,8 @@ INSTALL_CMD = "\r\n".join([
     'reg add "HKCU\\Software\\Astbox\\Capabilities\\FileAssociations" /v ".astbox" /d "Astbox.Container" /f >nul',
     'reg add "HKCU\\Software\\RegisteredApplications" /v "ASTBOX Container Manager" /d "Software\\Astbox\\Capabilities" /f >nul',
     'set "ARP=HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{8F4A2C63-9D1E-4B57-A6F3-2E5C7A90D411}_is1"',
-    'reg add "%ARP%" /v DisplayName /d "ASTBOX V2.0.0" /f >nul',
-    'reg add "%ARP%" /v DisplayVersion /d "2.0.0" /f >nul',
+    'reg add "%ARP%" /v DisplayName /d "ASTBOX V2.0.1" /f >nul',
+    'reg add "%ARP%" /v DisplayVersion /d "2.0.1" /f >nul',
     'reg add "%ARP%" /v DisplayIcon /d "%DEST%\\app\\assets\\astbox.ico" /f >nul',
     'reg add "%ARP%" /v UninstallString /d "cmd /c \\"%DEST%\\uninstall.cmd\\"" /f >nul',
     'reg add "%ARP%" /v NoModify /t REG_DWORD /d 1 /f >nul',
@@ -330,6 +330,33 @@ def sanity_boot():
     log("自检通过: 打包运行时启动/生成/解锁/退出均正常")
 
 
+def sign_file(path):
+    """Authenticode 签名(PowerShell 原生, 无需 SDK)。
+
+    配置: 环境变量 ASTBOX_SIGN_PFX(pfx 路径) + ASTBOX_SIGN_PW(密码);
+    可选 ASTBOX_SIGN_TS 时间戳服务器。未配置则跳过。
+    """
+    pfx = os.environ.get("ASTBOX_SIGN_PFX")
+    if not pfx or not os.path.isfile(pfx):
+        log("未配置 ASTBOX_SIGN_PFX, 跳过签名: %s" % os.path.basename(path))
+        return
+    ts = os.environ.get("ASTBOX_SIGN_TS",
+                        "http://timestamp.digicert.com")
+    ps = (
+        "$pw=[Environment]::GetEnvironmentVariable('ASTBOX_SIGN_PW');"
+        "$c=New-Object System.Security.Cryptography.X509Certificates."
+        "X509Certificate2('%s',$pw);"
+        "$r=Set-AuthenticodeSignature -FilePath '%s' -Certificate $c "
+        "-IncludeChain All -TimeStampServer '%s' -HashAlgorithm SHA256;"
+        "if($r.Status -ne 'Valid'){throw ('sign failed: '+$r.Status)}"
+        "else{Write-Output ('signed OK: '+$r.Status)}"
+        % (pfx.replace("'", "''"), path.replace("'", "''"), ts)
+    )
+    log("签名: %s" % os.path.basename(path))
+    subprocess.run(["powershell", "-NoProfile", "-Command", ps],
+                   check=True)
+
+
 def find_iscc():
     cands = [
         r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
@@ -446,6 +473,7 @@ def main():
         if os.path.isfile(p):
             log("安装程序: %s (%.1f MiB)"
                 % (p, os.path.getsize(p) / 1048576))
+            sign_file(p)
 
     if variant in ("both", "slim"):
         make_portable_zip("Astbox-portable.zip")

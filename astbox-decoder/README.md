@@ -1,4 +1,4 @@
-# ASTBOX V2.0.0 桌面端解码器 / 封装器
+# ASTBOX V2.0.1 桌面端解码器 / 封装器
 
 依据工作目录中的 4 份 ASTBOX v1.0 规范文档（`ASTBOX-v1.0-01-Core-Format.txt`、
 `02-Key-Crypto.txt`、`03-Data-Container.txt`、`04-Lifecycle-Security.txt`）实现的

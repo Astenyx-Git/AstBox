@@ -30,8 +30,8 @@ reg add "HKCU\Software\Astbox\Capabilities" /v ApplicationIcon /d "%DEST%\app\as
 reg add "HKCU\Software\Astbox\Capabilities\FileAssociations" /v ".astbox" /d "Astbox.Container" /f >nul
 reg add "HKCU\Software\RegisteredApplications" /v "ASTBOX Container Manager" /d "Software\Astbox\Capabilities" /f >nul
 set "ARP=HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{8F4A2C63-9D1E-4B57-A6F3-2E5C7A90D411}_is1"
-reg add "%ARP%" /v DisplayName /d "ASTBOX V2.0.0" /f >nul
-reg add "%ARP%" /v DisplayVersion /d "2.0.0" /f >nul
+reg add "%ARP%" /v DisplayName /d "ASTBOX V2.0.1" /f >nul
+reg add "%ARP%" /v DisplayVersion /d "2.0.1" /f >nul
 reg add "%ARP%" /v DisplayIcon /d "%DEST%\app\assets\astbox.ico" /f >nul
 reg add "%ARP%" /v UninstallString /d "cmd /c \"%DEST%\uninstall.cmd\"" /f >nul
 reg add "%ARP%" /v NoModify /t REG_DWORD /d 1 /f >nul

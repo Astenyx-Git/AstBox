@@ -189,7 +189,7 @@ No other digit count or period is valid in ASTBOX v1.
 ======================================================================
 14. TOTP ROLE
 ======================================================================
-REVISED IN ASTBOX V2.0.0:
+REVISED IN ASTBOX V2.0.1:
 A TOTP value MUST NOT be treated as the VaultKey itself, and MUST NOT
 be used as the Key Slot KDF credential.
 The TOTP value is an interactive authorization factor: it is verified
@@ -243,7 +243,7 @@ primary interoperability target.
 ======================================================================
 19. TOTP SECRET
 ======================================================================
-REVISED IN ASTBOX V2.0.0:
+REVISED IN ASTBOX V2.0.1:
 The TOTP secret is the source of the Key Slot credential: its Base32
 decoded bytes are passed to Argon2id for wrapping and unwrapping.
 It MUST be stored or provisioned independently from the encrypted file
@@ -1515,9 +1515,9 @@ End of ASTBOX-v1.0-04-Lifecycle-Security.txt
 Auto
 
 ======================================================================
-REVISION HISTORY - ASTBOX V2.0.0
+REVISION HISTORY - ASTBOX V2.0.1
 ======================================================================
-ASTBOX V2.0.0 revises lifecycle semantics:
+ASTBOX V2.0.1 revises lifecycle semantics:
 
 1. SECRET-BASED UNLOCK
    The Key Slot credential is the decoded byte sequence of the Base32

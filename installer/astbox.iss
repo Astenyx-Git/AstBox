@@ -3,16 +3,16 @@
 ; 安装完成页引导用户在系统设置中确认为默认打开方式。
 
 #define MyAppName "ASTBOX 容器管理器"
-#define MyAppVersion "2.0.0"
-#define MyAppVerName "ASTBOX V2.0.0"
+#define MyAppVersion "2.0.1"
+#define MyAppVerName "ASTBOX V2.0.1"
 #define MyAppExeName "pythonw.exe"
 
 ; 编译变体: ISCC /DChromiumBuild  →  输出含内核版安装包
 #ifdef ChromiumBuild
-#define MyOutputName "AstboxSetup-V2.0.0-Chromium"
+#define MyOutputName "AstboxSetup-V2.0.1-Chromium"
 #define MyVerSuffix " (Chromium 内核版)"
 #else
-#define MyOutputName "AstboxSetup-V2.0.0"
+#define MyOutputName "AstboxSetup-V2.0.1"
 #define MyVerSuffix ""
 #endif
 
