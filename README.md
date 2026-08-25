@@ -1,4 +1,4 @@
-# Astbox
+# Astbox (中文 / English / 日本語)
 
 Repository: Astenyx-Git/AstBox  
 License: Apache License 2.0
@@ -176,5 +176,3 @@ python installer/build.py
 - メンテナが確認すべき項目: サポートする Python の正確なバージョン、`astbox_server.py` の API ドキュメント、CI/CD 設定。
 
 ---
-
-*本書はリポジトリ内の実在ファイルとスクリプトに基づいて作成されています。*
