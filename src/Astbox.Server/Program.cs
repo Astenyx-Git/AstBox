@@ -1853,8 +1853,11 @@ public static partial class Handlers
         await Ok(ctx, w => w.WriteString("saved_to", dest));
     }
 
-    /// <summary>python _import_passbox_boot: 双击 .passbox 的导入流程。
-    /// 校验→试锁→注册→返回容器路径; 成败均不抛出。</summary>
+    /// <summary>双击 .passbox 的导入流程(C# 特性,有意偏离 python 参考):
+    /// 校验→试锁→注册→【硬删除传播包】;成败语义见下。
+    /// 传播包内嵌完整容器字节,UnwrapSecret 已将其落盘到包同目录
+    /// 的 <名称>.astbox;全部成功后才删除 .passbox(直接删除,
+    /// 不进回收站)。删除失败不影响导入成功,仅记录警告。</summary>
     public static (string? ContainerPath, string? Err) ImportPassboxBoot(
         string pbPath)
     {
@@ -1910,6 +1913,17 @@ public static partial class Handlers
                     (long)uc.Created);
             }
             Console.WriteLine($"  [passbox] 已导入并注册: {cpath}");
+
+            // 全链成功后硬删除传播包(不进回收站);失败仅告警
+            try
+            {
+                File.Delete(pbPath);
+                Console.WriteLine("  [passbox] 传播包已删除");
+            }
+            catch (Exception del)
+            {
+                Console.WriteLine($"  [passbox] 警告: 传播包删除失败: {del.Message}");
+            }
             return (cpath, null);
         }
         catch (AstboxError exc)

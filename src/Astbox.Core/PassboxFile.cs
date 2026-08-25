@@ -95,6 +95,9 @@ public static class PassboxFile
         }
 
         // JSON header, keys in sorted order (matches json.dumps(sort_keys=True))
+        // C# 扩展(有意偏离 python 参考实现): 写入 csha 使导入端强制校验内嵌容器
+        string cshaHex = Convert.ToHexStringLower(
+            SHA256.HashData(File.ReadAllBytes(astboxPath)));
         using var ms = new MemoryStream();
         using (var writer = new Utf8JsonWriter(ms))
         {
@@ -103,6 +106,7 @@ public static class PassboxFile
                 writer.WriteNumber("created", c);
             else
                 writer.WriteNull("created");
+            writer.WriteString("csha", cshaHex);
             writer.WriteNumber("digits", digits);
             if (wrapMode == "pass")
             {

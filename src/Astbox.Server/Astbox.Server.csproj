@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Astbox.Server</RootNamespace>
     <AssemblyName>astbox-server</AssemblyName>
+    <!-- 窗口子系统:双击/文件关联启动时不出现命令行黑框(CLI 保持 Exe 不受影响) -->
+    <OutputType>WinExe</OutputType>
     <PublishAot>true</PublishAot>
     <!-- NFC 归一化(CBOR 规范文本)依赖 ICU,禁止不变全球化 -->
   </PropertyGroup>
@@ -20,9 +22,9 @@
     <ProjectReference Include="..\Astbox.Core\Astbox.Core.csproj" />
   </ItemGroup>
 
-  <!-- gui 前端零改动复用:构建时从旧实现目录复制为静态资源 -->
+  <!-- gui 前端零改动复用:从仓库根 gui/ 复制为静态资源 -->
   <ItemGroup>
-    <Content Include="..\..\astbox-decoder\gui\**\*" CopyToOutputDirectory="PreserveNewest" Link="gui\%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
+    <Content Include="..\..\gui\**\*" CopyToOutputDirectory="PreserveNewest" Link="gui\%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
   </ItemGroup>
 
 </Project>

@@ -80,7 +80,7 @@ internal static class Program
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null &&
-               !Directory.Exists(Path.Combine(dir.FullName, "astbox-decoder")))
+               !Directory.Exists(Path.Combine(dir.FullName, ".git")))
             dir = dir.Parent!;
         if (dir is null) throw new InvalidOperationException("repo root not found");
         return dir.FullName;
