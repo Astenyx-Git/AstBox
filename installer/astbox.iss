@@ -36,6 +36,8 @@ UninstallDisplayIcon={app}\app\assets\astbox.ico
 [Files]
 Source: "stage\Astbox\*"; DestDir: "{app}"; \
     Flags: recursesubdirs ignoreversion
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\NOTICE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{userdesktop}\ASTBOX"; \

@@ -250,6 +250,12 @@ def stage_app():
     if os.path.isfile(pb_icon_src):
         shutil.copy2(pb_icon_src,
                      os.path.join(dst_app, "assets", "passbox.ico"))
+    # 许可文本(Apache-2.0 合规: 再分发须随附 LICENSE/NOTICE)
+    repo_root = os.path.dirname(HERE)
+    for doc in ("LICENSE", "NOTICE"):
+        doc_src = os.path.join(repo_root, doc)
+        if os.path.isfile(doc_src):
+            shutil.copy2(doc_src, os.path.join(STAGE, doc))
     # chromium 通道目录(与脚本同级，应用按 _HERE/chromium 探测)
     chr_dst = os.path.join(dst_app, "chromium")
     os.makedirs(chr_dst, exist_ok=True)
