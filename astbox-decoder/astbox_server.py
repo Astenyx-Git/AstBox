@@ -1426,7 +1426,7 @@ def _run_server():
     port = srv.server_address[1]
     url = "http://127.0.0.1:%d/" % port
     print("=" * 56)
-    print("  ASTBOX 容器管理器 · V2.0.1 · Liquid Glass Web UI")
+    print("  ASTBOX 容器管理器 · V3.0.0 · Liquid Glass Web UI")
     print("  %s" % url)
     print("  仅监听 127.0.0.1，关闭此进程即退出。Ctrl+C 退出。")
     print("=" * 56)

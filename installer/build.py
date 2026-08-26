@@ -32,7 +32,7 @@ CACHE = os.path.join(HERE, "_cache")
 DIST = os.path.join(HERE, "dist")
 
 PY_VER = "3.14.6"
-APP_VERSION = "V2.0.1"
+APP_VERSION = "V3.0.0"
 EMBED_FILE = "python-%s-embed-amd64.zip" % PY_VER
 EMBED_URLS = [
     "https://registry.npmmirror.com/-/binary/python/%s/%s"
@@ -166,19 +166,19 @@ INSTALL_CMD = "\r\n".join([
     'reg add "HKCU\\Software\\Astbox\\Capabilities\\FileAssociations" /v ".passbox" /d "Astbox.Passbox" /f >nul',
     'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.passbox\\UserChoice" /f >nul 2>&1',
     'reg add "HKCU\\Software\\Astbox\\Capabilities" /v ApplicationName /d "ASTBOX Container Manager" /f >nul',
-    'reg add "HKCU\\Software\\Astbox\\Capabilities" /v ApplicationIcon /d "%DEST%\\app\\assets\\astbox.ico" /f >nul',
+    'reg add "HKCU\\Software\\Astbox\\Capabilities" /v ApplicationIcon /d "%DEST%\\app\\assets\\astbox-app.ico" /f >nul',
     'reg add "HKCU\\Software\\Astbox\\Capabilities\\FileAssociations" /v ".astbox" /d "Astbox.Container" /f >nul',
     'reg delete "HKCU\\Software\\RegisteredApplications" /v "ASTBOX Container Manager" /f >nul 2>&1',
     'reg delete "HKCU\\Software\\RegisteredApplications" /v "ASTBOX 容器管理器" /f >nul 2>&1',
     'reg add "HKCU\\Software\\RegisteredApplications" /v "ASTBOX" /d "Software\\Astbox\\Capabilities" /f >nul',
     'set "ARP=HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{8F4A2C63-9D1E-4B57-A6F3-2E5C7A90D411}_is1"',
-    'reg add "%ARP%" /v DisplayName /d "ASTBOX V2.0.1" /f >nul',
-    'reg add "%ARP%" /v DisplayVersion /d "2.0.1" /f >nul',
-    'reg add "%ARP%" /v DisplayIcon /d "%DEST%\\app\\assets\\astbox.ico" /f >nul',
+    'reg add "%ARP%" /v DisplayName /d "ASTBOX V3.0.0" /f >nul',
+    'reg add "%ARP%" /v DisplayVersion /d "3.0.0" /f >nul',
+    'reg add "%ARP%" /v DisplayIcon /d "%DEST%\\app\\assets\\astbox-app.ico" /f >nul',
     'reg add "%ARP%" /v UninstallString /d "cmd /c \\"%DEST%\\uninstall.cmd\\"" /f >nul',
     'reg add "%ARP%" /v NoModify /t REG_DWORD /d 1 /f >nul',
     'reg add "%ARP%" /v NoRepair /t REG_DWORD /d 1 /f >nul',
-    'powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $lnk = $ws.CreateShortcut([Environment]::GetFolderPath(\'Desktop\') + \'\\ASTBOX.lnk\'); $lnk.TargetPath = \'%DEST%\\runtime\\pythonw.exe\'; $lnk.Arguments = \'\"%DEST%\\app\\astbox_server.py\"\'; $lnk.IconLocation = \'%DEST%\\app\\assets\\astbox.ico\'; $lnk.Save()" >nul 2>&1',
+    'powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $lnk = $ws.CreateShortcut([Environment]::GetFolderPath(\'Desktop\') + \'\\ASTBOX.lnk\'); $lnk.TargetPath = \'%DEST%\\runtime\\pythonw.exe\'; $lnk.Arguments = \'\"%DEST%\\app\\astbox_server.py\"\'; $lnk.IconLocation = \'%DEST%\\app\\assets\\astbox-app.ico\'; $lnk.Save()" >nul 2>&1',
     "echo [OK] installed, .astbox registered.",
     "echo Opening Windows default-apps settings: choose ASTBOX for .astbox",
     "start ms-settings:defaultapps",
@@ -252,6 +252,10 @@ def stage_app():
     if os.path.isfile(pb_icon_src):
         shutil.copy2(pb_icon_src,
                      os.path.join(dst_app, "assets", "passbox.ico"))
+    app_icon_src = os.path.join(HERE, "assets", "astbox-app.ico")
+    if os.path.isfile(app_icon_src):
+        shutil.copy2(app_icon_src,
+                     os.path.join(dst_app, "assets", "astbox-app.ico"))
     # 许可文本(Apache-2.0 合规: 再分发须随附 LICENSE/NOTICE)
     repo_root = os.path.dirname(HERE)
     for doc in ("LICENSE", "NOTICE"):

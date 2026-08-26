@@ -3,16 +3,16 @@
 ; 安装完成页引导用户在系统设置中确认为默认打开方式。
 
 #define MyAppName "ASTBOX 容器管理器"
-#define MyAppVersion "2.0.1"
-#define MyAppVerName "ASTBOX V2.0.1"
+#define MyAppVersion "3.0.0"
+#define MyAppVerName "ASTBOX V3.0.0"
 #define MyAppExeName "pythonw.exe"
 
 ; 编译变体: ISCC /DChromiumBuild  →  输出含内核版安装包
 #ifdef ChromiumBuild
-#define MyOutputName "AstboxSetup-V2.0.1-Chromium"
+#define MyOutputName "AstboxSetup-V3.0.0-Chromium"
 #define MyVerSuffix " (Chromium 内核版)"
 #else
-#define MyOutputName "AstboxSetup-V2.0.1"
+#define MyOutputName "AstboxSetup-V3.0.0"
 #define MyVerSuffix ""
 #endif
 
@@ -30,8 +30,8 @@ OutputBaseFilename={#MyOutputName}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-SetupIconFile=assets\astbox.ico
-UninstallDisplayIcon={app}\app\assets\astbox.ico
+SetupIconFile=assets\astbox-app.ico
+UninstallDisplayIcon={app}\app\assets\astbox-app.ico
 
 [Files]
 Source: "stage\Astbox\*"; DestDir: "{app}"; \
@@ -44,12 +44,12 @@ Source: "assets\Astbox.cer"; DestDir: "{app}"; Flags: ignoreversion
 Name: "{userdesktop}\ASTBOX"; \
     Filename: "{app}\runtime\{#MyAppExeName}"; \
     Parameters: """{app}\app\astbox_server.py"""; \
-    IconFilename: "{app}\app\assets\astbox.ico"; \
+    IconFilename: "{app}\app\assets\astbox-app.ico"; \
     Comment: "ASTBOX 容器管理器"
 Name: "{userstartmenu}\Programs\ASTBOX 容器管理器\ASTBOX 容器管理器"; \
     Filename: "{app}\runtime\{#MyAppExeName}"; \
     Parameters: """{app}\app\astbox_server.py"""; \
-    IconFilename: "{app}\app\assets\astbox.ico"
+    IconFilename: "{app}\app\assets\astbox-app.ico"
 Name: "{userstartmenu}\Programs\ASTBOX 容器管理器\卸载 ASTBOX"; \
     Filename: "{uninstallexe}"; \
     Comment: "从本机移除 ASTBOX 容器管理器"

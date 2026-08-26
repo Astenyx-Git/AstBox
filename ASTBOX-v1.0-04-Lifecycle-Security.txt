@@ -1515,9 +1515,10 @@ End of ASTBOX-v1.0-04-Lifecycle-Security.txt
 Auto
 
 ======================================================================
-REVISION HISTORY - ASTBOX V2.0.1
+REVISION HISTORY - ASTBOX V3.0.0
 ======================================================================
-ASTBOX V2.0.1 revises lifecycle semantics:
+ASTBOX V3.0.0 revises lifecycle semantics (carrying forward the
+2.0.x-era items below unchanged):
 
 1. SECRET-BASED UNLOCK
    The Key Slot credential is the decoded byte sequence of the Base32
