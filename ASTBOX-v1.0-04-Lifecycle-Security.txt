@@ -1672,6 +1672,13 @@ ASTBOX V2.0.1 revises lifecycle semantics:
                    (orphan-pack import on a clean directory:
                    container materialized, pack consumed, registry
                    entry created, graceful exit).
+                   Association governance 5.1-5.4 fully implemented
+                   (startup detection, dangling self-heal, epoch
+                   nudge with deep link, headless logging, heartbeat
+                   telemetry); native suite 36/36 green.
+                   Installer channels: Inno slim/kernel plus
+                   per-user WiX MSI with S2 seamless migration
+                   (6.2), E2E verified on real machine.
       python ref : Layout (4.1), procedure 4.2 a)-h), semantics
                    4.3-4.4, and hardening H1-H5 implemented (H3
                    consume-on-success and the 4.2 g) timestamp merge
@@ -1684,6 +1691,8 @@ ASTBOX V2.0.1 revises lifecycle semantics:
                    with legacy-value cleanup; UserChoice clearing for
                    dangling keys at install time); ceiling 5.3 not
                    implemented - documented divergence under rule 4.7.
+                   Installer channels: Inno/cmd only; no MSI
+                   channel (see 6.3).
 
    4.7 DUAL-TRACK RULE
       This document is the single source of truth for every
@@ -1692,3 +1701,31 @@ ASTBOX V2.0.1 revises lifecycle semantics:
       only through conformance entries in 4.6. Wording elsewhere
       that characterizes any active line as retired is superseded
       by this section.
+
+   6. WINDOWS INSTALLER CHANNELS & S2 MIGRATION
+      Two installer channels exist on the C# line: Inno Setup
+      (slim / kernel) targeting Programs\Astbox, and a per-user
+      WiX MSI (kernel; WiX 6.0.2 toolchain pinned) targeting
+      Programs\AstboxMSI. The directories are intentionally
+      disjoint so both channels can coexist without file conflict.
+
+      6.1 SHARED ASSOCIATION CONTRACT
+          Both channels register the ProgIds and Capabilities
+          defined in 5.1; the last-installed channel owns the
+          association command. UserChoice governance (5.2-5.4)
+          applies identically regardless of channel.
+
+      6.2 S2 SEAMLESS MIGRATION (normative for MSI)
+          On first install the MSI MUST detect a legacy Inno
+          installation (ARP _is1 key), silently run its uninstaller
+          (/SILENT /SUPPRESSMSGBOXES /NORESTART, wait for exit),
+          sequenced strictly AFTER InstallFiles and BEFORE any
+          association writes, so shared keys never dangle during
+          migration. msiexec uninstall MUST remove its own tree and
+          the association keys it wrote.
+
+      6.3 CHANNEL CONFORMANCE
+          python reference ships Inno/cmd channels only; no MSI
+          channel. Both lines' Inno builds target the same default
+          directory by convention - installing one line's Inno
+          build over the other's is not a supported configuration.
