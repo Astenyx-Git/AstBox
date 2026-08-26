@@ -1629,13 +1629,13 @@ ASTBOX V2.0.1 revises lifecycle semantics:
                    (orphan-pack import on a clean directory:
                    container materialized, pack consumed, registry
                    entry created, graceful exit).
-      python ref : Layout (4.1), procedure 4.2 a)-g), semantics
-                   4.3-4.4, and hardening H1, H2, H4, H5 implemented.
-                   Pending alignment: H3 consume-on-success (pack is
-                   retained after import) and 4.2 g) timestamp merge
-                   (container created currently overrides an existing
-                   registry timestamp). These are tracked as
-                   line-specific divergences, not defects.
+      python ref : Layout (4.1), procedure 4.2 a)-h), semantics
+                   4.3-4.4, and hardening H1-H5 implemented (H3
+                   consume-on-success and the 4.2 g) timestamp merge
+                   aligned in V2.0.1; merge preserves the original
+                   registry timestamp on re-import). Covered by the
+                   passbox end-to-end suite including pack-consumption
+                   and registry-merge assertions.
 
    4.7 DUAL-TRACK RULE
       This document is the single source of truth for every

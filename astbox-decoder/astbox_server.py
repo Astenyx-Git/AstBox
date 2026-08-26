@@ -210,8 +210,8 @@ class Session:
         self.secrets[key] = {
             "b32": b32,
             "digits": int(digits),
-            "created": int(created) if created else
-                       (old or {}).get("created"),
+            "created": (old or {}).get("created") or
+                       (int(created) if created else None),
         }
         save_secrets(self.secrets)
 
@@ -223,8 +223,8 @@ class Session:
             self.secrets[key] = {
                 "b32": b32,
                 "digits": int(digits),
-                "created": int(created) if created else
-                           (old or {}).get("created"),
+                "created": (old or {}).get("created") or
+                           (int(created) if created else None),
             }
             save_secrets(self.secrets)
 
@@ -1355,6 +1355,12 @@ def _import_passbox_boot(pb_path):
             SESSION.register_secret(vid, b32,
                                     int(header.get("digits") or 6),
                                     uc.created)
+        # 规范 §4.2 h)/H3: 成功导入后消费传播包(直接删除, 不入回收站);
+        # 删除失败非致命, 仅告警, 导入结果不受影响。
+        try:
+            os.remove(pb_path)
+        except OSError as exc:
+            print("  [passbox] 警告: 传播包删除失败(不影响导入): %s" % exc)
         print("  [passbox] 已导入并注册: %s" % cpath)
         return cpath, None
     except AstboxError as exc:

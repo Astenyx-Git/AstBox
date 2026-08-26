@@ -20,12 +20,15 @@ import time
 import urllib.error
 import urllib.request
 
-BASE = os.path.join(os.environ["LOCALAPPDATA"], "Programs", "Astbox")
-PY = os.path.join(BASE, "runtime", "python.exe")
-SRV = os.path.join(BASE, "app", "astbox_server.py")
-TMP = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(BASE, "app"))
-sys.path.insert(0, os.path.join(BASE, "app", "deps"))
+# Python 线自举: 本机安装位置可能属于 C# 栈, 因此一律跑源码树
+# (服务器自身会把 deps/ 与源码根插到 sys.path, 见 astbox_server.py 头部)
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_SRC = os.path.abspath(os.path.join(_HERE, os.pardir, "astbox-decoder"))
+PY = os.environ.get("T_PY") or sys.executable
+SRV = os.environ.get("T_SRV") or os.path.join(_SRC, "astbox_server.py")
+TMP = _HERE
+sys.path.insert(0, _SRC)
+sys.path.insert(0, os.path.join(_SRC, "deps"))
 
 results = []
 
@@ -202,6 +205,50 @@ check("P3 新设备导入后当前码解锁(跨设备本体)",
       phase == "locked" and bool(iname)
       and iname.startswith("demo") and unlocked)
 kill(pB)
+
+# ---- P4 H3 成功导入后消费传播包 ----
+check("P4 传播包已被消费(直接删除)",
+      not os.path.exists(pb_quick))
+
+# ---- P5 §4.2 g) 注册表合并: 重导入保留原 created 时间戳 ----
+# 安全注记: 一律经子进程操作隔离密钥库; 父进程绝不导入
+# astbox_server(其模块级默认路径指向真实注册表)
+def _child_read_created(secrets_path):
+    code = ("import sys;sys.path.insert(0,r'%s');"
+            "import astbox_server as s;"
+            "st=s.load_secrets();print(list(st.values())[0]['created'])"
+            % _SRC)
+    env = dict(os.environ)
+    env["ASTBOX_SECRETS_PATH"] = secrets_path
+    out = subprocess.run([PY, "-c", code], check=True, env=env,
+                         capture_output=True, text=True).stdout
+    return int(out.strip().splitlines()[-1])
+
+
+pA, urlA = start_server(portA, secA)     # A 再导一份同容器传播包
+api(urlA, "/api/open", {"path": ast})
+api(urlA, "/api/unlock", {"totp": totp_code(b32, time.time())})
+pb_again = os.path.join(workdir, "again.passbox")
+api(urlA, "/api/export_passbox",
+    {"out": pb_again, "passphrase": ""})
+kill(pA)
+
+SENTINEL = 1000000000
+_seed_code = ("import sys;sys.path.insert(0,r'%s');"
+              "import astbox_server as s;"
+              "st=s.load_secrets();k=next(iter(st));"
+              "st[k]['created']=%d;s.save_secrets(st)"
+              % (_SRC, SENTINEL))
+_envB = dict(os.environ)
+_envB["ASTBOX_SECRETS_PATH"] = secB
+subprocess.run([PY, "-c", _seed_code], check=True, env=_envB)
+
+pB2, urlB2 = start_server(free_port(18960), secB,
+                          extra=["--import-passbox", pb_again])
+kept = _child_read_created(secB)
+check("P5 重导入保留原注册时间戳(合并语义)", kept == SENTINEL)
+check("P4b 第二次导入同样消费传播包", not os.path.exists(pb_again))
+kill(pB2)
 
 # 清理
 shutil.rmtree(workdir, ignore_errors=True)
