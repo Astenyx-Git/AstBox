@@ -28,7 +28,9 @@ reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pa
 reg add "HKCU\Software\Astbox\Capabilities" /v ApplicationName /d "ASTBOX Container Manager" /f >nul
 reg add "HKCU\Software\Astbox\Capabilities" /v ApplicationIcon /d "%DEST%\app\assets\astbox.ico" /f >nul
 reg add "HKCU\Software\Astbox\Capabilities\FileAssociations" /v ".astbox" /d "Astbox.Container" /f >nul
-reg add "HKCU\Software\RegisteredApplications" /v "ASTBOX Container Manager" /d "Software\Astbox\Capabilities" /f >nul
+reg delete "HKCU\Software\RegisteredApplications" /v "ASTBOX Container Manager" /f >nul 2>&1
+reg delete "HKCU\Software\RegisteredApplications" /v "ASTBOX 容器管理器" /f >nul 2>&1
+reg add "HKCU\Software\RegisteredApplications" /v "ASTBOX" /d "Software\Astbox\Capabilities" /f >nul
 set "ARP=HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{8F4A2C63-9D1E-4B57-A6F3-2E5C7A90D411}_is1"
 reg add "%ARP%" /v DisplayName /d "ASTBOX V2.0.1" /f >nul
 reg add "%ARP%" /v DisplayVersion /d "2.0.1" /f >nul

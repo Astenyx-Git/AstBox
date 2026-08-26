@@ -1541,6 +1541,49 @@ ASTBOX V2.0.1 revises lifecycle semantics:
    with whole-file SHA-256 integrity tail. Import copies the secret
    into the target device registry; it is duplication, not transfer.
 
+5. ASSOCIATION GOVERNANCE (detection - self-heal - guidance)
+   File associations for .astbox/.passbox are governed as a two-layer
+   system: install-time clearing provides the floor (first-run works
+   with zero friction), runtime confirmation provides the ceiling
+   (long-term resistance to hijacking).
+
+   5.1 REGISTRY CONTRACT (normative)
+       RegisteredApplications value name MUST be the ASCII string
+       "ASTBOX" so that the deep link
+       ms-settings:defaultapps?registeredAppUser=ASTBOX
+       resolves for every conforming line. Legacy non-ASCII value
+       names MUST be removed at install time. ProgIds are fixed:
+       Astbox.Container / Astbox.Passbox.
+
+   5.2 FLOOR: INSTALL-TIME CLEARING
+       Installers MUST delete FileExts UserChoice keys for both
+       extensions whose ProgId no longer exists (dangling residue),
+       restoring the Classes-default fallback. Both lines implement
+       this: C# runtime at startup, python installer in Pascal [Code]
+       and cmd script.
+
+   5.3 CEILING: RUNTIME MISMATCH DETECTION (C# line)
+       At every interactive startup the C# server checks UserChoice
+       ownership of both extensions. Taken-over associations raise a
+       native prompt at most once per epoch (marker persisted in the
+       registry; epoch resets on version upgrade) and offer the
+       settings deep link. Headless (--no-browser) runs log only and
+       MUST NOT mutate state. Heartbeat telemetry AssocNudgeLastRun
+       records last execution for support diagnostics.
+       The python reference does not implement 5.3; its headless web
+       UI has no native dialog channel. This is a documented
+       line-specific divergence under rule 4.7.
+
+   5.4 BEHAVIOR MATRIX (normative outcomes)
+       clean machine            : silent pass, no side effects.
+       dangling UserChoice      : deleted at startup/install;
+                                  fallback restored.
+       foreign live choice,
+       headless                 : logged only, foreign key preserved.
+       foreign live choice,
+       interactive              : one prompt per epoch, then deep
+                                  link to the app entry.
+
    4.1 BINARY LAYOUT (normative)
       MAGIC       16B   "ASTPASSBX1" + 6x 0x00
       HDRLEN       4B   big-endian byte count of HEADER
@@ -1636,6 +1679,11 @@ ASTBOX V2.0.1 revises lifecycle semantics:
                    registry timestamp on re-import). Covered by the
                    passbox end-to-end suite including pack-consumption
                    and registry-merge assertions.
+                   Association governance: floor 5.1/5.2 implemented
+                   in installer assets (ASCII "ASTBOX" registration
+                   with legacy-value cleanup; UserChoice clearing for
+                   dangling keys at install time); ceiling 5.3 not
+                   implemented - documented divergence under rule 4.7.
 
    4.7 DUAL-TRACK RULE
       This document is the single source of truth for every

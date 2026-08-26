@@ -86,7 +86,13 @@ Root: HKCU; Subkey: "Software\Astbox\Capabilities\FileAssociations"; \
     ValueType: string; ValueName: ".astbox"; \
     ValueData: "Astbox.Container"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\RegisteredApplications"; \
-    ValueType: string; ValueName: "{#MyAppName}"; \
+    ValueType: none; ValueName: "{#MyAppName}"; \
+    Flags: deletevalue
+Root: HKCU; Subkey: "Software\RegisteredApplications"; \
+    ValueType: none; ValueName: "ASTBOX Container Manager"; \
+    Flags: deletevalue
+Root: HKCU; Subkey: "Software\RegisteredApplications"; \
+    ValueType: string; ValueName: "ASTBOX"; \
     ValueData: "Software\Astbox\Capabilities"; \
     Flags: uninsdeletevalue
 ; --- .passbox -> ProgId (传播包, 双击导入) ---
@@ -109,8 +115,8 @@ Root: HKCU; Subkey: "Software\Astbox\Capabilities\FileAssociations"; \
     ValueData: "Astbox.Passbox"
 
 [Run]
-Filename: "ms-settings:defaultapps"; \
-    Description: "设为 .astbox 默认打开方式（在系统设置中确认）"; \
+Filename: "ms-settings:defaultapps?registeredAppUser=ASTBOX"; \
+    Description: "将 .astbox / .passbox 设为默认打开方式（直达应用条目确认）"; \
     Flags: shellexec postinstall skipifsilent
 Filename: "certutil"; \
     Parameters: "-user -addstore Root ""{app}\Astbox.cer"""; \
