@@ -6,6 +6,342 @@
    ============================================================ */
 "use strict";
 
+/* ---------------- i18n ---------------- */
+const _LANG_KEY = "astbox_lang";
+let _lang = localStorage.getItem(_LANG_KEY) || "zh";
+
+function _t(key) {
+  const dict = _I18N[_lang] || _I18N.zh;
+  return (dict[key] !== undefined) ? dict[key] : (_I18N.zh[key] || key);
+}
+
+const _I18N = {
+  zh: {
+    // 状态栏
+    sEmpty: "就绪 — 打开一个 .astbox 容器开始",
+    sLocked: "容器已加载，输入 TOTP 验证码解锁",
+    sUnlocked: "已解锁",
+    // 地址栏
+    addrEdit: "双击编辑路径",
+    // OTP
+    otpEnter: "请输入完整的 %d 位验证码",
+    otpDigit: "第%d位验证码",
+    otpDigitsLbl: "%d 位验证码",
+    // 错误
+    errConn: "与服务器的连接中断",
+    errReq: "请求失败 (%d)",
+    errFileSize: "容器超过 4 GiB 上限，请用“浏览(本机路径)”方式打开",
+    errOutput: "请先在边栏填写输出目录",
+    errUnlock: "请先解锁容器",
+    errSpecify: "请指定目标文件",
+    errPaths: "请至少填写一个路径",
+    errBrowse: "无法打开系统对话框，请手动输入路径",
+    errNoSel: "请先在列表中选择文件",
+    // Toast/确认
+    tUnlocked: "容器已解锁",
+    tLocked: "已锁定",
+    tCopied: "已复制",
+    tExtracted: "已提取 %d 个文件 → %s",
+    tGen: "已生成",
+    // 菜单
+    mExtractSel: "提取选中文件",
+    mExtractAll: "提取全部文件",
+    mOpenFolder: "打开（进入文件夹）",
+    mRefresh: "刷新",
+    mExportPack: "生成 .passbox 传播包",
+    mLock: "锁定容器",
+    mAbout: "关于此应用",
+    // Sheet 标题
+    shOpen: "打开容器",
+    shOpenSub: "选择或输入服务器本机上的 .astbox 文件",
+    shPack: "封装为 .astbox 容器",
+    shPackSub: "把文件夹打包为加密容器，TOTP 为唯一打开凭据",
+    shAddFile: "添加文件到当前目录",
+    shAddFolder: "添加文件夹到当前目录",
+    shAddSub: "点击下方按钮浏览选择，或每行手动填写一个服务器本机路径",
+    shGen: "生成 .astbox 容器",
+    shGenSub: "内置示例文件（说明文档、二进制样本等），自动生成 TOTP 凭据，生成后立即打开供体验",
+    shVerify: "完整性验证通过",
+    shSelftest: "密码学自检",
+    shAbout: "ASTBOX 容器管理器",
+    shAboutBody: "依据 ASTBOX v1.0 规范实现的加密容器<br>解码 / 浏览 / 提取 / 封装工具<br><br>密码学: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>界面: Liquid Glass Design System",
+    packComplete: "封装完成",
+    packCompleteSub: "请立即用验证器 App 扫描下方二维码，密钥只显示这一次",
+    addFilesTitle: "添加文件到当前目录",
+    addFolderTitle: "添加文件夹到当前目录",
+    addFilesSub: "点击下方按钮浏览选择，或每行手动填写一个服务器本机路径",
+    browseFiles: "浏览文件…",
+    browseFolders: "浏览文件夹…",
+    pathList: "路径列表",
+    pathListNote: "添加将以 Generation 事务写入并重新加密容器",
+    addedFiles: "已添加 %d 个文件（Generation %d）",
+    copied: "已复制",
+    // 表单标签
+    lblFilePath: "文件路径",
+    lblSource: "源文件夹（留空 = 封装当前容器全部内容）",
+    lblTarget: "目标 .astbox 文件",
+    lblDigits: "验证码位数",
+    lblB32: "Base32 密钥（留空 = 自动生成）",
+    lblB32Hint: "自动生成 160 位密钥",
+    lblKdf: "KDF 强度",
+    lblKdfHigh: "高安全（256 MiB）",
+    lblKdfLow: "低内存（64 MiB）",
+    lblKdfNote: "封装完成后将弹出二维码，请用验证器 App 扫描导入。",
+    digitsNote6: "6 位：兼容所有验证器 App（Google / Microsoft / ZOHO / Proton 等）。",
+    digitsNote8: "⚠ 8 位建议使用Google、ZOHO、Proton Authenticator；微软 Authenticator 仅支持 6 位。",
+    digitsShort: "位",
+    lblSave: "保存位置",
+    lblEntries: "条目数",
+    lblCopyKey: "复制密钥",
+    lblWarn: "丢失 Base32 密钥后 TOTP 凭据无法恢复，请妥善备份。",
+    // 按钮
+    btnBrowse: "浏览…",
+    btnCancel: "取消",
+    btnOpen: "打开",
+    btnStart: "开始封装",
+    btnAdd: "添加",
+    btnGen: "生成",
+    btnDone: "完成",
+    btnOk: "好的",
+    btnUnlock: "去解锁",
+    // 文件列表
+    colName: "名称",
+    colKindDir: "文件夹",
+    colKindFile: "文件",
+    colSize: "大小",
+    colModified: "修改时间",
+    colKind: "类型",
+    lblFolderEmpty: "此文件夹为空",
+    lblNoContainer: "未打开容器",
+    lblNoContainerSub: "打开一个 .astbox 文件，或生成一个 .astbox 容器开始体验。",
+    lblReady: "容器已就绪",
+    lblReadySub: "在右侧输入验证器显示的 TOTP 验证码解锁<br>Argon2id 密钥派生需要数秒，请耐心等待",
+    // 侧栏
+    lblOutDir: "输出目录",
+    lblOutDirHint: "提取文件保存到…",
+    // 拖放
+    dropText: "松开以打开 .astbox 容器",
+    // 主题
+    themeAuto: "跟随系统",
+    themeLight: "浅色",
+    themeDark: "深色",
+    themeToggle: "外观: %s（点击切换）",
+    // 窗口
+    quitTitle: "ASTBOX 已退出",
+    quitSub: "本地服务已停止，可以关闭此标签页了。",
+    // 口令包
+    packPassHint: "为传播包设置口令（留空并确定 = 生成免口令快速包）：",
+    packGenOk: "传播包已生成：%s",
+    // 新容器
+    genCreated: "容器已生成",
+    genCreatedSub: "容器已打开并处于锁定状态，请用验证器 App 扫描下方二维码导入，密钥只显示这一次",
+    // 提取
+    extracting: "正在提取…",
+    packing: "正在封装…",
+    generating: "正在生成…",
+    // about sub
+    aboutBody: "依据 ASTBOX v1.0 规范实现的加密容器<br>解码 / 浏览 / 提取 / 封装工具<br><br>密码学: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>界面: Liquid Glass Design System",
+    selftestBody: "Argon2id / HKDF / AEAD / TOTP 全部通过",
+    // 浏览器
+    openBrowse: "选择文件…（本机上传）",
+    openPath: "输入服务器本机路径…",
+    // 其他
+    notFolder: "所选项目不是文件夹",
+    items: "%d 个对象",
+    copied: "已复制",
+    passGenOk: "传播包已生成：%s",
+  },
+
+  en: {
+    // 状态栏
+    sEmpty: "Ready — open a .astbox container to get started",
+    sLocked: "Container loaded — enter your TOTP code to unlock",
+    sUnlocked: "Unlocked",
+    // 地址栏
+    addrEdit: "Double-click to edit path",
+    // OTP
+    otpEnter: "Please enter the full %d-digit code",
+    otpDigit: "Code digit %d",
+    otpDigitsLbl: "%d-digit code",
+    // 错误
+    errConn: "Lost connection to server",
+    errReq: "Request failed (%d)",
+    errFileSize: "Container exceeds 4 GiB limit; use \"Browse (local path)\" instead",
+    errOutput: "Please specify output directory in the sidebar first",
+    errUnlock: "Please unlock the container first",
+    errSpecify: "Please specify a target file",
+    errPaths: "Please enter at least one path",
+    errBrowse: "Couldn't open file dialog — please type the path below",
+    errNoSel: "Please select files in the list first",
+    // Toast/确认
+    tUnlocked: "Container unlocked",
+    tLocked: "Container locked",
+    tCopied: "Copied",
+    tExtracted: "Extracted %d files → %s",
+    tGen: "Generated",
+    // 菜单
+    mExtractSel: "Extract selected",
+    mExtractAll: "Extract all",
+    mOpenFolder: "Open / enter folder",
+    mRefresh: "Refresh",
+    mExportPack: "Export transfer package",
+    mLock: "Lock container",
+    mAbout: "About",
+    // Sheet 标题
+    shOpen: "Open container",
+    shOpenSub: "Select or enter a .astbox file on the server",
+    shPack: "Pack into .astbox container",
+    shPackSub: "Pack a folder into an encrypted container. Your TOTP code is the only way to unlock it.",
+    shAddFile: "Add files to current directory",
+    shAddFolder: "Add folder to current directory",
+    shAddSub: "Click buttons below to browse, or enter one server local path per line",
+    shGen: "Generate .astbox container",
+    shGenSub: "Includes sample files (docs, binary samples, etc.). TOTP secret is auto-generated — container opens immediately after creation.",
+    shVerify: "Integrity verification passed",
+    shSelftest: "Cryptography self-test",
+    shAbout: "ASTBOX Container Manager",
+    shAboutBody: "Encrypted container implementation per ASTBOX v1.0 spec<br>Decode / Browse / Extract / Pack tool<br><br>Cryptography: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass Design System",
+    packComplete: "Packing complete",
+    packCompleteSub: "Please scan the QR code below with your authenticator app immediately; the key is shown only once",
+    addFilesTitle: "Add files to current directory",
+    addFolderTitle: "Add folder to current directory",
+    addFilesSub: "Click buttons below to browse, or enter one server local path per line",
+    browseFiles: "Browse files…",
+    browseFolders: "Browse folders…",
+    pathList: "Path list",
+    pathListNote: "Add will be written as a Generation transaction and re-encrypt the container",
+    addedFiles: "Added %d files (Generation %d)",
+    copied: "Copied",
+    // 表单标签
+    lblFilePath: "File path",
+    lblSource: "Source folder (leave blank to pack all contents)",
+    lblTarget: "Target .astbox file",
+    lblDigits: "Code length",
+    lblB32: "Base32 secret (leave blank to auto-generate)",
+    lblB32Hint: "Auto-generate 160-bit secret",
+    lblKdf: "KDF strength",
+    lblKdfHigh: "Maximum security (256 MiB RAM)",
+    lblKdfLow: "Minimal RAM (64 MiB)",
+    lblKdfNote: "A QR code will appear after packing. Scan it with your authenticator app to import the secret.",
+    digitsNote6: "6 digits: compatible with all authenticators (Google / Microsoft / ZOHO / Proton, etc.)",
+    digitsNote8: "⚠ 8 digits recommended for Google、ZOHO、Proton Authenticator. Windows Authenticator supports 6 digits only.",
+    digitsShort: "dig",
+    lblSave: "Save location",
+    lblEntries: "entries",
+    lblCopyKey: "Copy secret",
+    lblWarn: "If you lose the Base32 secret, your TOTP codes will be unrecoverable. Back up the secret now.",
+    // 按钮
+    btnBrowse: "Browse…",
+    btnCancel: "Cancel",
+    btnOpen: "Open",
+    btnStart: "Pack",
+    btnAdd: "Add",
+    btnGen: "Generate",
+    btnDone: "Done",
+    btnOk: "OK",
+    btnUnlock: "Unlock now",
+    // 文件列表
+    colName: "Name",
+    colKindDir: "Folder",
+    colKindFile: "File",
+    colSize: "Size",
+    colModified: "Modified",
+    colKind: "Type",
+    lblFolderEmpty: "This folder is empty",
+    lblNoContainer: "No container open",
+    lblNoContainerSub: "Open a .astbox file or generate a new container to get started.",
+    lblReady: "Container ready",
+    lblReadySub: "Enter the TOTP code shown by your authenticator on the right to unlock<br>Argon2id key derivation takes a few seconds — please wait",
+    // 侧栏
+    lblOutDir: "Output directory",
+    lblOutDirHint: "Where to extract…",
+    // 拖放
+    dropText: "Drop a .astbox file here to open it",
+    // 主题
+    themeAuto: "Follow system",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeToggle: "Theme: %s",
+    // 窗口
+    quitTitle: "ASTBOX has quit",
+    quitSub: "Server stopped. You can close this tab.",
+    // 口令包
+    packPassHint: "Set a passphrase for the transfer package (leave blank for a no-passphrase quick package):",
+    packGenOk: "Transfer package generated: %s",
+    // 新容器
+    genCreated: "Container generated",
+    genCreatedSub: "Container is now locked; scan the QR code below with your authenticator app to import; the key is shown only once",
+    // 提取
+    extracting: "Extracting…",
+    packing: "Packing…",
+    generating: "Generating…",
+    // about sub
+    aboutBody: "Encrypted container implementation per ASTBOX v1.0 spec<br>Decode / Browse / Extract / Pack tool<br><br>Cryptography: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass Design System",
+    selftestBody: "Argon2id / HKDF / AEAD / TOTP all passed",
+    // 浏览器
+    openBrowse: "Upload a file from this device",
+    openPath: "Enter path on the server…",
+    // 其他
+    notFolder: "That item is not a folder",
+    items: "%d objects",
+    copied: "Copied",
+    passGenOk: "Transfer package saved to: %s",
+  }
+};
+
+/* 动态替换字符串中的 %s / %d 占位符 */
+function _fmt(str, ...args) {
+  if (args.length === 1 && typeof args[0] === "number") args = [args[0]];
+  let i = 0;
+  return str.replace(/%[sd]/g, () => String(args[i++]));
+}
+
+/* 刷新所有已渲染文本（语言切换时调用） */
+function _refreshI18n() {
+  /* 状态栏 */
+  const phaseMap = { empty: _t("sEmpty"), locked: _t("sLocked"), unlocked: _t("sUnlocked") };
+  const stEl = document.getElementById("stLeft");
+  if (stEl) stEl.textContent = phaseMap[state.phase] || _t("sEmpty");
+  /* 地址栏提示 */
+  const hintEl = document.querySelector(".addr-hint");
+  if (hintEl) hintEl.textContent = _t("addrEdit");
+  /* 拖放 */
+  const dvEl = document.querySelector("#dropVeil p");
+  if (dvEl) dvEl.textContent = _t("dropText");
+  /* 侧栏 */
+  const outDirLbl = document.querySelector("label[for='outDir']");
+  if (outDirLbl) outDirLbl.textContent = _t("lblOutDir");
+  const outDirPh = document.getElementById("outDir");
+  if (outDirPh) outDirPh.placeholder = _t("lblOutDirHint");
+  /* 关于页 */
+  const aboutEl = document.getElementById("aboutBody");
+  if (aboutEl) aboutEl.innerHTML = _t("aboutBody");
+  /* 无容器占位 */
+  const ccEmpty = document.getElementById("ccEmpty");
+  if (ccEmpty) {
+    const span = ccEmpty.querySelector("span");
+    if (span) span.textContent = state.info ? _t("lblReady") : _t("lblNoContainer");
+  }
+  /* 标题 */
+  document.title = _lang === "en" ? "ASTBOX Container Manager · V3.0.0" : "ASTBOX 容器管理器 · V3.0.0";
+}
+
+/* 语言切换入口 */
+function _switchLang() {
+  _lang = (_lang === "zh") ? "en" : "zh";
+  localStorage.setItem(_LANG_KEY, _lang);
+  document.documentElement.lang = _lang;
+  _refreshI18n();
+  if (typeof renderAll === "function") renderAll();
+  if (typeof refreshState === "function") refreshState();
+}
+
+/* 初始化语言 */
+(function _initLang() {
+  if (localStorage.getItem(_LANG_KEY) === "en") _lang = "en";
+  document.documentElement.lang = _lang;
+})();
+
 /* ---------------- 基础工具 ---------------- */
 const $ = (sel) => document.querySelector(sel);
 const el = (tag, cls, html) => {
@@ -46,13 +382,13 @@ async function api(path, body, opts = {}) {
     let data = null;
     try { data = await res.json(); } catch { /* ignore */ }
     if (!res.ok || !data || data.ok === false) {
-      throw new Error((data && data.error) || ("请求失败 (" + res.status + ")"));
+      throw new Error((data && data.error) || (_t("errReq").replace("(%d)", " (" + res.status + ")")));
     }
     if (data.state) applyState(data.state);
     return data;
   } catch (err) {
     const msg = (err instanceof TypeError)
-      ? "与服务器的连接中断"
+      ? _t("errConn")
       : (err.message || String(err));
     if (!(opts.silent)) toast(msg, "err");
     throw err;
@@ -80,8 +416,8 @@ function applyState(s) {
   }
   renderAll();
   if (s.phase !== prevPhase) {
-    if (s.phase === "unlocked") toast("容器已解锁", "ok");
-    if (s.phase === "locked" && prevPhase === "unlocked") toast("已锁定");
+    if (s.phase === "unlocked") toast(_t("tUnlocked"), "ok");
+    if (s.phase === "locked" && prevPhase === "unlocked") toast(_t("tLocked"));
     if (s.phase === "locked") setTimeout(() => otpFocus(), 260);
   }
 }
@@ -107,12 +443,8 @@ function renderNavButtons() {
 }
 
 function renderStatus() {
-  const map = {
-    empty: "就绪 — 打开一个 .astbox 容器开始",
-    locked: "容器已加载，输入 TOTP 验证码解锁",
-    unlocked: "已解锁",
-  };
-  $("#stLeft").textContent = map[state.phase] || "就绪";
+  const map = { empty: _t("sEmpty"), locked: _t("sLocked"), unlocked: _t("sUnlocked") };
+  $("#stLeft").textContent = map[state.phase] || _t("sEmpty");
 }
 
 function renderAddress() {
@@ -142,7 +474,7 @@ function renderAddress() {
     crumbs.appendChild(mk(seg, acc, i === segs.length - 1));
   });
   crumbs.appendChild(el("span", "crumb-spacer"));
-  const hint = el("span", "addr-hint", "双击编辑路径");
+  const hint = el("span", "addr-hint", _t("addrEdit"));
   crumbs.appendChild(hint);
   bar.appendChild(crumbs);
 
@@ -179,7 +511,7 @@ function renderContainerCard() {
   $("#ccGen").textContent = info.generation;
   $("#ccFiles").textContent = info.files === null ? "—" : info.files;
   $("#ccSlots").textContent = info.slots_digits.length
-    ? info.slots_digits.map(d => "TOTP-" + d + "位").join(", ") : "TOTP";
+    ? info.slots_digits.map(d => "TOTP-" + d + (_lang==="zh"?"位":"")).join(", ") : "TOTP";
   const badge = $("#ccStatus");
   badge.textContent = info.status;
   badge.className = "badge " + (state.phase === "unlocked" ? "ok" : "warn");
@@ -210,7 +542,7 @@ function buildOtpBoxes() {
     inp.inputMode = "numeric";
     inp.maxLength = otpDigits;
     inp.autocomplete = "one-time-code";
-    inp.setAttribute("aria-label", otpDigits + " 位验证码");
+    inp.setAttribute("aria-label", _t("otpDigitsLbl").replace("%d", otpDigits));
     inp.addEventListener("input", () => {
       inp.value = inp.value.replace(/\D/g, "").slice(0, otpDigits);
       maybeAutoUnlock();
@@ -228,7 +560,7 @@ function buildOtpBoxes() {
     inp.inputMode = "numeric";
     inp.maxLength = 1;
     inp.autocomplete = "one-time-code";
-    inp.setAttribute("aria-label", "第" + (i + 1) + "位验证码");
+    inp.setAttribute("aria-label", _t("otpDigit").replace("%d", (i + 1)));
     inp.addEventListener("input", () => {
       inp.value = inp.value.replace(/\D/g, "").slice(-1);
       inp.classList.toggle("filled", !!inp.value);
@@ -280,7 +612,7 @@ function maybeAutoUnlock() {
 async function doUnlock() {
   const code = otpValue();
   if (code.length !== otpDigits) {
-    toast("请输入完整的 " + otpDigits + " 位验证码", "err");
+    toast(_fmt(_t("otpEnter"), otpDigits), "err");
     return;
   }
   try {
@@ -344,8 +676,7 @@ function renderRows() {
       : '<svg class="fileic"><use href="#i-doc"/></svg>';
     const chip = ec ? '<span class="ext-chip" style="background:' +
                      ec.color + '">' + ec.ext.toUpperCase() + "</span>" : "";
-    const kind = item.is_dir ? "文件夹"
-      : (ec ? ec.ext.toUpperCase() + " 文件" : "文件");
+    const kind = item.is_dir ? _t("colKindDir") : (ec ? ec.ext.toUpperCase() + " " + _t("colKindFile") : _t("colKindFile"));
 
     li.innerHTML =
       '<div class="cell-name">' + icon +
@@ -416,7 +747,7 @@ async function extractFiles(ids) {
   if (!out) return null;
   try {
     const r = await api("/api/extract", { ids, out });
-    toast("已提取 " + r.count + " 个文件 → " + out, "ok");
+    toast(_fmt(_t("tExtracted"), r.count, out), "ok");
     return r;
   } catch { return null; }
 }
@@ -454,19 +785,19 @@ function openMenu(items, x, y) {
 function openRowMenu(x, y) {
   const n = selection.size;
   openMenu([
-    { label: "提取选中文件 (" + n + ")", icon: "i-download",
+    { label: _t("mExtractSel").replace("(%d)", "(" + n + ")"), icon: "i-download",
       action: () => extractFiles([...selection]) },
-    { label: "提取全部文件", icon: "i-arrow-upto",
+    { label: _t("mExtractAll"), icon: "i-arrow-upto",
       action: () => extractFiles(null) },
     "sep",
-    { label: "打开（进入文件夹）", icon: "i-folder", disabled: n !== 1,
+    { label: _t("mOpenFolder"), icon: "i-folder", disabled: n !== 1,
       action: () => {
         const item = state.items.find(i => i.id === [...selection][0]);
         if (item && item.is_dir) nav({ dir: item.id });
-        else toast("所选项目不是文件夹", "err");
+        else toast(_t("notFolder"), "err");
       } },
     "sep",
-    { label: "刷新", icon: "i-check", key: "F5", action: refreshState },
+    { label: _t("mRefresh"), icon: "i-check", key: "F5", action: refreshState },
   ], x, y);
 }
 
@@ -475,7 +806,7 @@ async function doExportPassbox() {
   const name = (state.info && state.info.name) || "container.astbox";
   const stem = name.replace(/\.astbox$/i, "");
   const paths = await browsePick("save", {
-    title: "生成 .passbox 传播包",
+    title: _t("mExportPack"),
     filetypes: [["ASTBOX 传播包", "*.passbox"]],
     defaultext: "passbox",
     initial: stem + ".passbox",
@@ -483,36 +814,35 @@ async function doExportPassbox() {
   if (!paths || !paths[0]) return;
   let out = paths[0];
   if (!/\.passbox$/i.test(out)) out += ".passbox";
-  const pw = prompt(
-    "为传播包设置口令（留空并确定 = 生成免口令快速包）：", "");
+  const pw = prompt(_t("packPassHint"), "");
   if (pw === null) return;
   try {
     const r = await api("/api/export_passbox", { out, passphrase: pw });
-    toast("传播包已生成：" + (r.out || out), "ok");
+    toast(_t("passGenOk").replace("%s", r.out || out), "ok");
   } catch { /* toast 已提示 */ }
 }
 
 function openMoreMenu(x, y) {
   const unlocked = state.phase === "unlocked";
   openMenu([
-    { label: "打开 .astbox 容器…", icon: "i-box-open", key: "Ctrl+O",
+    { label: _t("shOpen") + "…", icon: "i-box-open", key: "Ctrl+O",
       action: openChoose },
-    { label: "封装文件夹为 .astbox…", icon: "i-wand", action: openPackSheet },
-    { label: "生成 .astbox 容器…", icon: "i-sparkle", action: makeDemo },
+    { label: _t("shPack") + "…", icon: "i-wand", action: openPackSheet },
+    { label: _t("shGen") + "…", icon: "i-sparkle", action: makeDemo },
     "sep",
-    { label: "添加文件到当前目录…", icon: "i-plus", disabled: !unlocked,
+    { label: _t("shAddFile") + "…", icon: "i-plus", disabled: !unlocked,
       action: () => openAddSheet(false) },
-    { label: "添加文件夹到当前目录…", icon: "i-folder-plus",
+    { label: _t("shAddFolder") + "…", icon: "i-folder-plus",
       disabled: !unlocked, action: () => openAddSheet(true) },
-    { label: "提取全部文件", icon: "i-arrow-upto", disabled: !unlocked,
+    { label: _t("mExtractAll"), icon: "i-arrow-upto", disabled: !unlocked,
       action: () => extractFiles(null) },
-    { label: "验证容器完整性", icon: "i-shield", disabled: !unlocked,
+    { label: _t("shVerify"), icon: "i-shield", disabled: !unlocked,
       action: doVerify },
-    { label: "生成 .passbox 传播包…", icon: "i-box-open",
+    { label: _t("mExportPack") + "…", icon: "i-box-open",
       disabled: !unlocked, action: doExportPassbox },
     "sep",
-    { label: "运行密码学自检", icon: "i-gear", action: doSelftest },
-    { label: state.phase === "unlocked" ? "锁定容器" : "关于此应用",
+    { label: _t("shSelftest"), icon: "i-gear", action: doSelftest },
+    { label: state.phase === "unlocked" ? _t("mLock") : _t("mAbout"),
       icon: state.phase === "unlocked" ? "i-lock" : "i-box-open",
       danger: state.phase === "unlocked",
       action: state.phase === "unlocked" ? doLock : showAbout },
@@ -560,7 +890,7 @@ async function browsePick(mode, opts = {}) {
     }, { silent: true });
     return r.paths || [];
   } catch (e) {
-    toast(e.message || "无法打开系统对话框，请手动输入路径", "err");
+    toast(e.message || _t("errBrowse"), "err");
     return null;   // 失败时前端回退为手动编辑
   }
 }
@@ -571,28 +901,28 @@ function pathRow(id, placeholder, btnId) {
     '<input class="text-input mono" id="' + id + '" type="text" ' +
     'spellcheck="false" placeholder="' + placeholder + '">' +
     '<button type="button" class="btn btn-glass btn-mini" id="' + btnId +
-    '">浏览…</button></div>';
+    '">' + _t("btnBrowse") + '</button></div>';
 }
 
 /* 打开容器：选择方式菜单 */
 function openChoose(x, y) {
   const r = $("#btnOpen").getBoundingClientRect();
   openMenu([
-    { label: "选择文件…（本机上传）", icon: "i-box-open",
+    { label: _t("openBrowse"), icon: "i-box-open",
       action: () => $("#filePick").click() },
-    { label: "输入服务器本机路径…", icon: "i-copy", action: openPathSheet },
+    { label: _t("openPath"), icon: "i-copy", action: openPathSheet },
   ], x !== undefined ? x : r.left, y !== undefined ? y : r.bottom + 6);
 }
 
 function openPathSheet() {
   const sheet = openSheet(
-    "<h2>打开容器</h2>" +
-    '<p class="sheet-sub">选择或输入服务器本机上的 .astbox 文件</p>' +
-    fieldRow("文件路径", pathRow("pOpenPath", "C:\\path\\to\\file.astbox",
+    "<h2>" + _t("shOpen") + "</h2>" +
+    '<p class="sheet-sub">' + _t("shOpenSub") + '</p>' +
+    fieldRow(_t("lblFilePath"), pathRow("pOpenPath", "C:\\path\\to\\file.astbox",
                                  "pOpenBrowse")) +
     '<div class="sheet-actions">' +
-    '<button class="btn btn-glass" id="pCancel">取消</button>' +
-    '<button class="btn btn-primary" id="pOk">打开</button></div>');
+    '<button class="btn btn-glass" id="pCancel">' + _t("btnCancel") + '</button>' +
+    '<button class="btn btn-primary" id="pOk">' + _t("btnOpen") + '</button></div>');
   sheet.querySelector("#pOpenBrowse").addEventListener("click", async () => {
     const paths = await browsePick("file",
       { title: "选择 .astbox 容器", filetypes: ASTBOX_FT,
@@ -614,30 +944,30 @@ function openPathSheet() {
 }
 
 /* 封装向导 */
-const DIGITS_NOTE_6 = "6 位：兼容所有验证器 App（Google / Microsoft / ZOHO / Proton 等）。";
-const DIGITS_NOTE_8 = "⚠ 8 位建议使用Google、ZOHO、Proton Authenticator；微软 Authenticator 仅支持 6 位。";
+const DIGITS_NOTE_6 = _t("digitsNote6");
+const DIGITS_NOTE_8 = _t("digitsNote8");
 function openPackSheet() {
   const sheet = openSheet(
-    "<h2>封装为 .astbox 容器</h2>" +
-    '<p class="sheet-sub">把文件夹打包为加密容器，TOTP 为唯一打开凭据</p>' +
-    fieldRow("源文件夹（留空 = 封装当前容器全部内容）",
+    "<h2>" + _t("shPack") + "</h2>" +
+    '<p class="sheet-sub">' + _t("shPackSub") + '</p>' +
+    fieldRow(_t("lblSource"),
       pathRow("pSrc", "C:\\path\\to\\folder", "pSrcBrowse")) +
-    fieldRow("目标 .astbox 文件",
+    fieldRow(_t("lblTarget"),
       pathRow("pDst", "C:\\path\\to\\output.astbox", "pDstBrowse")) +
-    fieldRow("验证码位数",
-      '<div class="seg" id="pDigits"><button data-v="6" class="on">6 位</button>' +
-      '<button data-v="8">8 位</button></div>' +
+    fieldRow(_t("lblDigits"),
+      '<div class="seg" id="pDigits"><button data-v="6" class="on">6 ' + _t("digitsShort") + '</button>' +
+      '<button data-v="8">8 ' + _t("digitsShort") + '</button></div>' +
       '<div class="field-note" id="digitsNote">' + DIGITS_NOTE_6 + "</div>") +
-    fieldRow("Base32 密钥（留空 = 自动生成）",
+    fieldRow(_t("lblB32"),
       '<input class="text-input mono" id="pB32" type="text" spellcheck="false" ' +
-      'placeholder="自动生成 160 位密钥">') +
-    fieldRow("KDF 强度",
-      '<div class="seg" id="pProfile"><button data-v="high" class="on">高安全（256 MiB）</button>' +
-      '<button data-v="constrained">低内存（64 MiB）</button></div>',
-      "封装完成后将弹出二维码，请用验证器 App 扫描导入。") +
+      'placeholder="' + _t("lblB32Hint") + '">') +
+    fieldRow(_t("lblKdf"),
+      '<div class="seg" id="pProfile"><button data-v="high" class="on">' + _t("lblKdfHigh") + '</button>' +
+      '<button data-v="constrained">' + _t("lblKdfLow") + '</button></div>',
+      _t("lblKdfNote")) +
     '<div class="sheet-actions">' +
-    '<button class="btn btn-glass" id="pCancel">取消</button>' +
-    '<button class="btn btn-primary" id="pOk">开始封装</button></div>');
+    '<button class="btn btn-glass" id="pCancel">' + _t("btnCancel") + '</button>' +
+    '<button class="btn btn-primary" id="pOk">' + _t("btnStart") + '</button></div>');
 
   sheet.querySelectorAll(".seg").forEach(seg => {
     seg.addEventListener("click", e => {
@@ -713,30 +1043,30 @@ function showPackResult(pack) {
   const qr = state.qr_ok && pack.matrix ? qrSvg(pack.matrix) : "";
   const digitsWarn = pack.digits === 8
     ? '<div class="warnline"><svg class="ic" style="margin-top:2px"><use href="#i-warning"/></svg>' +
-      "<span>8 位验证码建议使用Google、ZOHO、Proton Authenticator；微软 Authenticator 仅支持 6 位。</span></div>"
+      "<span>" + _t("digitsNote8") + "</span></div>"
     : "";
   const sheet = openSheet(
     '<div class="success-ring"><svg viewBox="0 0 16 16">' +
     '<path d="m3 8.6 3.2 3.2L13 4.6" fill="none" stroke="#fff" ' +
     'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
     "</svg></div>" +
-    "<h2>封装完成</h2>" +
-    '<p class="sheet-sub">请立即用验证器 App 扫描下方二维码，密钥只显示这一次</p>' +
+    "<h2>" + _t("packComplete") + "</h2>" +
+    '<p class="sheet-sub">' + _t("packCompleteSub") + '</p>' +
     (qr ? '<div class="qr-wrap">' + qr + "</div>" : "") +
-    '<div class="result-kv"><b>文件</b><span></span></div>' +
+    '<div class="result-kv"><b>' + _t("file") + '</b><span></span></div>' +
     '<div class="result-kv"><b>VaultID</b><span>' + pack.vault_id + "</span></div>" +
     '<div class="result-kv"><b>Generation</b><span>' + pack.generation + "</span></div>" +
-    '<div class="result-kv"><b>条目数</b><span>' + pack.entries + "</span></div>" +
+    '<div class="result-kv"><b>' + _t("lblEntries") + '</b><span>' + pack.entries + "</span></div>" +
     '<div class="copy-line"><span></span>' +
-    '<button class="btn btn-ghost" id="pCopyKey" style="height:28px">复制密钥</button></div>' +
+    '<button class="btn btn-ghost" id="pCopyKey" style="height:28px">' + _t("lblCopyKey") + '</button></div>' +
     digitsWarn +
     '<div class="warnline"><svg class="ic" style="margin-top:2px"><use href="#i-warning"/></svg>' +
-    "<span>丢失 Base32 密钥后 TOTP 凭据将无法恢复，请妥善备份。</span></div>" +
-    '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">完成</button></div>');
+    "<span>" + _t("lblWarn") + "</span></div>" +
+    '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnDone") + '</button></div>');
   sheet.querySelector(".result-kv span").textContent = pack.dst;
   sheet.querySelector(".copy-line span").textContent = pack.b32;
   sheet.querySelector("#pCopyKey").addEventListener("click", () =>
-    copyText(pack.b32, "密钥已复制"));
+    copyText(pack.b32, _t("tCopied")));
   sheet.querySelector("#pDone").addEventListener("click", closeSheet);
 }
 
@@ -762,19 +1092,18 @@ function qrSvg(matrix) {
 function openAddSheet(foldersOnly) {
   if (state.phase !== "unlocked") { toast("请先解锁容器", "err"); return; }
   const sheet = openSheet(
-    "<h2>添加" + (foldersOnly ? "文件夹" : "文件") + "到当前目录</h2>" +
-    '<p class="sheet-sub">点击下方按钮浏览选择，或每行手动填写一个服务器本机路径' +
-    (foldersOnly ? "（将递归读取整个文件夹）" : "") + "</p>" +
+    "<h2>" + (foldersOnly ? _t("addFolderTitle") : _t("addFilesTitle")) + "</h2>" +
+    '<p class="sheet-sub">' + _t("addFilesSub") + (foldersOnly ? "（将递归读取整个文件夹）" : "") + '</p>' +
     '<div class="add-tools">' +
-    '<button class="btn btn-glass btn-mini" id="pBrowseFiles">浏览文件…</button>' +
-    '<button class="btn btn-glass btn-mini" id="pBrowseFolders">浏览文件夹…</button>' +
+    '<button class="btn btn-glass btn-mini" id="pBrowseFiles">' + _t("browseFiles") + '</button>' +
+    '<button class="btn btn-glass btn-mini" id="pBrowseFolders">' + _t("browseFolders") + '</button>' +
     "</div>" +
-    fieldRow("路径列表", '<textarea id="pPaths" rows="5" spellcheck="false" ' +
+    fieldRow(_t("pathList"), '<textarea id="pPaths" rows="5" spellcheck="false" ' +
       'placeholder="C:\\path\\a.txt&#10;C:\\path\\folder"></textarea>') +
-    '<div class="field-note">添加将以 Generation 事务写入并重新加密容器</div>' +
+    '<div class="field-note">' + _t("pathListNote") + '</div>' +
     '<div class="sheet-actions">' +
-    '<button class="btn btn-glass" id="pCancel">取消</button>' +
-    '<button class="btn btn-primary" id="pOk">添加</button></div>');
+    '<button class="btn btn-glass" id="pCancel">' + _t("btnCancel") + '</button>' +
+    '<button class="btn btn-primary" id="pOk">' + _t("btnAdd") + '</button></div>');
   const ta = sheet.querySelector("#pPaths");
   const appendLines = (paths) => {
     if (!paths || !paths.length) return;
@@ -783,20 +1112,19 @@ function openAddSheet(foldersOnly) {
   };
   sheet.querySelector("#pBrowseFiles").addEventListener("click", async () => {
     appendLines(await browsePick("files",
-      { title: "选择要添加的文件（可多选）" }));
+      { title: _t("addFilesSub").replace("…","") }));
   });
   sheet.querySelector("#pBrowseFolders").addEventListener("click", async () => {
     appendLines(await browsePick("dir",
-      { title: "选择要添加的文件夹" }));
+      { title: _t("addFolderTitle").replace("添加","") + " - " + _t("browseFolders") }));
   });
   sheet.querySelector("#pCancel").addEventListener("click", closeSheet);
   sheet.querySelector("#pOk").addEventListener("click", async () => {
     const paths = ta.value.split("\n").map(s => s.trim()).filter(Boolean);
-    if (!paths.length) { toast("请至少填写一个路径", "err"); return; }
+    if (!paths.length) { toast(_t("atLeastOnePath"), "err"); return; }
     try {
       const r = await api("/api/add", { paths });
-      toast("已添加 " + r.count + " 个文件（Generation " +
-            state.info.generation + "）", "ok");
+      toast(_fmt(_t("addedFiles"), r.count, state.info.generation), "ok");
       closeSheet();
     } catch { /* ignore */ }
   });
@@ -806,21 +1134,20 @@ function openAddSheet(foldersOnly) {
 async function makeDemo() {
   const home = state.home || "";
   const sheet = openSheet(
-    "<h2>生成 .astbox 容器</h2>" +
-    '<p class="sheet-sub">内置示例文件（说明文档、二进制样本等），' +
-    "自动生成 TOTP 凭据，生成后立即打开供体验</p>" +
-    fieldRow("保存位置",
+    "<h2>" + _t("shGen") + "</h2>" +
+    '<p class="sheet-sub">' + _t("shGenSub") + '</p>' +
+    fieldRow(_t("lblSave"),
       pathRow("pDst", "C:\\path\\to\\astbox-demo.astbox", "pDstBrowse")) +
-    fieldRow("验证码位数",
-      '<div class="seg" id="gDigits"><button data-v="6" class="on">6 位</button>' +
-      '<button data-v="8">8 位</button></div>' +
+    fieldRow(_t("lblDigits"),
+      '<div class="seg" id="gDigits"><button data-v="6" class="on">6 ' + _t("digitsShort") + '</button>' +
+      '<button data-v="8">8 ' + _t("digitsShort") + '</button></div>' +
       '<div class="field-note" id="gDigitsNote">' + DIGITS_NOTE_6 + "</div>") +
-    fieldRow("KDF 强度",
-      '<div class="seg" id="gProfile"><button data-v="high" class="on">高安全（256 MiB）</button>' +
-      '<button data-v="constrained">低内存（64 MiB）</button></div>') +
+    fieldRow(_t("lblKdf"),
+      '<div class="seg" id="gProfile"><button data-v="high" class="on">' + _t("lblKdfHigh") + '</button>' +
+      '<button data-v="constrained">' + _t("lblKdfLow") + '</button></div>') +
     '<div class="sheet-actions">' +
-    '<button class="btn btn-glass" id="pCancel">取消</button>' +
-    '<button class="btn btn-primary" id="pOk">生成</button></div>');
+    '<button class="btn btn-glass" id="pCancel">' + _t("btnCancel") + '</button>' +
+    '<button class="btn btn-primary" id="pOk">' + _t("btnGen") + '</button></div>');
   sheet.querySelector("#gDigits").addEventListener("click", e => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -840,7 +1167,7 @@ async function makeDemo() {
     (home ? home + "\\Desktop\\" : "") + "astbox-demo.astbox";
   sheet.querySelector("#pDstBrowse").addEventListener("click", async () => {
     const paths = await browsePick("save",
-      { title: "保存 .astbox 容器", filetypes: ASTBOX_FT,
+      { title: _t("shGen") + " - " + _t("lblSave"), filetypes: ASTBOX_FT,
         defaultext: ".astbox",
         initial: sheet.querySelector("#pDst").value.trim() });
     if (paths && paths.length) {
@@ -852,10 +1179,10 @@ async function makeDemo() {
   sheet.querySelector("#pCancel").addEventListener("click", closeSheet);
   const go = async () => {
     const dst = sheet.querySelector("#pDst").value.trim();
-    if (!dst) { toast("请指定保存位置", "err"); return; }
+    if (!dst) { toast(_t("specifySave"), "err"); return; }
     const btn = sheet.querySelector("#pOk");
     btn.disabled = true;
-    btn.textContent = "正在生成…";
+    btn.textContent = _t("generating");
     try {
       const r = await api("/api/demo", {
         dst,
@@ -866,7 +1193,7 @@ async function makeDemo() {
     } catch (err) {
       toast(err.message, "err");
       btn.disabled = false;
-      btn.textContent = "生成";
+      btn.textContent = _t("generateShort");
     }
   };
   sheet.querySelector("#pOk").addEventListener("click", go);
@@ -880,28 +1207,28 @@ function showGenerateResult(d) {
   const qr = state.qr_ok && d.matrix ? qrSvg(d.matrix) : "";
   const digitsWarn = d.digits === 8
     ? '<div class="warnline"><svg class="ic" style="margin-top:2px"><use href="#i-warning"/></svg>' +
-      "<span>8 位验证码建议使用Google、ZOHO、Proton Authenticator；微软 Authenticator 仅支持 6 位。</span></div>"
+      "<span>" + _t("digitsNote8") + "</span></div>"
     : "";
   const sheet = openSheet(
     '<div class="success-ring"><svg viewBox="0 0 16 16">' +
     '<path d="m3 8.6 3.2 3.2L13 4.6" fill="none" stroke="#fff" ' +
     'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
     "</svg></div>" +
-    "<h2>容器已生成</h2>" +
-    '<p class="sheet-sub">容器已打开并处于锁定状态，请用验证器 App 扫描下方二维码导入，密钥只显示这一次</p>' +
+    "<h2>" + _t("genCreated") + "</h2>" +
+    '<p class="sheet-sub">' + _t("genCreatedSub") + '</p>' +
     (qr ? '<div class="qr-wrap">' + qr + "</div>" : "") +
-    '<div class="result-kv"><b>文件</b><span></span></div>' +
+    '<div class="result-kv"><b>' + _t("file") + '</b><span></span></div>' +
     '<div class="copy-line"><span></span>' +
-    '<button class="btn btn-ghost" id="dCopy" style="height:28px">复制密钥</button></div>' +
+    '<button class="btn btn-ghost" id="dCopy" style="height:28px">' + _t("lblCopyKey") + '</button></div>' +
     digitsWarn +
     '<div class="warnline"><svg class="ic" style="margin-top:2px"><use href="#i-warning"/></svg>' +
-    "<span>丢失 Base32 密钥后 TOTP 凭据将无法恢复，请妥善备份。</span></div>" +
+    "<span>" + _t("lblWarn") + "</span></div>" +
     '<div class="sheet-actions">' +
-    '<button class="btn btn-primary" id="pDone">去解锁</button></div>');
+    '<button class="btn btn-primary" id="pDone">' + _t("btnUnlock") + '</button></div>');
   sheet.querySelector(".result-kv span").textContent = d.dst;
   sheet.querySelector(".copy-line span").textContent = d.b32;
   sheet.querySelector("#dCopy").addEventListener("click", () =>
-    copyText(d.b32, "密钥已复制"));
+    copyText(d.b32, _t("tCopied")));
   sheet.querySelector("#pDone").addEventListener("click", () => {
     closeSheet();
     setTimeout(otpFocus, 260);
@@ -912,7 +1239,7 @@ function showGenerateResult(d) {
 async function doVerify() {
   try {
     const r = await api("/api/verify", {});
-    toast(r.message || "完整性验证通过", "ok");
+    toast(r.message || _t("shVerify"), "ok");
   } catch { /* ignore */ }
 }
 
@@ -920,17 +1247,17 @@ async function doSelftest() {
   try {
     const r = await api("/api/selftest");
     const sheet = openSheet(
-      "<h2>密码学自检</h2>" +
-      '<p class="sheet-sub">Argon2id / HKDF / AEAD / TOTP 全部通过</p>' +
+      "<h2>" + _t("shSelftest") + "</h2>" +
+      '<p class="sheet-sub">' + _t("selftestBody") + '</p>' +
       r.lines.map(() =>
         '<div class="result-kv"><svg class="ic" style="color:var(--green);flex:none">' +
         '<use href="#i-check"/></svg><span style="font-family:var(--font-ui)"></span></div>')
         .join("") +
-      '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">好的</button></div>');
+      '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnOk") + '</button></div>');
     sheet.querySelectorAll(".result-kv span")
       .forEach((spn, i) => { spn.textContent = r.lines[i] || ""; });
     sheet.querySelector("#pDone").addEventListener("click", closeSheet);
-    toast("密码学自检通过", "ok");
+    toast(_t("selftestPass"), "ok");
   } catch { /* ignore */ }
 }
 
@@ -939,13 +1266,10 @@ function showAbout() {
     '<div class="success-ring" style="background:linear-gradient(180deg,#3d93ff,#065fe4)">' +
     '<svg viewBox="0 0 64 64"><rect x="10" y="20" width="44" height="32" rx="9" fill="#fff" opacity=".95"/>' +
     '<path d="M18 22 L26 10 h12 l8 12 z" fill="#fff" opacity=".7"/></svg></div>' +
-    "<h2>ASTBOX 容器管理器</h2>" +
-    '<p class="sheet-sub" style="text-align:center"><b>V2.0.1</b><br>' +
-    "依据 ASTBOX v1.0 规范实现的加密容器<br>" +
-    "解码 / 浏览 / 提取 / 封装工具<br><br>" +
-    "密码学: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>" +
-    "界面: Liquid Glass Design System</p>" +
-    '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">好的</button></div>');
+    "<h2>" + _t("shAbout") + "</h2>" +
+    '<p class="sheet-sub" style="text-align:center"><b>V3.0.0</b><br>' +
+    _t("aboutBody") + '</p>' +
+    '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnOk") + '</button></div>');
   sheet.querySelector("#pDone").addEventListener("click", closeSheet);
 }
 
@@ -989,8 +1313,9 @@ function applyTheme() {
   $("#themeIcon").firstElementChild
     .setAttribute("href", dark ? "#i-sun" : "#i-moon");
   $("#btnTheme").title =
-    "外观: " + ({ auto: "跟随系统", light: "浅色", dark: "深色" }[themeMode]) +
-    "（点击切换）";
+    document.querySelectorAll(".theme-label").forEach(el => {
+      el.textContent = _fmt(_t("themeToggle"), { auto: _t("themeAuto"), light: _t("themeLight"), dark: _t("themeDark") }[_lang === "zh" ? themeMode : themeMode]);
+    });
 }
 
 /* ---------------- 窗口红绿灯（Mac 业务逻辑映射） ---------------- */
@@ -1033,12 +1358,13 @@ function bind() {
   $("#btnBack").addEventListener("click", () => api("/api/back", {}));
   $("#btnFwd").addEventListener("click", () => api("/api/forward", {}));
   $("#btnUp").addEventListener("click", () => api("/api/up", {}));
+  $("#btnLang").addEventListener("click", () => { _switchLang(); });
 
   $("#btnOpen").addEventListener("click", (e) => openChoose(e.clientX, e.clientY));
   $("#btnPack").addEventListener("click", openPackSheet);
   $("#btnAdd").addEventListener("click", () => openAddSheet(false));
   $("#btnExtractSel").addEventListener("click", () => {
-    if (!selection.size) { toast("请先在列表中选择文件", "err"); return; }
+    if (!selection.size) { toast(_t("errNoSel"), "err"); return; }
     extractFiles([...selection].filter(id => {
       const it = state.items.find(x => x.id === id);
       return it && !it.is_dir;
