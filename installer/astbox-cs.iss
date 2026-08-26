@@ -43,8 +43,8 @@ Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 ShowLanguageDialog=yes
-SetupIconFile=assets\astbox.ico
-UninstallDisplayIcon={app}\assets\astbox.ico
+SetupIconFile=assets\app.ico
+UninstallDisplayIcon={app}\assets\app.ico
 
 [Languages]
 ; 简体中文置首:系统语言未命中任何选项时的默认回退语言
@@ -65,15 +65,15 @@ Source: "..\NOTICE"; DestDir: "{app}"; Flags: ignoreversion
 #ifndef NoDesktopIcon
 Name: "{userdesktop}\ASTBOX"; \
     Filename: "{app}\{#MyServerExe}"; \
-    IconFilename: "{app}\assets\astbox.ico"; \
+    IconFilename: "{app}\assets\app.ico"; \
     Comment: "ASTBOX 容器管理器"
 #endif
 Name: "{userstartmenu}\Programs\ASTBOX 容器管理器\ASTBOX 容器管理器"; \
     Filename: "{app}\{#MyServerExe}"; \
-    IconFilename: "{app}\assets\astbox.ico"
+    IconFilename: "{app}\assets\app.ico"
 Name: "{userstartmenu}\Programs\ASTBOX 容器管理器\ASTBOX 命令行工具"; \
     Filename: "{app}\{#MyCliExe}"; \
-    IconFilename: "{app}\assets\astbox.ico"
+    IconFilename: "{app}\assets\app.ico"
 Name: "{userstartmenu}\Programs\ASTBOX 容器管理器\卸载 ASTBOX"; \
     Filename: "{uninstallexe}"; \
     Comment: "从本机移除 ASTBOX 容器管理器"
@@ -105,7 +105,7 @@ Root: HKCU; Subkey: "Software\Astbox\Capabilities"; \
     ValueData: "{#MyAppName}"
 Root: HKCU; Subkey: "Software\Astbox\Capabilities"; \
     ValueType: string; ValueName: "ApplicationIcon"; \
-    ValueData: "{app}\assets\astbox.ico"
+    ValueData: "{app}\assets\app.ico"
 Root: HKCU; Subkey: "Software\Astbox\Capabilities\FileAssociations"; \
     ValueType: string; ValueName: ".astbox"; \
     ValueData: "Astbox.Container"; Flags: uninsdeletekey

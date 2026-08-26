@@ -147,7 +147,7 @@ $wxs = @"
     <SummaryInformation Description="ASTBOX 容器管理器(Chromium 内核版, MSI)" />
     <MajorUpgrade DowngradeErrorMessage="已安装更新版本的 ASTBOX, 无法降级。(错误 1)" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-    <Icon Id="AppIco" SourceFile="$(Esc $RepoRoot)\installer\assets\astbox.ico" />
+    <Icon Id="AppIco" SourceFile="$(Esc $RepoRoot)\installer\assets\app.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIco" />
     <Property Id="INNO_QUIET">
       <RegistrySearch Type="raw" Id="RS_InnoQuiet" Root="HKCU"
