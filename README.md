@@ -11,7 +11,7 @@ License: Apache License 2.0
 ### 功能
 - `src/Astbox.Core`:核心库,模块与旧版一一对应 —— `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`。
 - `src/Astbox.Cli`:单文件 AOT 命令行 `astbox-cli.exe`,命令包括 `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
-- `src/Astbox.Server`:无窗口(WinExe)本地服务 `astbox-server.exe`,托管 `gui/` 前端与本地 HTTP API;支持 `.astbox` / `.passbox` 文件关联(含 `--import-passbox` 导入:校验→落盘→注册→删除传播包)。
+- `src/Astbox.Server`:无窗口(WinExe)本地服务 `astbox-server.exe`,托管 `gui/` 前端与本地 HTTP API;支持 `.astbox` / `.passbox` 文件关联(含 `--import-passbox` 导入:校验→落盘→注册→删除传播包)。启动时自动检测默认打开方式被接管并引导手动确权(悬空选择自愈)。
 - `src/Astbox.TestsRunner`:原生自测试套件(36 项,含 CBOR 拒绝用例与互操作向量)。
 - Windows 打包:`installer/` 含 `build_cs.py`、`astbox-cs.iss`、`VERSION` 与 `assets`(签名证书可选导入)。
 
@@ -74,7 +74,7 @@ This branch is the C#/.NET 10 (NativeAOT) rewrite of AstBox: **byte-compatible**
 ### Features
 - `src/Astbox.Core`: core library whose modules map one-to-one to the legacy ones — `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`.
 - `src/Astbox.Cli`: single-file AOT command line `astbox-cli.exe`; commands include `selftest`, `info`, `unlock`, `extract`, `create`, `add`, `verify`.
-- `src/Astbox.Server`: windowless (WinExe) local service `astbox-server.exe` hosting the `gui/` front end and a local HTTP API; handles `.astbox` / `.passbox` file associations (including `--import-passbox`: verify → materialize → register → consume pack).
+- `src/Astbox.Server`: windowless (WinExe) local service `astbox-server.exe` hosting the `gui/` front end and a local HTTP API; handles `.astbox` / `.passbox` file associations (including `--import-passbox`: verify → materialize → register → consume pack). On startup it detects hijacked file-type defaults and guides manual re-confirmation (dangling choices self-heal).
 - `src/Astbox.TestsRunner`: native self-test suite (36 checks, including CBOR rejection cases and interop vectors).
 - Windows packaging: `installer/` contains `build_cs.py`, `astbox-cs.iss`, `VERSION`, and `assets` (optional signing certificate).
 
@@ -137,7 +137,7 @@ Note: Inno Setup (ISCC) on Windows is required. The version comes from `installe
 ### 機能
 - `src/Astbox.Core`:コアライブラリ。モジュールは旧版と 1 対 1 に対応 —— `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`。
 - `src/Astbox.Cli`:単一ファイル AOT の CLI `astbox-cli.exe`。コマンドは `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
-- `src/Astbox.Server`:ウィンドウなし(WinExe)のローカルサービス `astbox-server.exe`。`gui/` フロントエンドとローカル HTTP API を提供し、`.astbox` / `.passbox` の関連付けに対応(`--import-passbox`:検証 → 展開 → 登録 → パック削除)。
+- `src/Astbox.Server`:ウィンドウなし(WinExe)のローカルサービス `astbox-server.exe`。`gui/` フロントエンドとローカル HTTP API を提供し、`.astbox` / `.passbox` の関連付けに対応(`--import-passbox`:検証 → 展開 → 登録 → パック削除)。起動時に既定アプリの乗っ取りを検出し、手動確権へ誘導します(壊れた選択は自己修復)。
 - `src/Astbox.TestsRunner`:ネイティブ自己テストスイート(36 項目。CBOR 拒否ケースや相互運用ベクトルを含む)。
 - Windows パッケージ:`installer/` に `build_cs.py`、`astbox-cs.iss`、`VERSION`、`assets`(署名証明書は任意)。
 

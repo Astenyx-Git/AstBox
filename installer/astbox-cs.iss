@@ -110,9 +110,12 @@ Root: HKCU; Subkey: "Software\Astbox\Capabilities\FileAssociations"; \
     ValueType: string; ValueName: ".astbox"; \
     ValueData: "Astbox.Container"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\RegisteredApplications"; \
-    ValueType: string; ValueName: "{#MyAppName}"; \
+    ValueType: string; ValueName: "ASTBOX"; \
     ValueData: "Software\Astbox\Capabilities"; \
     Flags: uninsdeletevalue
+; 清理旧版以中文名注册的条目(深链 registeredAppUser 需 ASCII 名)
+Root: HKCU; Subkey: "Software\RegisteredApplications"; \
+    ValueType: none; ValueName: "{#MyAppName}"; Flags: deletevalue
 ; --- .passbox -> ProgId (传播包, 双击导入) ---
 Root: HKCU; Subkey: "Software\Classes\.passbox"; \
     ValueType: string; ValueData: "Astbox.Passbox"; \
@@ -133,8 +136,8 @@ Root: HKCU; Subkey: "Software\Astbox\Capabilities\FileAssociations"; \
     ValueData: "Astbox.Passbox"
 
 [Run]
-Filename: "ms-settings:defaultapps"; \
-    Description: "设为 .astbox 默认打开方式（在系统设置中确认）"; \
+Filename: "ms-settings:defaultapps?registeredAppUser=ASTBOX"; \
+    Description: "确权 .astbox / .passbox 默认打开方式（在系统设置中点选 ASTBOX）"; \
     Flags: shellexec postinstall skipifsilent
 
 [UninstallDelete]
@@ -142,11 +145,24 @@ Type: filesandordirs; Name: "{app}\chromium-profile"
 
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+  I: Integer;
+  Ext, UcKey, Pid: String;
 begin
   if CurStep = ssInstall then
   begin
-    // 重置用户级选择, 让 HKCU Classes 的默认 ProgId 生效为默认打开方式
+    // (a) passbox 清障(原有): 让 HKCU Classes 的默认 ProgId 立即生效
     RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER,
       'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.passbox\UserChoice');
+    // (b) 双扩展悬空 UserChoice 自愈: 指向已不存在的 ProgId 则移除残留键
+    for I := 0 to 1 do
+    begin
+      if I = 0 then Ext := '.astbox' else Ext := '.passbox';
+      UcKey := 'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\' + Ext + '\UserChoice';
+      Pid := '';
+      if RegQueryStringValue(HKEY_CURRENT_USER, UcKey, 'ProgId', Pid) then
+        if not RegKeyExists(HKEY_CURRENT_USER, 'Software\Classes\' + Pid) then
+          RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, UcKey);
+    end;
   end;
 end;

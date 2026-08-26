@@ -990,6 +990,10 @@ public static class NativeDialogs
     public static void ShowError(string text)
         => MessageBoxW(IntPtr.Zero, text, "ASTBOX 传播包", 0x10 /*MB_ICONERROR*/);
 
+    /// <summary>是/否询问框(MB_YESNO|MB_ICONQUESTION)。返回 true=用户选择"是"。</summary>
+    public static bool AskYesNo(string title, string text)
+        => MessageBoxW(IntPtr.Zero, text, title, 0x24) == 6 /*IDYES*/;
+
     private static IntPtr AllocUni(string s)
     {
         var bytes = new byte[(s.Length + 1) * 2];
@@ -1321,7 +1325,7 @@ public static class UiLauncher
 
     public static string ExeDir => AppContext.BaseDirectory;
 
-    private static string LogPath => Path.Combine(ExeDir, "server_error.log");
+    internal static string LogPath => Path.Combine(ExeDir, "server_error.log");
 
     /// <summary>寻找支持 --app 独立窗口模式的浏览器(优先 Edge, 其次 Chrome)。</summary>
     public static string? FindAppHost()
@@ -1935,6 +1939,99 @@ public static partial class Handlers
             return (null, $"{exc.GetType().FullName}: {exc.Message}");
         }
     }
+
+    // ------------------------------------------------ 关联错配检测与引导
+
+    /// <summary>本 Epoch 内每个安装版本只打扰一次; 升级或调整逻辑时递增日期。</summary>
+    private const string AssocNudgeEpoch = "2026-08-26";
+
+    private static readonly (string Ext, string ProgId)[] AssocPairs =
+        { (".astbox", "Astbox.Container"), (".passbox", "Astbox.Passbox") };
+
+    /// <summary>设置页深链: 直达 ASTBOX 应用条目(Win10/11 对参数支持略有差异,
+    /// 参数被忽略时退化为普通默认应用页, 无副作用)。</summary>
+    public static string AssocDeepLink
+        => "ms-settings:defaultapps?registeredAppUser=" + Uri.EscapeDataString("ASTBOX");
+
+    /// <summary>启动时双向(.astbox/.passbox)错配检测。
+    /// 干净机/回退生效机: 静默通过。悬空 UserChoice(指向已不存在的 ProgId)
+    /// 直接自愈删除。被接管且交互模式: 每 Epoch 至多一次弹窗引导手动确权;
+    /// 非交互(--no-browser)只记日志, 不弹窗不写标记。</summary>
+    public static void CheckAssociationNudge(bool interactive)
+    {
+        // 轻量遥测: 最近一次检测时间(运维排障用; 同时作为执行链存活性证据)
+        try
+        {
+            using var hb = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\Astbox");
+            hb?.SetValue("AssocNudgeLastRun", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") +
+                $" interactive={interactive}");
+        }
+        catch { }
+
+        var foreign = new List<string>();
+        foreach (var (ext, progid) in AssocPairs)
+        {
+            try
+            {
+                using var uc = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" +
+                    ext + @"\UserChoice");
+                if (uc is null) continue;                       // 回退生效, 无需干预
+                var pid = uc.GetValue("ProgId") as string;
+                if (pid is null || pid == progid) continue;     // 已是我们
+                using var cls = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Classes\" + pid);
+                if (cls is null)
+                {
+                    // 悬空指针自愈: 指向的 ProgId 已不存在, 删除残留键恢复回退
+                    Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(
+                        @"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" +
+                        ext + @"\UserChoice", throwOnMissingSubKey: false);
+                    Console.WriteLine($"  [assoc] {ext} 悬空 UserChoice({pid}) 已清除");
+                    continue;
+                }
+                foreign.Add($"{ext} ← {pid}");
+            }
+            catch (Exception assocEx)
+            {
+                // 诊断: 检测失败必须可观测(WinExe 控制台不可见)
+                try
+                {
+                    File.AppendAllText(UiLauncher.LogPath,
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [assoc] {ext} 检测异常: {assocEx.Message}\n");
+                }
+                catch { }
+            }
+        }
+        if (foreign.Count == 0) return;
+
+        string detail = string.Join("; ", foreign);
+        Console.WriteLine("  [assoc] 默认打开方式被接管: " + detail);
+        if (!interactive) return;
+
+        try
+        {
+            using var mk = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(
+                @"Software\Astbox");
+            var prev = mk?.GetValue("AssocNudgeVersion") as string;
+            if (prev == AssocNudgeEpoch) return;                // 本版本内不再打扰
+            bool yes = NativeDialogs.AskYesNo("ASTBOX 关联确认",
+                "检测到以下文件类型的默认打开方式由其他程序接管:\n\n  " + detail +
+                "\n\n是否前往系统设置改为 ASTBOX?\n" +
+                "(稍后可在 设置 > 应用 > 默认应用 > ASTBOX 中修改)");
+            mk?.SetValue("AssocNudgeVersion", AssocNudgeEpoch);
+            if (yes)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = AssocDeepLink,
+                    UseShellExecute = true,
+                });
+                Console.WriteLine("  [assoc] 已打开设置页: " + AssocDeepLink);
+            }
+        }
+        catch { /* 尽力而为 */ }
+    }
 }
 
 // =================================================================== main
@@ -2215,7 +2312,15 @@ public static class Program
                 {
                     await Task.Delay(400);     // threading.Timer(0.4, ...) 对齐
                     UiLauncher.OpenUi(url, uiMode);
+                    try { Handlers.CheckAssociationNudge(interactive: true); }
+                    catch { /* 引导为尽力而为 */ }
                 });
+            }
+            else
+            {
+                // 无头模式只记日志, 不弹窗不写标记
+                try { Handlers.CheckAssociationNudge(interactive: false); }
+                catch { }
             }
         });
 
