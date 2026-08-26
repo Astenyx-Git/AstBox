@@ -1540,3 +1540,91 @@ ASTBOX V2.0.1 revises lifecycle semantics:
    (XChaCha20-Poly1305 over Argon2id, domain ASTBOX-PASSBOX-v1),
    with whole-file SHA-256 integrity tail. Import copies the secret
    into the target device registry; it is duplication, not transfer.
+
+   4.1 BINARY LAYOUT (normative)
+      MAGIC       16B   "ASTPASSBX1" + 6x 0x00
+      HDRLEN       4B   big-endian byte count of HEADER
+      HEADER      JSON   sorted keys; fields:
+                         v            format version (integer)
+                         name         original container file name
+                         digits       TOTP digits (integer)
+                         created      unix seconds or null
+                         wrap         "none" | "pass"
+                         csha         lowercase hex SHA-256 of the
+                                      embedded container bytes
+                                      (see 4.5 HARDENING H1)
+                         salt/snonce/kdf   present iff wrap="pass"
+      SECRETLEN    4B   big-endian
+      SECRET_BLK        wrap=none: Base32 ASCII secret;
+                        wrap=pass: XChaCha20-Poly1305 ciphertext of
+                        the Base32 secret, key = Argon2id(
+                        "ASTBOX-PASSBOX-v1" || passphrase, salt,
+                        constrained profile), aad = MAGIC
+      CONTAINER         the complete .astbox container bytes
+      TRAILER      32B  SHA-256 over all preceding bytes
+
+   4.2 IMPORT PROCEDURE (normative order)
+      The importer MUST perform, in this exact order:
+        a) verify the whole-file TRAILER;
+        b) parse HEADER; unwrap the SECRET_BLK (passphrase prompt,
+           at most three attempts, cancel-safe at each attempt);
+        c) validate the unwrapped Base32 secret;
+        d) compare SHA-256(CONTAINER) against HEADER.csha when
+           present (H1); mismatch MUST abort with no side effects;
+        e) materialize CONTAINER to <pack dir>/<pack stem>.astbox
+           (overwriting an existing same-name file is permitted and
+           idempotent);
+        f) trial-unlock the materialized container with the secret;
+        g) register the secret (vault id, Base32, digits, created)
+           into the local registry; an existing record for the same
+           vault id is merged, preserving its original timestamp;
+        h) only after a)-g) all succeeded, delete the pack itself
+           (H3).
+      A failure at any step before e) MUST leave the filesystem
+      untouched: no container file, no temporary files, and no
+      registry entry (H2). A wrong passphrase therefore produces
+      zero filesystem artifacts.
+
+   4.3 CROSS-DEVICE SEMANTICS
+      The package is fully self-contained: it embeds the complete
+      container and carries NO host-specific data (no machine id,
+      user SID, or absolute path). Import writes a FRESH local
+      registry entry on the target device; nothing from the source
+      device's registry is transferred. One file is sufficient to
+      propagate to any device running a conforming implementation.
+      Recipients SHOULD duplicate the pack before first import:
+      a successful import consumes the pack (H3).
+
+   4.4 PASSPHRASE PROTECTION
+      wrap="pass" seals ONLY the secret block; the embedded
+      container remains protected by its own cryptography. Offline
+      guessing cost is bounded by the Argon2id constrained profile.
+      Three consecutive wrong passphrases MUST abort the import;
+      cancellation at the prompt MUST abort cleanly.
+
+   4.5 HARDENING REGISTER (C# implementation line; intentional
+       extension over the retired python reference)
+      H1  CONTAINER DIGEST: writers MUST emit HEADER.csha; readers
+          MUST verify it when present (pre-materialization, in
+          memory). Packs lacking csha remain importable for
+          backward compatibility; readers MAY flag them.
+      H2  ALL-OR-NOTHING MATERIALIZATION: every fallible check
+          (trailer, secret unwrap, csha) precedes the single
+          filesystem write; the write itself is the last fallible-
+          by-content step.
+      H3  CONSUME ON SUCCESS: after a)-g) succeed the pack is
+          hard-deleted (direct unlink; MUST NOT go to the recycle
+          bin). Deletion failure is non-fatal and logged as a
+          warning; the import result is unaffected.
+      H4  ATTEMPT BOUND: passphrase retries are capped at three;
+          every failure path is side-effect free (see 4.2).
+      H5  NO HOST BINDING BY CONSTRUCTION: no field in the layout
+          may carry host identity; implementations MUST NOT add
+          machine-bound metadata to this format.
+
+   4.6 STATUS
+      Layout, procedure 4.2, semantics 4.3-4.4, and hardening H1-H3,
+      H5 are implemented and covered by the native test suite and a
+      verified cross-device simulation (orphan-pack import on a
+      clean directory: container materialized, pack consumed,
+      registry entry created, graceful exit).
