@@ -1541,6 +1541,49 @@ ASTBOX V2.0.1 revises lifecycle semantics:
    with whole-file SHA-256 integrity tail. Import copies the secret
    into the target device registry; it is duplication, not transfer.
 
+5. ASSOCIATION GOVERNANCE (detection - self-heal - guidance)
+   File associations for .astbox/.passbox are governed as a two-layer
+   system: install-time clearing provides the floor (first-run works
+   with zero friction), runtime confirmation provides the ceiling
+   (long-term resistance to hijacking).
+
+   5.1 REGISTRY CONTRACT (normative)
+       RegisteredApplications value name MUST be the ASCII string
+       "ASTBOX" so that the deep link
+       ms-settings:defaultapps?registeredAppUser=ASTBOX
+       resolves for every conforming line. Legacy non-ASCII value
+       names MUST be removed at install time. ProgIds are fixed:
+       Astbox.Container / Astbox.Passbox.
+
+   5.2 FLOOR: INSTALL-TIME CLEARING
+       Installers MUST delete FileExts UserChoice keys for both
+       extensions whose ProgId no longer exists (dangling residue),
+       restoring the Classes-default fallback. Both lines implement
+       this: C# runtime at startup, python installer in Pascal [Code]
+       and cmd script.
+
+   5.3 CEILING: RUNTIME MISMATCH DETECTION (C# line)
+       At every interactive startup the C# server checks UserChoice
+       ownership of both extensions. Taken-over associations raise a
+       native prompt at most once per epoch (marker persisted in the
+       registry; epoch resets on version upgrade) and offer the
+       settings deep link. Headless (--no-browser) runs log only and
+       MUST NOT mutate state. Heartbeat telemetry AssocNudgeLastRun
+       records last execution for support diagnostics.
+       The python reference does not implement 5.3; its headless web
+       UI has no native dialog channel. This is a documented
+       line-specific divergence under rule 4.7.
+
+   5.4 BEHAVIOR MATRIX (normative outcomes)
+       clean machine            : silent pass, no side effects.
+       dangling UserChoice      : deleted at startup/install;
+                                  fallback restored.
+       foreign live choice,
+       headless                 : logged only, foreign key preserved.
+       foreign live choice,
+       interactive              : one prompt per epoch, then deep
+                                  link to the app entry.
+
    4.1 BINARY LAYOUT (normative)
       MAGIC       16B   "ASTPASSBX1" + 6x 0x00
       HDRLEN       4B   big-endian byte count of HEADER
@@ -1602,8 +1645,8 @@ ASTBOX V2.0.1 revises lifecycle semantics:
       Three consecutive wrong passphrases MUST abort the import;
       cancellation at the prompt MUST abort cleanly.
 
-   4.5 HARDENING REGISTER (C# implementation line; intentional
-       extension over the retired python reference)
+   4.5 HARDENING REGISTER (binding for all conforming
+       implementations; introduced by the C# line)
       H1  CONTAINER DIGEST: writers MUST emit HEADER.csha; readers
           MUST verify it when present (pre-materialization, in
           memory). Packs lacking csha remain importable for
@@ -1622,9 +1665,67 @@ ASTBOX V2.0.1 revises lifecycle semantics:
           may carry host identity; implementations MUST NOT add
           machine-bound metadata to this format.
 
-   4.6 STATUS
-      Layout, procedure 4.2, semantics 4.3-4.4, and hardening H1-H3,
-      H5 are implemented and covered by the native test suite and a
-      verified cross-device simulation (orphan-pack import on a
-      clean directory: container materialized, pack consumed,
-      registry entry created, graceful exit).
+   4.6 STATUS (per line)
+      C# line    : Layout, procedure 4.2, semantics 4.3-4.4, and
+                   hardening H1-H5 implemented; covered by the native
+                   test suite and a verified cross-device simulation
+                   (orphan-pack import on a clean directory:
+                   container materialized, pack consumed, registry
+                   entry created, graceful exit).
+                   Association governance 5.1-5.4 fully implemented
+                   (startup detection, dangling self-heal, epoch
+                   nudge with deep link, headless logging, heartbeat
+                   telemetry); native suite 36/36 green.
+                   Installer channels: Inno slim/kernel plus
+                   per-user WiX MSI with S2 seamless migration
+                   (6.2), E2E verified on real machine.
+      python ref : Layout (4.1), procedure 4.2 a)-h), semantics
+                   4.3-4.4, and hardening H1-H5 implemented (H3
+                   consume-on-success and the 4.2 g) timestamp merge
+                   aligned in V2.0.1; merge preserves the original
+                   registry timestamp on re-import). Covered by the
+                   passbox end-to-end suite including pack-consumption
+                   and registry-merge assertions.
+                   Association governance: floor 5.1/5.2 implemented
+                   in installer assets (ASCII "ASTBOX" registration
+                   with legacy-value cleanup; UserChoice clearing for
+                   dangling keys at install time); ceiling 5.3 not
+                   implemented - documented divergence under rule 4.7.
+                   Installer channels: Inno/cmd only; no MSI
+                   channel (see 6.3).
+
+   4.7 DUAL-TRACK RULE
+      This document is the single source of truth for every
+      implementation line. Lines evolve independently in code but
+      MUST NOT fork this text: line-specific behaviour is expressed
+      only through conformance entries in 4.6. Wording elsewhere
+      that characterizes any active line as retired is superseded
+      by this section.
+
+   6. WINDOWS INSTALLER CHANNELS & S2 MIGRATION
+      Two installer channels exist on the C# line: Inno Setup
+      (slim / kernel) targeting Programs\Astbox, and a per-user
+      WiX MSI (kernel; WiX 6.0.2 toolchain pinned) targeting
+      Programs\AstboxMSI. The directories are intentionally
+      disjoint so both channels can coexist without file conflict.
+
+      6.1 SHARED ASSOCIATION CONTRACT
+          Both channels register the ProgIds and Capabilities
+          defined in 5.1; the last-installed channel owns the
+          association command. UserChoice governance (5.2-5.4)
+          applies identically regardless of channel.
+
+      6.2 S2 SEAMLESS MIGRATION (normative for MSI)
+          On first install the MSI MUST detect a legacy Inno
+          installation (ARP _is1 key), silently run its uninstaller
+          (/SILENT /SUPPRESSMSGBOXES /NORESTART, wait for exit),
+          sequenced strictly AFTER InstallFiles and BEFORE any
+          association writes, so shared keys never dangle during
+          migration. msiexec uninstall MUST remove its own tree and
+          the association keys it wrote.
+
+      6.3 CHANNEL CONFORMANCE
+          python reference ships Inno/cmd channels only; no MSI
+          channel. Both lines' Inno builds target the same default
+          directory by convention - installing one line's Inno
+          build over the other's is not a supported configuration.
