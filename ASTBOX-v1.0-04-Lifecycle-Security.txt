@@ -1602,8 +1602,8 @@ ASTBOX V2.0.1 revises lifecycle semantics:
       Three consecutive wrong passphrases MUST abort the import;
       cancellation at the prompt MUST abort cleanly.
 
-   4.5 HARDENING REGISTER (C# implementation line; intentional
-       extension over the retired python reference)
+   4.5 HARDENING REGISTER (binding for all conforming
+       implementations; introduced by the C# line)
       H1  CONTAINER DIGEST: writers MUST emit HEADER.csha; readers
           MUST verify it when present (pre-materialization, in
           memory). Packs lacking csha remain importable for
@@ -1622,9 +1622,25 @@ ASTBOX V2.0.1 revises lifecycle semantics:
           may carry host identity; implementations MUST NOT add
           machine-bound metadata to this format.
 
-   4.6 STATUS
-      Layout, procedure 4.2, semantics 4.3-4.4, and hardening H1-H3,
-      H5 are implemented and covered by the native test suite and a
-      verified cross-device simulation (orphan-pack import on a
-      clean directory: container materialized, pack consumed,
-      registry entry created, graceful exit).
+   4.6 STATUS (per line)
+      C# line    : Layout, procedure 4.2, semantics 4.3-4.4, and
+                   hardening H1-H5 implemented; covered by the native
+                   test suite and a verified cross-device simulation
+                   (orphan-pack import on a clean directory:
+                   container materialized, pack consumed, registry
+                   entry created, graceful exit).
+      python ref : Layout (4.1), procedure 4.2 a)-g), semantics
+                   4.3-4.4, and hardening H1, H2, H4, H5 implemented.
+                   Pending alignment: H3 consume-on-success (pack is
+                   retained after import) and 4.2 g) timestamp merge
+                   (container created currently overrides an existing
+                   registry timestamp). These are tracked as
+                   line-specific divergences, not defects.
+
+   4.7 DUAL-TRACK RULE
+      This document is the single source of truth for every
+      implementation line. Lines evolve independently in code but
+      MUST NOT fork this text: line-specific behaviour is expressed
+      only through conformance entries in 4.6. Wording elsewhere
+      that characterizes any active line as retired is superseded
+      by this section.
