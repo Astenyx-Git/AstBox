@@ -142,8 +142,8 @@ try {
     $verPath = Join-Path $here 'VERSION'
     $appVersion = ([IO.File]::ReadAllText($verPath)).Trim()
     if (-not $appVersion) { Fail 'installer/VERSION 为空, 无法确定版本' }
-    $label = $appVersion + 'C#'          # e.g. V2.0.1C#
-    $num = $label.Substring(1)           # 2.0.1C#
+    $label = $appVersion + 'C#'          # e.g. V3.0.0C#
+    $num = $label.Substring(1)           # 3.0.0C#
     Log ('本包版本: ' + $label + ' (VERSION 文件)')
 
     Stage

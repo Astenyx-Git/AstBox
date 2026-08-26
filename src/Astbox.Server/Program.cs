@@ -2302,7 +2302,7 @@ public static class Program
             catch { /* 保持探测到的端口 */ }
             string url = $"http://127.0.0.1:{bannerPort}/";
             Console.WriteLine(new string('=', 56));
-            Console.WriteLine("  ASTBOX 容器管理器 · V2.0.1 · Liquid Glass Web UI");
+            Console.WriteLine("  ASTBOX 容器管理器 · V3.0.0 · Liquid Glass Web UI");
             Console.WriteLine($"  {url}");
             Console.WriteLine("  仅监听 127.0.0.1，关闭此进程即退出。Ctrl+C 退出。");
             Console.WriteLine(new string('=', 56));

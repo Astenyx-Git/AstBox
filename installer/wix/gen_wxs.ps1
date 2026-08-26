@@ -3,7 +3,7 @@
 param(
     [string]$StageDir = 'D:\New_LANG\C#-astbox\installer\stage\Astbox',
     [string]$OutWxs   = 'D:\New_LANG\C#-astbox\installer\wix\AstboxChromium.wxs',
-    [string]$VersionLabel = 'V2.0.1C#',
+    [string]$VersionLabel = 'V3.0.0C#',
     [string]$RepoRoot = 'D:\New_LANG\C#-astbox'
 )
 
@@ -110,10 +110,12 @@ $assocXml = @'
         <RegistryValue Root="HKCU" Key="Software\Classes\.astbox\OpenWithProgids" Name="Astbox.Container" Type="string" Value="" />
         <RegistryValue Root="HKCU" Key="Software\Classes\Astbox.Container" Type="string" Value="ASTBOX 容器" />
         <RegistryValue Root="HKCU" Key="Software\Classes\Astbox.Container\shell\open\command" Type="string" Value="&quot;[#AstboxServerExe]&quot; &quot;%1&quot;" />
+        <RegistryValue Root="HKCU" Key="Software\Classes\Astbox.Container\DefaultIcon" Type="string" Value="[INSTALLFOLDER]assets\astbox.ico,0" />
         <RegistryValue Root="HKCU" Key="Software\Classes\.passbox" Type="string" Value="Astbox.Passbox" />
         <RegistryValue Root="HKCU" Key="Software\Classes\.passbox\OpenWithProgids" Name="Astbox.Passbox" Type="string" Value="" />
         <RegistryValue Root="HKCU" Key="Software\Classes\Astbox.Passbox" Type="string" Value="ASTBOX 传播包" />
         <RegistryValue Root="HKCU" Key="Software\Classes\Astbox.Passbox\shell\open\command" Type="string" Value="&quot;[#AstboxServerExe]&quot; --import-passbox &quot;%1&quot;" />
+        <RegistryValue Root="HKCU" Key="Software\Classes\Astbox.Passbox\DefaultIcon" Type="string" Value="[INSTALLFOLDER]assets\passbox.ico,0" />
         <RegistryValue Root="HKCU" Key="Software\Astbox\Capabilities" Name="ApplicationName" Type="string" Value="ASTBOX 容器管理器" />
         <RegistryValue Root="HKCU" Key="Software\Astbox\Capabilities" Name="ApplicationIcon" Type="string" Value="[#AppIco]" />
         <RegistryValue Root="HKCU" Key="Software\Astbox\Capabilities\FileAssociations" Name=".astbox" Type="string" Value="Astbox.Container" />

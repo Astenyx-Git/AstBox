@@ -3,17 +3,17 @@
 ; 产物布局由 installer/build_cs.ps1 装配到 stage/Astbox。
 ;
 ; 编译开关:
-;   /DAppVersionNum=2.0.1C#     版本号(build_cs.ps1 自动跟随 VERSION)
-;   /DAppVersionLabel=V2.0.1C#  显示版本(含 C# 后缀)
+;   /DAppVersionNum=3.0.0C#     版本号(build_cs.ps1 自动跟随 VERSION)
+;   /DAppVersionLabel=V3.0.0C#  显示版本(含 C# 后缀)
 ;   /DNoDesktopIcon             跳过桌面快捷方式
 ;   /DNoIcons                   跳过全部快捷方式(自动化测试用)
 ;   /DChromiumBuild             内核版命名
 
 #ifndef AppVersionNum
-#define AppVersionNum "2.0.1C#"
+#define AppVersionNum "3.0.0C#"
 #endif
 #ifndef AppVersionLabel
-#define AppVersionLabel "V2.0.1C#"
+#define AppVersionLabel "V3.0.0C#"
 #endif
 
 #define MyAppName "ASTBOX 容器管理器"
@@ -95,7 +95,7 @@ Root: HKCU; Subkey: "Software\Classes\Astbox.Container"; \
     ValueType: string; ValueData: "ASTBOX 容器"; \
     Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\Astbox.Container\DefaultIcon"; \
-    ValueType: expandsz; ValueData: "%SystemRoot%\system32\zipfldr.dll"
+    ValueType: string; ValueData: "{app}\assets\astbox.ico"
 Root: HKCU; Subkey: "Software\Classes\Astbox.Container\shell\open\command"; \
     ValueType: string; \
     ValueData: """{app}\{#MyServerExe}"" ""%1"""

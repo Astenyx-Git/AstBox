@@ -940,7 +940,7 @@ function showAbout() {
     '<svg viewBox="0 0 64 64"><rect x="10" y="20" width="44" height="32" rx="9" fill="#fff" opacity=".95"/>' +
     '<path d="M18 22 L26 10 h12 l8 12 z" fill="#fff" opacity=".7"/></svg></div>' +
     "<h2>ASTBOX 容器管理器</h2>" +
-    '<p class="sheet-sub" style="text-align:center"><b>V2.0.1</b><br>' +
+    '<p class="sheet-sub" style="text-align:center"><b>V3.0.0</b><br>' +
     "依据 ASTBOX v1.0 规范实现的加密容器<br>" +
     "解码 / 浏览 / 提取 / 封装工具<br><br>" +
     "密码学: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>" +
