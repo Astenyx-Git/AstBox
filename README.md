@@ -53,14 +53,14 @@ CLI 帮助与常用示例
 安装后双击 `.astbox` 直接打开容器;双击 `.passbox` 导入传播包(内嵌容器落盘至包同目录,成功后自动删除该包)。
 
 ### 构建安装器
-```bash
-python installer/build_cs.py            # 同时产出 精简版 + Chromium 内核版
-python installer/build_cs.py --no-chromium   # 仅精简版
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # 同时产出 精简版 + Chromium 内核版
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # 仅精简版
 ```
 说明:需在 Windows 上安装 Inno Setup(ISCC)。版本号取自 `installer/VERSION`,标签自动追加 `C#` 后缀;产物写入 `installer/dist/` 并生成 `manifest.json`(channels:slim / chromium)。可选代码签名:设置环境变量 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(及时间戳 `ASTBOX_SIGN_TS`)后,负载与安装包将逐一 Authenticode 签名。
 
 ### 其他
-- 驱动脚本:`scripts/`(回环验证 `cs_roundtrip.py`、密钥库清理 `cleanup_secrets.py` 等)。
+- 构建链零 Python:安装器入口为 `installer/build_cs.ps1`;历史开发脚本已归档至 `scripts/legacy/`(非构建必需)。
 - 传播包加固(csha 容器摘要强制校验、导入成功即硬删除)见规范文档 `ASTBOX-v1.0-04-Lifecycle-Security.txt` §4。
 - 本分支与 `main`(Python 参考实现)保持独立演进,互不合并。
 
@@ -116,14 +116,14 @@ Launch the local GUI
 Once installed, double-clicking `.astbox` opens the container directly; double-clicking `.passbox` imports a propagation package (the embedded container is materialized next to the pack, and the pack is consumed on success).
 
 ### Build installer
-```bash
-python installer/build_cs.py            # builds both Slim and Chromium-bundled channels
-python installer/build_cs.py --no-chromium   # Slim only
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # builds both Slim and Chromium-bundled channels
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # Slim only
 ```
 Note: Inno Setup (ISCC) on Windows is required. The version comes from `installer/VERSION` and gets a `C#` suffix automatically; artifacts land in `installer/dist/` together with `manifest.json` (channels: slim / chromium). Optional Authenticode signing: set environment variables `ASTBOX_SIGN_PFX`, `ASTBOX_SIGN_PW` (and optionally `ASTBOX_SIGN_TS`); payload binaries and setup EXEs are then signed individually.
 
 ### Notes
-- Driver scripts live in `scripts/` (`cs_roundtrip.py` round-trip verification, `cleanup_secrets.py`, etc.).
+- The build chain is Python-free: the installer entry point is `installer/build_cs.ps1`; historical dev scripts are archived under `scripts/legacy/` (not required for building).
 - Propagation-package hardening (mandatory `csha` container digest; consume-on-success deletion) is specified in `ASTBOX-v1.0-04-Lifecycle-Security.txt` §4.
 - This branch evolves independently from `main` (the Python reference); no cross-merges.
 
@@ -179,14 +179,14 @@ CLI ヘルプと主な例
 インストール後、`.astbox` のダブルクリックでコンテナを直接開き、`.passbox` のダブルクリックで伝播パッケージを取り込みます(埋め込まれたコンテナはパックと同じフォルダーに展開され、成功後パックは自動削除)。
 
 ### インストーラのビルド
-```bash
-python installer/build_cs.py            # Slim 版 + Chromium 同梱版の両方を生成
-python installer/build_cs.py --no-chromium   # Slim 版のみ
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # Slim 版 + Chromium 同梱版の両方を生成
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # Slim 版のみ
 ```
 注:Windows 上の Inno Setup(ISCC)が必要です。バージョンは `installer/VERSION` から取得し、自動的に `C#` 接尾辞が付きます。成果物は `installer/dist/` に出力され、`manifest.json`(channels: slim / chromium)が生成されます。オプションの Authenticode 署名:環境変数 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(および `ASTBOX_SIGN_TS`)を設定すると、ペイロードとセットアップ EXE が個別に署名されます。
 
 ### 備考
-- ドライバースクリプトは `scripts/`(`cs_roundtrip.py`、`cleanup_secrets.py` など)。
+- ビルドチェーンに Python は不要です。インストーラの入口は `installer/build_cs.ps1`。過去の開発スクリプトは `scripts/legacy/` に保管(ビルドには不要)。
 - 伝播パッケージの強化(csha コンテナダイジェストの強制検証、成功時のパック消費)は仕様書 `ASTBOX-v1.0-04-Lifecycle-Security.txt` §4 を参照。
 - 本ブランチは `main`(Python リファレンス)とは独立して進化し、相互マージは行いません。
 

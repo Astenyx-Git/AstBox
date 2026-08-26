@@ -1,9 +1,9 @@
 ; ASTBOX 容器管理器 — Inno Setup 6 安装脚本(C#/.NET 10 NativeAOT 布局)
 ; 按用户安装(无需管理员)，注册 .astbox 关联与默认应用能力。
-; 产物布局由 installer/build_cs.py 装配到 stage/Astbox。
+; 产物布局由 installer/build_cs.ps1 装配到 stage/Astbox。
 ;
 ; 编译开关:
-;   /DAppVersionNum=2.0.1C#     版本号(build_cs.py 自动跟随 python 侧)
+;   /DAppVersionNum=2.0.1C#     版本号(build_cs.ps1 自动跟随 VERSION)
 ;   /DAppVersionLabel=V2.0.1C#  显示版本(含 C# 后缀)
 ;   /DNoDesktopIcon             跳过桌面快捷方式
 ;   /DNoIcons                   跳过全部快捷方式(自动化测试用)
