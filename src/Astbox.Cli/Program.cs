@@ -1,6 +1,7 @@
 // Copyright 2026 Astenyx-Git
 // SPDX-License-Identifier: Apache-2.0
 //! ASTBOX v1.0 command-line decoder (NativeAOT port of astbox_cli.py).
+//! Distribution: installer/build_cs.ps1 channels slim | chromium | msi.
 //!
 //! Subcommands:
 //!     selftest                      run cryptographic self-tests

@@ -13,7 +13,7 @@ License: Apache License 2.0
 - `src/Astbox.Cli`:单文件 AOT 命令行 `astbox-cli.exe`,命令包括 `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
 - `src/Astbox.Server`:无窗口(WinExe)本地服务 `astbox-server.exe`,托管 `gui/` 前端与本地 HTTP API;支持 `.astbox` / `.passbox` 文件关联(含 `--import-passbox` 导入:校验→落盘→注册→删除传播包)。启动时自动检测默认打开方式被接管并引导手动确权(悬空选择自愈)。
 - `src/Astbox.TestsRunner`:原生自测试套件(36 项,含 CBOR 拒绝用例与互操作向量)。
-- Windows 打包:`installer/` 含 `build_cs.py`、`astbox-cs.iss`、`VERSION` 与 `assets`(签名证书可选导入)。
+- Windows 打包:`installer/` 含 `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI 通道)、`VERSION` 与 `assets`(签名证书可选导入)。
 
 ### 技术栈
 - C# / .NET 10(NativeAOT 发布)
@@ -55,9 +55,10 @@ CLI 帮助与常用示例
 ### 构建安装器
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # 同时产出 精简版 + Chromium 内核版
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi          # 追加产出 Chromium 内核版 MSI
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # 仅精简版
 ```
-说明:需在 Windows 上安装 Inno Setup(ISCC)。版本号取自 `installer/VERSION`,标签自动追加 `C#` 后缀;产物写入 `installer/dist/` 并生成 `manifest.json`(channels:slim / chromium)。可选代码签名:设置环境变量 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(及时间戳 `ASTBOX_SIGN_TS`)后,负载与安装包将逐一 Authenticode 签名。
+说明:需在 Windows 上安装 Inno Setup(ISCC);MSI 通道另需 WiX Toolset(`dotnet tool install -g wix --version 6.0.2`)。版本号取自 `installer/VERSION`,标签自动追加 `C#` 后缀;产物写入 `installer/dist/` 并生成 `manifest.json`(channels:slim / chromium / msi)。可选代码签名:设置环境变量 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(及时间戳 `ASTBOX_SIGN_TS`)后,负载与安装包将逐一 Authenticode 签名。MSI 为 per-user 安装(独立目录 `Programs\AstboxMSI`,不与 EXE 版同目录冲突),首次安装会**静默卸载检测到的旧 Inno 版**(S2 无缝迁移,关联自动切换)。
 
 ### 其他
 - 构建链零 Python:安装器入口为 `installer/build_cs.ps1`;历史开发脚本已归档至 `scripts/legacy/`(非构建必需)。
@@ -76,7 +77,7 @@ This branch is the C#/.NET 10 (NativeAOT) rewrite of AstBox: **byte-compatible**
 - `src/Astbox.Cli`: single-file AOT command line `astbox-cli.exe`; commands include `selftest`, `info`, `unlock`, `extract`, `create`, `add`, `verify`.
 - `src/Astbox.Server`: windowless (WinExe) local service `astbox-server.exe` hosting the `gui/` front end and a local HTTP API; handles `.astbox` / `.passbox` file associations (including `--import-passbox`: verify → materialize → register → consume pack). On startup it detects hijacked file-type defaults and guides manual re-confirmation (dangling choices self-heal).
 - `src/Astbox.TestsRunner`: native self-test suite (36 checks, including CBOR rejection cases and interop vectors).
-- Windows packaging: `installer/` contains `build_cs.py`, `astbox-cs.iss`, `VERSION`, and `assets` (optional signing certificate).
+- Windows packaging: `installer/` contains `build_cs.ps1`, `astbox-cs.iss`, `wix/` (MSI channel), `VERSION`, and `assets` (optional signing certificate).
 
 ### Tech stack
 - C# / .NET 10 (NativeAOT publishing)
@@ -118,9 +119,10 @@ Once installed, double-clicking `.astbox` opens the container directly; double-c
 ### Build installer
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # builds both Slim and Chromium-bundled channels
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi          # additionally builds the Chromium-bundled MSI
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # Slim only
 ```
-Note: Inno Setup (ISCC) on Windows is required. The version comes from `installer/VERSION` and gets a `C#` suffix automatically; artifacts land in `installer/dist/` together with `manifest.json` (channels: slim / chromium). Optional Authenticode signing: set environment variables `ASTBOX_SIGN_PFX`, `ASTBOX_SIGN_PW` (and optionally `ASTBOX_SIGN_TS`); payload binaries and setup EXEs are then signed individually.
+Note: Inno Setup (ISCC) on Windows is required; the MSI channel additionally needs the WiX Toolset (`dotnet tool install -g wix --version 6.0.2`). The version comes from `installer/VERSION` and gets a `C#` suffix automatically; artifacts land in `installer/dist/` together with `manifest.json` (channels: slim / chromium / msi). Optional Authenticode signing: set environment variables `ASTBOX_SIGN_PFX`, `ASTBOX_SIGN_PW` (and optionally `ASTBOX_SIGN_TS`); payload binaries and setup packages are then signed individually. The MSI installs per-user into its own folder (`Programs\AstboxMSI`, no clash with the EXE edition) and **silently uninstalls a detected legacy Inno install on first setup** (seamless S2 migration; file associations follow automatically).
 
 ### Notes
 - The build chain is Python-free: the installer entry point is `installer/build_cs.ps1`; historical dev scripts are archived under `scripts/legacy/` (not required for building).
@@ -139,7 +141,7 @@ Note: Inno Setup (ISCC) on Windows is required. The version comes from `installe
 - `src/Astbox.Cli`:単一ファイル AOT の CLI `astbox-cli.exe`。コマンドは `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
 - `src/Astbox.Server`:ウィンドウなし(WinExe)のローカルサービス `astbox-server.exe`。`gui/` フロントエンドとローカル HTTP API を提供し、`.astbox` / `.passbox` の関連付けに対応(`--import-passbox`:検証 → 展開 → 登録 → パック削除)。起動時に既定アプリの乗っ取りを検出し、手動確権へ誘導します(壊れた選択は自己修復)。
 - `src/Astbox.TestsRunner`:ネイティブ自己テストスイート(36 項目。CBOR 拒否ケースや相互運用ベクトルを含む)。
-- Windows パッケージ:`installer/` に `build_cs.py`、`astbox-cs.iss`、`VERSION`、`assets`(署名証明書は任意)。
+- Windows パッケージ:`installer/` に `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI チャネル)、`VERSION`、`assets`(署名証明書は任意)。
 
 ### 技術スタック
 - C# / .NET 10(NativeAOT 公開)
@@ -181,9 +183,10 @@ CLI ヘルプと主な例
 ### インストーラのビルド
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # Slim 版 + Chromium 同梱版の両方を生成
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi          # 加えて Chromium 同梱 MSI を生成
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # Slim 版のみ
 ```
-注:Windows 上の Inno Setup(ISCC)が必要です。バージョンは `installer/VERSION` から取得し、自動的に `C#` 接尾辞が付きます。成果物は `installer/dist/` に出力され、`manifest.json`(channels: slim / chromium)が生成されます。オプションの Authenticode 署名:環境変数 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(および `ASTBOX_SIGN_TS`)を設定すると、ペイロードとセットアップ EXE が個別に署名されます。
+注:Windows 上の Inno Setup(ISCC)が必要です。MSI チャネルにはさらに WiX Toolset(`dotnet tool install -g wix --version 6.0.2`)が必要です。バージョンは `installer/VERSION` から取得し、自動的に `C#` 接尾辞が付きます。成果物は `installer/dist/` に出力され、`manifest.json`(channels: slim / chromium / msi)が生成されます。オプションの Authenticode 署名:環境変数 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(および `ASTBOX_SIGN_TS`)を設定すると、ペイロードとインストーラーが個別に署名されます。MSI はユーザーごとインストールで専用フォルダー(`Programs\AstboxMSI`)を使い、EXE 版と衝突しません。初回セットアップ時に旧 Inno 版を検出すると**サイレントでアンインストール**します(S2 シームレス移行、関連付けも自動切替)。
 
 ### 備考
 - ビルドチェーンに Python は不要です。インストーラの入口は `installer/build_cs.ps1`。過去の開発スクリプトは `scripts/legacy/` に保管(ビルドには不要)。

@@ -10,6 +10,7 @@
 //!   - 便携 Chromium / Edge --app 启动器与 Windows 原生对话框
 //!     (comdlg32/shell32/user32 经典 DllImport)。
 //!   - 单用户内存 Session(ConcurrentDictionary 单例), 锁定容器句柄驻留内存。
+//!   - MSI 分发通道: installer/wix + S2 无缝迁移(静默卸载旧 Inno 版)。
 
 using System.Collections.Concurrent;
 using System.Globalization;

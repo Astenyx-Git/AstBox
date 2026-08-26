@@ -11,7 +11,7 @@
 #   env ASTBOX_SIGN_PFX (+ ASTBOX_SIGN_PW, optional ASTBOX_SIGN_TS);
 #   unset => signing silently skipped.
 
-param([switch]$NoChromium)
+param([switch]$NoChromium, [switch]$Msi)
 
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -79,6 +79,9 @@ function Stage-Chromium {
 }
 
 function Invoke-Selftest([string]$cli) {
+    # 前置直跑:绕开 Start-Job 序列化干扰, 失败时保留原始 stderr
+    $pre = & $cli selftest 2>&1
+    if ($LASTEXITCODE -ne 0) { Fail ('自检失败(直跑): ' + (($pre | Select-Object -Last 3) -join ' ')) }
     $job = Start-Job -ScriptBlock { param($c) & $c selftest 2>&1; $LASTEXITCODE } -ArgumentList $cli
     if (-not (Wait-Job $job -Timeout 300)) {
         Stop-Job $job; Remove-Job $job -Force
@@ -200,6 +203,23 @@ try {
         Stage-Chromium
         Compile @('/DChromiumBuild') ('AstboxSetup-' + $label + '-Chromium.exe')
         $channels += 'chromium'
+    }
+
+    # (3) 内核版 MSI(S2 无缝迁移: 静默卸载旧 Inno 版后安装至 Programs\AstboxMSI)
+    if ($Msi) {
+        $wixExe = Join-Path $env:USERPROFILE '.dotnet\tools\wix.exe'
+        if (-not (Test-Path $wixExe)) { Fail '未找到 wix.exe(需 dotnet tool install -g wix --version 6.0.2)' }
+        $gen = Join-Path $PSScriptRoot 'wix\gen_wxs.ps1'
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $gen -VersionLabel $label
+        if ($LASTEXITCODE -ne 0) { Fail 'gen_wxs 失败' }
+        $msiOut = Join-Path $dist ('AstboxSetup-' + $label + '-Chromium.msi')
+        Log ('wix build → ' + (Split-Path $msiOut -Leaf))
+        & $wixExe build -arch x64 -o $msiOut (Join-Path $PSScriptRoot 'wix\AstboxChromium.wxs') 2>&1 |
+            ForEach-Object { Write-Output ('[wix] ' + $_) }
+        if ($LASTEXITCODE -ne 0) { Fail 'wix build 失败' }
+        Sign-File $msiOut
+        $channels += 'msi'
+        Log ('安装程序: ' + $msiOut + ' ({0:N1} MiB)' -f ((Get-Item -LiteralPath $msiOut).Length / 1048576))
     }
 
     $manifest = [ordered]@{
