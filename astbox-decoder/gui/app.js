@@ -147,9 +147,50 @@ const _I18N = {
     openPath: "输入服务器本机路径…",
     // 其他
     notFolder: "所选项目不是文件夹",
+    dlgOpenFile: "选择 .astbox 容器",
+    dlgPackDir: "选择要封装的文件夹",
+    dlgSaveAs: "保存为 .astbox",
+    dlgPickOutDir: "选择提取输出目录",
+    ftAstbox: "ASTBOX 容器",
+    ftAll: "所有文件",
+    ftPassbox: "ASTBOX 传播包",
+    parsedUnlock: "容器已解析，请输入凭据解锁",
+    openOrSpecify: "请先打开并解锁容器，或指定源文件夹",
+    copiedKey: "密钥已复制",
+    b32Prompt: "输入 Base32 TOTP 密钥（来自你的验证器）:",
+    totpComputed: "TOTP(%d位) = %s",
+    ttClose: "退出 ASTBOX（关闭本地服务）",
+    ttMin: "最小化请使用 Windows UI",
+    ttZoom: "进入/退出全屏",
+    navBack: "后退", navFwd: "前进", navUp: "上级目录",
+    ttOpenBox: "打开 .astbox 容器…", ttPackBox: "封装为 .astbox…",
+    ttAddBox: "添加文件到当前目录…", ttExtractBox: "提取选中文件",
+    ttVerifyBox: "验证容器完整性", ttMore: "更多操作",
+    ttLang: "切换语言", ttTheme: "切换外观",
+    unlockTopBtn: "解锁…",
+    ccEmptyTitle: "未打开容器",
+    ccEmptySub: "打开一个 .astbox 文件，或生成 .astbox 容器开始体验。",
+    dtFiles: "文件数", dtCred: "凭据",
+    otpHead: "输入 TOTP 验证码",
+    btnUnlockSide: "解锁",
+    btnCalc: "Base32 计算…", ttCalc: "用 Base32 密钥计算当前验证码",
+    btnLockSide: "锁定并清除凭据",
+    sideLocation: "位置", qRoot: "根目录", sideActions: "操作",
+    opOpen: "打开容器…", opPack: "封装文件夹…", opDemo: "生成 .astbox 容器…",
+    opAddFiles: "添加文件…", opAddFolder: "添加文件夹…",
+    opExtractAll: "提取全部文件", opVerify: "验证完整性", opSelftest: "密码学自检",
+    heroSub: "加密容器的解码 · 浏览 · 提取 · 封装<br>Argon2id + HKDF-SHA256 + XChaCha20-Poly1305",
+    btnHeroOpen: "打开 .astbox 文件…", btnHeroDemo: "生成 .astbox 容器",
+    heroDim: "也可以把 .astbox 文件拖进本窗口",
+    statusReady: "就绪",
+    dlgAddFiles2: "选择要添加的文件（可多选）",
+    dlgAddFolder2: "选择要添加的文件夹",
     items: "%d 个对象",
     copied: "已复制",
     passGenOk: "传播包已生成：%s",
+    // 工具栏 aria 群组标签
+    grpNav: "导航", grpOps: "操作", mainToolbar: "主导航",
+    addrBar: "地址栏", sidePanel: "边栏", fileList: "文件列表", stDot: "状态",
   },
 
   en: {
@@ -286,6 +327,46 @@ const _I18N = {
     items: "%d objects",
     copied: "Copied",
     passGenOk: "Transfer package saved to: %s",
+    dlgOpenFile: "Select .astbox container",
+    dlgPackDir: "Select folder to pack",
+    dlgSaveAs: "Save as .astbox",
+    dlgPickOutDir: "Choose extraction output folder",
+    ftAstbox: "ASTBOX containers",
+    ftAll: "All files",
+    ftPassbox: "ASTBOX transfer packages",
+    parsedUnlock: "Container parsed — enter your code to unlock",
+    openOrSpecify: "Open and unlock a container first, or pick a source folder",
+    copiedKey: "Secret copied",
+    b32Prompt: "Enter the Base32 TOTP secret (from your authenticator):",
+    totpComputed: "TOTP (%d-digit) = %s",
+    ttClose: "Quit ASTBOX (stops local service)",
+    ttMin: "Minimize via Windows UI",
+    ttZoom: "Enter/exit full screen",
+    navBack: "Back", navFwd: "Forward", navUp: "Up one level",
+    ttOpenBox: "Open .astbox container…", ttPackBox: "Pack as .astbox…",
+    ttAddBox: "Add files to current folder…", ttExtractBox: "Extract selected files",
+    ttVerifyBox: "Verify container integrity", ttMore: "More actions",
+    ttLang: "Switch language", ttTheme: "Toggle appearance",
+    unlockTopBtn: "Unlock…",
+    ccEmptyTitle: "No container open",
+    ccEmptySub: "Open a .astbox file or generate a new container to get started.",
+    dtFiles: "Files", dtCred: "Credential",
+    otpHead: "Enter TOTP code",
+    btnUnlockSide: "Unlock",
+    btnCalc: "Base32 calc…", ttCalc: "Compute current code from Base32 secret",
+    btnLockSide: "Lock and wipe credential",
+    sideLocation: "Locations", qRoot: "Root", sideActions: "Actions",
+    opOpen: "Open container…", opPack: "Pack folder…", opDemo: "Generate .astbox container…",
+    opAddFiles: "Add files…", opAddFolder: "Add folder…",
+    opExtractAll: "Extract all files", opVerify: "Verify integrity", opSelftest: "Crypto self-test",
+    heroSub: "Decode · Browse · Extract · Pack encrypted containers<br>Argon2id + HKDF-SHA256 + XChaCha20-Poly1305",
+    btnHeroOpen: "Open a .astbox file…", btnHeroDemo: "Generate .astbox container",
+    heroDim: "You can also drop a .astbox file into this window",
+    statusReady: "Ready",
+    dlgAddFiles2: "Choose files to add (multi-select)",
+    dlgAddFolder2: "Choose folder to add",
+    grpNav: "Navigation", grpOps: "Actions", mainToolbar: "Main toolbar",
+    addrBar: "Address bar", sidePanel: "Sidebar", fileList: "File list", stDot: "Status",
   }
 };
 
@@ -296,34 +377,29 @@ function _fmt(str, ...args) {
   return str.replace(/%[sd]/g, () => String(args[i++]));
 }
 
-/* 刷新所有已渲染文本（语言切换时调用） */
+/* 静态 DOM 文案应用：data-i18n / data-i18n-html / data-i18n-ph / data-i18n-title */
+function _applyStatic() {
+  document.querySelectorAll("[data-i18n]").forEach(n => { n.textContent = _t(n.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(n => { n.innerHTML = _t(n.dataset.i18nHtml); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(n => { n.placeholder = _t(n.dataset.i18nPh); });
+  document.querySelectorAll("[data-i18n-title]").forEach(n => {
+    const s = _t(n.dataset.i18nTitle);
+    n.title = s; n.setAttribute("aria-label", s);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach(n => {
+    n.setAttribute("aria-label", _t(n.dataset.i18nAria));
+  });
+  document.title = _lang === "en"
+    ? "ASTBOX Container Manager · V3.0.0" : "ASTBOX 容器管理器 · V3.0.0";
+}
+
+/* 动态已渲染片段刷新（语言切换时） */
 function _refreshI18n() {
-  /* 状态栏 */
-  const phaseMap = { empty: _t("sEmpty"), locked: _t("sLocked"), unlocked: _t("sUnlocked") };
-  const stEl = document.getElementById("stLeft");
-  if (stEl) stEl.textContent = phaseMap[state.phase] || _t("sEmpty");
-  /* 地址栏提示 */
+  _applyStatic();
   const hintEl = document.querySelector(".addr-hint");
   if (hintEl) hintEl.textContent = _t("addrEdit");
-  /* 拖放 */
-  const dvEl = document.querySelector("#dropVeil p");
-  if (dvEl) dvEl.textContent = _t("dropText");
-  /* 侧栏 */
-  const outDirLbl = document.querySelector("label[for='outDir']");
-  if (outDirLbl) outDirLbl.textContent = _t("lblOutDir");
-  const outDirPh = document.getElementById("outDir");
-  if (outDirPh) outDirPh.placeholder = _t("lblOutDirHint");
-  /* 关于页 */
-  const aboutEl = document.getElementById("aboutBody");
-  if (aboutEl) aboutEl.innerHTML = _t("aboutBody");
-  /* 无容器占位 */
-  const ccEmpty = document.getElementById("ccEmpty");
-  if (ccEmpty) {
-    const span = ccEmpty.querySelector("span");
-    if (span) span.textContent = state.info ? _t("lblReady") : _t("lblNoContainer");
-  }
-  /* 标题 */
-  document.title = _lang === "en" ? "ASTBOX Container Manager · V3.0.0" : "ASTBOX 容器管理器 · V3.0.0";
+  if (typeof applyTheme === "function") applyTheme();   // 同步 btnTheme tooltip
+  if (typeof renderAll === "function") renderAll();
 }
 
 /* 语言切换入口 */
@@ -332,15 +408,12 @@ function _switchLang() {
   localStorage.setItem(_LANG_KEY, _lang);
   document.documentElement.lang = _lang;
   _refreshI18n();
-  if (typeof renderAll === "function") renderAll();
-  if (typeof refreshState === "function") refreshState();
 }
 
-/* 初始化语言 */
-(function _initLang() {
-  if (localStorage.getItem(_LANG_KEY) === "en") _lang = "en";
-  document.documentElement.lang = _lang;
-})();
+/* 启动：脚本位于 body 尾部，DOM 已就绪，直接执行 */
+if (localStorage.getItem(_LANG_KEY) === "en") _lang = "en";
+document.documentElement.lang = _lang;
+_applyStatic();
 
 /* ---------------- 基础工具 ---------------- */
 const $ = (sel) => document.querySelector(sel);
@@ -511,7 +584,7 @@ function renderContainerCard() {
   $("#ccGen").textContent = info.generation;
   $("#ccFiles").textContent = info.files === null ? "—" : info.files;
   $("#ccSlots").textContent = info.slots_digits.length
-    ? info.slots_digits.map(d => "TOTP-" + d + (_lang==="zh"?"位":"")).join(", ") : "TOTP";
+    ? info.slots_digits.map(d => "TOTP-" + d + (_lang==="zh"?_t("digitsShort"):"")).join(", ") : "TOTP";
   const badge = $("#ccStatus");
   badge.textContent = info.status;
   badge.className = "badge " + (state.phase === "unlocked" ? "ok" : "warn");
@@ -718,7 +791,7 @@ function renderRows() {
     ul.appendChild(li);
   });
 
-  $("#stCount").textContent = hasContainer ? items.length + " 个对象" : "";
+  $("#stCount").textContent = hasContainer ? _fmt(_t("items"), items.length) : "";
 }
 
 function paintSelection() {
@@ -735,7 +808,7 @@ async function nav(target) {
 function ensureOutDir() {
   const out = $("#outDir").value.trim();
   if (!out) {
-    toast("请先在边栏填写输出目录", "err");
+    toast(_t("errOutput"), "err");
     $("#outDir").focus();
     return null;
   }
@@ -879,7 +952,7 @@ function fieldRow(labelText, inputHtml, note) {
 }
 
 /* 原生"浏览…"对话框：调用服务器端 Windows 文件对话框 */
-const ASTBOX_FT = [["ASTBOX 容器", "*.astbox"], ["所有文件", "*.*"]];
+const ASTBOX_FT = () => [[_t("ftAstbox"), "*.astbox"], [_t("ftAll"), "*.*"]];
 async function browsePick(mode, opts = {}) {
   try {
     const r = await api("/api/browse", {
@@ -925,7 +998,7 @@ function openPathSheet() {
     '<button class="btn btn-primary" id="pOk">' + _t("btnOpen") + '</button></div>');
   sheet.querySelector("#pOpenBrowse").addEventListener("click", async () => {
     const paths = await browsePick("file",
-      { title: "选择 .astbox 容器", filetypes: ASTBOX_FT,
+      { title: _t("dlgOpenFile"), filetypes: ASTBOX_FT(),
         initial: sheet.querySelector("#pOpenPath").value.trim() });
     if (paths && paths.length) sheet.querySelector("#pOpenPath").value = paths[0];
   });
@@ -944,8 +1017,8 @@ function openPathSheet() {
 }
 
 /* 封装向导 */
-const DIGITS_NOTE_6 = _t("digitsNote6");
-const DIGITS_NOTE_8 = _t("digitsNote8");
+const DIGITS_NOTE_6 = () => _t("digitsNote6");
+const DIGITS_NOTE_8 = () => _t("digitsNote8");
 function openPackSheet() {
   const sheet = openSheet(
     "<h2>" + _t("shPack") + "</h2>" +
@@ -957,7 +1030,7 @@ function openPackSheet() {
     fieldRow(_t("lblDigits"),
       '<div class="seg" id="pDigits"><button data-v="6" class="on">6 ' + _t("digitsShort") + '</button>' +
       '<button data-v="8">8 ' + _t("digitsShort") + '</button></div>' +
-      '<div class="field-note" id="digitsNote">' + DIGITS_NOTE_6 + "</div>") +
+      '<div class="field-note" id="digitsNote">' + DIGITS_NOTE_6() + "</div>") +
     fieldRow(_t("lblB32"),
       '<input class="text-input mono" id="pB32" type="text" spellcheck="false" ' +
       'placeholder="' + _t("lblB32Hint") + '">') +
@@ -978,7 +1051,7 @@ function openPackSheet() {
       if (seg.id === "pDigits") {
         const eight = +b.dataset.v === 8;
         const note = sheet.querySelector("#digitsNote");
-        note.textContent = eight ? DIGITS_NOTE_8 : DIGITS_NOTE_6;
+        note.textContent = eight ? DIGITS_NOTE_8() : DIGITS_NOTE_6();
         note.classList.toggle("field-warn", eight);
       }
     });
@@ -986,7 +1059,7 @@ function openPackSheet() {
   const digitsSel = () => +sheet.querySelector("#pDigits .on").dataset.v;
   sheet.querySelector("#pSrcBrowse").addEventListener("click", async () => {
     const paths = await browsePick("dir",
-      { title: "选择要封装的文件夹",
+      { title: _t("dlgPackDir"),
         initial: sheet.querySelector("#pSrc").value.trim() });
     if (paths && paths.length) {
       sheet.querySelector("#pSrc").value = paths[0];
@@ -996,7 +1069,7 @@ function openPackSheet() {
   sheet.querySelector("#pDstBrowse").addEventListener("click", async () => {
     const cur = sheet.querySelector("#pDst").value.trim();
     const paths = await browsePick("save",
-      { title: "保存为 .astbox", filetypes: ASTBOX_FT, defaultext: ".astbox",
+      { title: _t("dlgSaveAs"), filetypes: ASTBOX_FT(), defaultext: ".astbox",
         initial: cur });
     if (paths && paths.length) {
       let p = paths[0];
@@ -1020,21 +1093,21 @@ function openPackSheet() {
       b32: sheet.querySelector("#pB32").value.trim(),
       profile: sheet.querySelector("#pProfile .on").dataset.v,
     };
-    if (!body.dst) { toast("请指定目标文件", "err"); return; }
+    if (!body.dst) { toast(_t("errSpecify"), "err"); return; }
     if (!body.src && state.phase !== "unlocked") {
-      toast("请先打开并解锁容器，或指定源文件夹", "err");
+      toast(_t("openOrSpecify"), "err");
       return;
     }
     const btn = sheet.querySelector("#pOk");
     btn.disabled = true;
-    btn.textContent = "正在封装…";
+    btn.textContent = _t("packing");
     try {
       const r = await api("/api/pack", body, { silent: true });
       showPackResult(r.pack);
     } catch (err) {
       toast(err.message, "err");
       btn.disabled = false;
-      btn.textContent = "开始封装";
+      btn.textContent = _t("btnStart");
     }
   });
 }
@@ -1090,7 +1163,7 @@ function qrSvg(matrix) {
 
 /* 添加文件 / 文件夹 */
 function openAddSheet(foldersOnly) {
-  if (state.phase !== "unlocked") { toast("请先解锁容器", "err"); return; }
+  if (state.phase !== "unlocked") { toast(_t("errUnlock"), "err"); return; }
   const sheet = openSheet(
     "<h2>" + (foldersOnly ? _t("addFolderTitle") : _t("addFilesTitle")) + "</h2>" +
     '<p class="sheet-sub">' + _t("addFilesSub") + (foldersOnly ? "（将递归读取整个文件夹）" : "") + '</p>' +
@@ -1112,11 +1185,11 @@ function openAddSheet(foldersOnly) {
   };
   sheet.querySelector("#pBrowseFiles").addEventListener("click", async () => {
     appendLines(await browsePick("files",
-      { title: _t("addFilesSub").replace("…","") }));
+      { title: _t("dlgAddFiles2") }));
   });
   sheet.querySelector("#pBrowseFolders").addEventListener("click", async () => {
     appendLines(await browsePick("dir",
-      { title: _t("addFolderTitle").replace("添加","") + " - " + _t("browseFolders") }));
+      { title: _t("dlgAddFolder2") }));
   });
   sheet.querySelector("#pCancel").addEventListener("click", closeSheet);
   sheet.querySelector("#pOk").addEventListener("click", async () => {
@@ -1141,7 +1214,7 @@ async function makeDemo() {
     fieldRow(_t("lblDigits"),
       '<div class="seg" id="gDigits"><button data-v="6" class="on">6 ' + _t("digitsShort") + '</button>' +
       '<button data-v="8">8 ' + _t("digitsShort") + '</button></div>' +
-      '<div class="field-note" id="gDigitsNote">' + DIGITS_NOTE_6 + "</div>") +
+      '<div class="field-note" id="gDigitsNote">' + DIGITS_NOTE_6() + "</div>") +
     fieldRow(_t("lblKdf"),
       '<div class="seg" id="gProfile"><button data-v="high" class="on">' + _t("lblKdfHigh") + '</button>' +
       '<button data-v="constrained">' + _t("lblKdfLow") + '</button></div>') +
@@ -1154,7 +1227,7 @@ async function makeDemo() {
     sheet.querySelectorAll("#gDigits button").forEach(x => x.classList.remove("on"));
     b.classList.add("on");
     const note = sheet.querySelector("#gDigitsNote");
-    note.textContent = +b.dataset.v === 8 ? DIGITS_NOTE_8 : DIGITS_NOTE_6;
+    note.textContent = +b.dataset.v === 8 ? DIGITS_NOTE_8() : DIGITS_NOTE_6();
     note.classList.toggle("field-warn", +b.dataset.v === 8);
   });
   sheet.querySelector("#gProfile").addEventListener("click", e => {
@@ -1292,7 +1365,7 @@ function toast(msg, type = "") {
 
 function copyText(text, okMsg) {
   navigator.clipboard.writeText(text)
-    .then(() => toast(okMsg || "已复制", "ok"))
+    .then(() => toast(okMsg || _t("copied"), "ok"))
     .catch(() => {
       const ta = el("textarea");
       ta.value = text;
@@ -1300,7 +1373,7 @@ function copyText(text, okMsg) {
       ta.select();
       document.execCommand("copy");
       ta.remove();
-      toast(okMsg || "已复制", "ok");
+      toast(okMsg || _t("copied"), "ok");
     });
 }
 
@@ -1313,9 +1386,8 @@ function applyTheme() {
   $("#themeIcon").firstElementChild
     .setAttribute("href", dark ? "#i-sun" : "#i-moon");
   $("#btnTheme").title =
-    document.querySelectorAll(".theme-label").forEach(el => {
-      el.textContent = _fmt(_t("themeToggle"), { auto: _t("themeAuto"), light: _t("themeLight"), dark: _t("themeDark") }[_lang === "zh" ? themeMode : themeMode]);
-    });
+    _fmt(_t("themeToggle"),
+      { auto: _t("themeAuto"), light: _t("themeLight"), dark: _t("themeDark") }[themeMode]);
 }
 
 /* ---------------- 窗口红绿灯（Mac 业务逻辑映射） ---------------- */
@@ -1387,7 +1459,7 @@ function bind() {
   $("#btnLock").addEventListener("click", doLock);
   $("#btnCalcTotp").addEventListener("click", async () => {
     if (state.phase !== "locked") return;
-    const b32 = prompt("输入 Base32 TOTP 密钥（来自你的验证器）:");
+    const b32 = prompt(_t("b32Prompt"));
     if (!b32) return;
     try {
       const r = await api("/api/totp", { b32: b32.trim(), digits: otpDigits });
@@ -1401,7 +1473,7 @@ function bind() {
           if (boxes[i]) { boxes[i].value = ch; boxes[i].classList.add("filled"); }
         });
       }
-      toast("TOTP(" + otpDigits + "位) = " + r.code);
+      toast(_fmt(_t("totpComputed"), otpDigits, r.code));
       maybeAutoUnlock();
     } catch { /* ignore */ }
   });
@@ -1425,7 +1497,7 @@ function bind() {
   });
   $("#outBrowse").addEventListener("click", async () => {
     const paths = await browsePick("dir",
-      { title: "选择提取输出目录", initial: $("#outDir").value.trim() });
+      { title: _t("dlgPickOutDir"), initial: $("#outDir").value.trim() });
     if (paths && paths.length) {
       $("#outDir").value = paths[0];
       $("#outDir").dispatchEvent(new Event("change"));
@@ -1449,14 +1521,14 @@ function bind() {
     $("#filePick").value = "";
     if (!f) return;
     if (f.size > MAX_UPLOAD) {
-      toast("容器超过 4 GiB 上限，请用“浏览(本机路径)”方式打开", "err");
+      toast(_t("errFileSize"), "err");
       return;
     }
     try {
       await api("/api/open_upload", f, {
         headers: { "X-Filename": encodeURIComponent(f.name) },
       });
-      toast("容器已解析，请输入凭据解锁");
+      toast(_t("parsedUnlock"));
     } catch { /* ignore */ }
   });
 
@@ -1519,14 +1591,14 @@ function bind() {
     const f = e.dataTransfer.files && e.dataTransfer.files[0];
     if (!f) return;
     if (f.size > MAX_UPLOAD) {
-      toast("容器超过 4 GiB 上限，请用“浏览(本机路径)”方式打开", "err");
+      toast(_t("errFileSize"), "err");
       return;
     }
     try {
       await api("/api/open_upload", f, {
         headers: { "X-Filename": encodeURIComponent(f.name) },
       });
-      toast("容器已解析，请输入凭据解锁");
+      toast(_t("parsedUnlock"));
     } catch { /* ignore */ }
   });
 
