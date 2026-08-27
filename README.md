@@ -6,20 +6,21 @@ License: Apache License 2.0
 ## 中文
 
 ### 项目简介
-本分支是 AstBox 的 C#/.NET 10(NativeAOT)重写版:与 ASTBOX v1.0 规范及早期 Python 版产物**字节兼容**,移除了 Python 运行时。仓库包含四个 .NET 工程、原样复用的静态 GUI、Windows 安装包构建器,以及根目录的格式与安全规范文档 `ASTBOX-v1.0-*.txt`。
+本分支是 AstBox 的 C#/.NET 10(NativeAOT)重写版:与 ASTBOX v1.0 规范及早期 Python 版产物**字节兼容**,移除了 Python 运行时。仓库包含四个 .NET 工程、三语化(中文 / English / 日本語)的静态 GUI、Windows 安装包构建器,以及根目录的格式与安全规范文档 `ASTBOX-v1.0-*.txt`。
 
 ### 功能
 - `src/Astbox.Core`:核心库,模块与旧版一一对应 —— `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`。
 - `src/Astbox.Cli`:单文件 AOT 命令行 `astbox-cli.exe`,命令包括 `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
 - `src/Astbox.Server`:无窗口(WinExe)本地服务 `astbox-server.exe`,托管 `gui/` 前端与本地 HTTP API;支持 `.astbox` / `.passbox` 文件关联(含 `--import-passbox` 导入:校验→落盘→注册→删除传播包)。启动时自动检测默认打开方式被接管并引导手动确权(悬空选择自愈)。
 - `src/Astbox.TestsRunner`:原生自测试套件(36 项,含 CBOR 拒绝用例与互操作向量)。
-- Windows 打包:`installer/` 含 `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI 通道)、`VERSION` 与 `assets`(签名证书可选导入)。
+- 三语 Web 界面:工具栏按钮实时显示当前语言代码(`中` / `EN` / `あ`),点击弹出下拉选择;服务器返回的用户可见消息在日语界面下经查表映射为日语(未命中原样透传,永不裸崩);防回归审计工具 `tools/i18n_audit.mjs`(三方字典对齐 + 悬空键/残留 CJK 扫描)。
+- Windows 打包:`installer/` 含 `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI 通道)、`VERSION` 与 `assets`(签名证书可选导入)。应用本体图标(`app.ico`,嵌入 exe/快捷方式/ARP)与文件关联图标(`astbox.ico`)分离维护。
 
 ### 技术栈
 - C# / .NET 10(NativeAOT 发布)
 - 依赖:NSec(libsodium)、Konscious.Security.Cryptography.Argon2、QRCoder、System.Security.Cryptography.ProtectedData
 - 测试:xUnit(互操作源码套件)+ 原生 TestsRunner
-- 前端:HTML / JavaScript / CSS(`gui/`,与旧版共用)
+- 前端:HTML / JavaScript / CSS(`gui/`,内置 zh/en/ja i18n 引擎与 179×3 键字典)
 - 许可证:Apache-2.0,详见根目录 LICENSE
 
 ### 快速安装与运行
@@ -70,20 +71,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoCh
 ## English
 
 ### Overview
-This branch is the C#/.NET 10 (NativeAOT) rewrite of AstBox: **byte-compatible** with the ASTBOX v1.0 specification and artifacts produced by the earlier Python implementation, with the Python runtime removed. The repository hosts four .NET projects, the static GUI reused unchanged, a Windows installer builder, and the format/security specifications `ASTBOX-v1.0-*.txt` at the root.
+This branch is the C#/.NET 10 (NativeAOT) rewrite of AstBox: **byte-compatible** with the ASTBOX v1.0 specification and artifacts produced by the earlier Python implementation, with the Python runtime removed. The repository hosts four .NET projects, a trilingual (Chinese / English / 日本語) static GUI, a Windows installer builder, and the format/security specifications `ASTBOX-v1.0-*.txt` at the root.
 
 ### Features
 - `src/Astbox.Core`: core library whose modules map one-to-one to the legacy ones — `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`.
 - `src/Astbox.Cli`: single-file AOT command line `astbox-cli.exe`; commands include `selftest`, `info`, `unlock`, `extract`, `create`, `add`, `verify`.
 - `src/Astbox.Server`: windowless (WinExe) local service `astbox-server.exe` hosting the `gui/` front end and a local HTTP API; handles `.astbox` / `.passbox` file associations (including `--import-passbox`: verify → materialize → register → consume pack). On startup it detects hijacked file-type defaults and guides manual re-confirmation (dangling choices self-heal).
 - `src/Astbox.TestsRunner`: native self-test suite (36 checks, including CBOR rejection cases and interop vectors).
-- Windows packaging: `installer/` contains `build_cs.ps1`, `astbox-cs.iss`, `wix/` (MSI channel), `VERSION`, and `assets` (optional signing certificate).
+- Trilingual web UI: the toolbar button always shows the current language code (`中` / `EN` / `あ`); clicking opens a dropdown selector. User-visible messages returned by the server are mapped to Japanese via a lookup table when the UI is in Japanese (unmatched messages pass through unchanged — never crashes on new server text). Anti-regression audit tool: `tools/i18n_audit.mjs` (three-way dictionary parity + dangling-key/residual-CJK scanning).
+- Windows packaging: `installer/` contains `build_cs.ps1`, `astbox-cs.iss`, `wix/` (MSI channel), `VERSION`, and `assets` (optional signing certificate). The application icon (`app.ico`, embedded in exe/shortcuts/ARP) is maintained separately from the file-association icon (`astbox.ico`).
 
 ### Tech stack
 - C# / .NET 10 (NativeAOT publishing)
 - Dependencies: NSec (libsodium), Konscious.Security.Cryptography.Argon2, QRCoder, System.Security.Cryptography.ProtectedData
 - Testing: xUnit (interop source suite) + the native TestsRunner
-- Front end: HTML / JavaScript / CSS (`gui/`, shared with the legacy line)
+- Front end: HTML / JavaScript / CSS (`gui/`, with a built-in zh/en/ja i18n engine and a 179×3-key dictionary)
 - License: Apache-2.0 (`LICENSE` in repo root)
 
 ### Quick install & run
@@ -134,20 +136,21 @@ Note: Inno Setup (ISCC) on Windows is required; the MSI channel additionally nee
 ## 日本語
 
 ### 概要
-このブランチは AstBox の C#/.NET 10(NativeAOT)による書き直しです。ASTBOX v1.0 仕様および旧 Python 実装が生成した成果物と**バイト互換**を保ち、Python ランタイムを廃しています。リポジトリには 4 つの .NET プロジェクト、そのまま再利用する静的 GUI、Windows インストーラ作成ツール、そしてルートの仕様文書 `ASTBOX-v1.0-*.txt` が含まれます。
+このブランチは AstBox の C#/.NET 10(NativeAOT)による書き直しです。ASTBOX v1.0 仕様および旧 Python 実装が生成した成果物と**バイト互換**を保ち、Python ランタイムを廃しています。リポジトリには 4 つの .NET プロジェクト、三言語(中文 / English / 日本語)対応の静的 GUI、Windows インストーラ作成ツール、そしてルートの仕様文書 `ASTBOX-v1.0-*.txt` が含まれます。
 
 ### 機能
 - `src/Astbox.Core`:コアライブラリ。モジュールは旧版と 1 対 1 に対応 —— `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`。
 - `src/Astbox.Cli`:単一ファイル AOT の CLI `astbox-cli.exe`。コマンドは `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
 - `src/Astbox.Server`:ウィンドウなし(WinExe)のローカルサービス `astbox-server.exe`。`gui/` フロントエンドとローカル HTTP API を提供し、`.astbox` / `.passbox` の関連付けに対応(`--import-passbox`:検証 → 展開 → 登録 → パック削除)。起動時に既定アプリの乗っ取りを検出し、手動確権へ誘導します(壊れた選択は自己修復)。
 - `src/Astbox.TestsRunner`:ネイティブ自己テストスイート(36 項目。CBOR 拒否ケースや相互運用ベクトルを含む)。
-- Windows パッケージ:`installer/` に `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI チャネル)、`VERSION`、`assets`(署名証明書は任意)。
+- 三言語 Web UI:ツールバーのボタンには常に現在の言語コード(`中` / `EN` / `あ`)が表示され、クリックでドロップダウン選択できます。日本語 UI のとき、サーバーが返すユーザー可視メッセージは照合テーブルで日本語に変換されます(未一致は原文のまま透過 —— 新規サーバーテキストでも決してクラッシュしません)。回帰防止の監査ツール:`tools/i18n_audit.mjs`(3 言語辞書の対齐 + 未解決キー/残留 CJK の走査)。
+- Windows パッケージ:`installer/` に `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI チャネル)、`VERSION`、`assets`(署名証明書は任意)。アプリ本体アイコン(`app.ico`、exe/ショートカット/ARP 埋め込み)とファイル関連付けアイコン(`astbox.ico`)は分けて管理します。
 
 ### 技術スタック
 - C# / .NET 10(NativeAOT 公開)
 - 依存関係:NSec(libsodium)、Konscious.Security.Cryptography.Argon2、QRCoder、System.Security.Cryptography.ProtectedData
 - テスト:xUnit(相互運用ソーススイート)+ ネイティブ TestsRunner
-- フロントエンド:HTML / JavaScript / CSS(`gui/`、旧版と共有)
+- フロントエンド:HTML / JavaScript / CSS(`gui/`、zh/en/ja i18n エンジンと 179×3 キーの辞書を内蔵)
 - ライセンス:Apache-2.0(リポジトリの LICENSE)
 
 ### 簡単な導入と実行
