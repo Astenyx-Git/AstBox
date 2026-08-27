@@ -66,8 +66,8 @@ for (const lang of LANGS) {
 const dictAnchor = jsSrc.indexOf("const _I18N");
 const dictClose = jsSrc.indexOf("\n};", dictAnchor);
 const tailLines = jsSrc.slice(dictClose).split("\n");
-// 允许清单：语言内建展示(document.title 映射)等有意为之的多语文本
-const ALLOW = [/ASTBOX 容器管理器 · V3\.0\.0/];
+// 允许清单：语言内建展示(document.title 映射/语言按钮代码与菜单项自称)等有意为之的多语文本
+const ALLOW = [/ASTBOX 容器管理器 · V3\.0\.0/, /^中$/, /^中文\(简体\)$/, /^日本語$/, /^English$/];
 const srvStart = jsSrc.indexOf("/* ---------------- 服务器错误消息本地化");
 let srvEnd = -1;
 if (srvStart >= 0) {
