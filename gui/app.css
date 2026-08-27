@@ -354,9 +354,8 @@ button.tl-zoom:hover   { filter: brightness(1.06); }
               opacity .18s ease;
 }
 .btn-icon svg { width: 17px; height: 17px; }
-/* 语言按钮: 地球图标 + 当前语言代码 */
-#btnLang #langCode { font: 700 11px/1 var(--font-ui); letter-spacing: .02em; }
-#btnLang:not(:has(#langCode)) svg { margin: 0; }
+/* 语言按钮: 纯当前语言代码标识(min-width 防宽窄跳动) */
+#btnLang #langCode { font: 700 12px/1 var(--font-ui); letter-spacing: .02em; min-width: 22px; text-align: center; }
 .btn-icon:hover { background: rgba(125, 130, 150, .18); }
 .btn-icon:active { transform: scale(.88); }
 .btn-icon:disabled { opacity: .32; }

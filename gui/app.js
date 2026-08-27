@@ -1685,17 +1685,20 @@ function bind() {
   $("#btnBack").addEventListener("click", () => api("/api/back", {}));
   $("#btnFwd").addEventListener("click", () => api("/api/forward", {}));
   $("#btnUp").addEventListener("click", () => api("/api/up", {}));
-  /* 语言下拉菜单: 按钮下方弹出, 当前项打勾禁用, 各项以自身语言显示 */
+  /* 语言下拉菜单: 按钮下方弹出, 各项以自身语言显示;
+   当前项 ✓ 标记 —— 再次点击仅关闭菜单(不重选) */
 function openLangMenu() {
   const b = $("#btnLang");
   const r = b.getBoundingClientRect();
   openMenu(_LANGS.map(l => ({
     label: (l === _lang ? "✓ " : "") + _LANG_MENU[l],
-    disabled: l === _lang,
-    action: () => _setLang(l),
+    action: () => { if (l === _lang) { closeMenu(); return; } _setLang(l); },
   })), r.left, r.bottom + 6);
 }
-$("#btnLang").addEventListener("click", () => { openLangMenu(); });
+$("#btnLang").addEventListener("click", () => {
+  if (menuEl) { closeMenu(); return; }   // 菜单已开 -> 按钮即关闭开关
+  openLangMenu();
+});
 
   $("#btnOpen").addEventListener("click", (e) => openChoose(e.clientX, e.clientY));
   $("#btnPack").addEventListener("click", openPackSheet);
