@@ -379,6 +379,188 @@ const _I18N = {
     dlgAddFolder2: "Choose folder to add",
     grpNav: "Navigation", grpOps: "Actions", mainToolbar: "Main toolbar",
     addrBar: "Address bar", sidePanel: "Sidebar", fileList: "File list", stDot: "Status",
+  },
+
+  ja: {
+    // 状态栏
+    sEmpty: "準備完了 — .astbox コンテナを開いて始めましょう",
+    sLocked: "コンテナ読み込み済み — TOTP 認証コードを入力してロック解除",
+    sUnlocked: "ロック解除済み",
+    // 地址栏
+    addrEdit: "ダブルクリックでパスを編集",
+    // OTP
+    otpEnter: "%d 桁すべての認証コードを入力してください",
+    otpDigit: "認証コード 第%d桁",
+    otpDigitsLbl: "%d 桁の認証コード",
+    // 错误
+    errConn: "サーバーとの接続が切断されました",
+    errReq: "リクエスト失敗 (%d)",
+    errFileSize: "コンテナが 4 GiB 上限を超えています。「参照(ローカルパス)」をご利用ください",
+    errOutput: "先にサイドバーに出力フォルダーを入力してください",
+    errUnlock: "先にコンテナをロック解除してください",
+    errSpecify: "保存先ファイルを指定してください",
+    errPaths: "パスを少なくとも 1 つ入力してください",
+    atLeastOnePath: "パスを少なくとも 1 つ入力してください",
+    errBrowse: "システムダイアログを開けませんでした。下の欄に直接パスを入力してください",
+    errNoSel: "先にリストからファイルを選択してください",
+    // Toast/确认
+    tUnlocked: "コンテナのロックを解除しました",
+    tLocked: "ロックしました",
+    tCopied: "コピーしました",
+    file: "ファイル",
+    tExtracted: "%d 個のファイルを展開しました → %s",
+    tGen: "生成しました",
+    // 菜单
+    mExtractSel: "選択したファイルを展開",
+    mExtractAll: "すべて展開",
+    mOpenFolder: "開く（フォルダーへ移動）",
+    mRefresh: "更新",
+    mExportPack: ".passbox 伝播パッケージを生成",
+    mLock: "コンテナをロック",
+    mAbout: "このアプリについて",
+    // Sheet 标题
+    shOpen: "コンテナを開く",
+    shOpenSub: "サーバー上の .astbox ファイルを選択または入力",
+    shPack: ".astbox コンテナへパック化",
+    shPackSub: "フォルダーを暗号化コンテナへパック化します。TOTP 認証コードだけが解錠手段です",
+    shAddFile: "現在のディレクトリへファイルを追加",
+    shAddFolder: "現在のディレクトリへフォルダーを追加",
+    shAddSub: "下のボタンで参照選択、または 1 行に 1 件ずつサーバーのローカルパスを入力",
+    shGen: ".astbox コンテナを生成",
+    shGenSub: "サンプルファイル（説明書・バイナリ等）を同梱し、TOTP シークレットを自動生成。生成後すぐに開いて体験できます",
+    shVerify: "整合性検証に合格しました",
+    shSelftest: "暗号セルフテスト",
+    selftestPass: "暗号セルフテスト合格",
+    shAbout: "ASTBOX コンテナマネージャー",
+    shAboutBody: "ASTBOX v1.0 仕様準拠の暗号化コンテナ<br>デコード / ブラウズ / 展開 / パック化ツール<br><br>暗号: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass Design System",
+    packComplete: "パック化が完了しました",
+    packCompleteSub: "下の QR コードを今すぐ認証アプリでスキャンしてください。シークレットは今回のみ表示されます",
+    addFilesTitle: "現在のディレクトリへファイルを追加",
+    addFolderTitle: "現在のディレクトリへフォルダーを追加",
+    addFilesSub: "下のボタンで参照選択、または 1 行に 1 件ずつサーバーのローカルパスを入力",
+    recurseNote: "（サブフォルダーも再帰的に読み込みます）",
+    browseFiles: "ファイルを参照…",
+    browseFolders: "フォルダーを参照…",
+    pathList: "パス一覧",
+    pathListNote: "追加は Generation トランザクションとして書き込まれ、コンテナは再暗号化されます",
+    addedFiles: "%d 個のファイルを追加しました（Generation %d）",
+    copied: "コピーしました",
+    // 表单标签
+    lblFilePath: "ファイルパス",
+    lblSource: "ソースフォルダー（空欄＝現在のコンテナ内容全体）",
+    lblTarget: "出力 .astbox ファイル",
+    lblDigits: "認証コード桁数",
+    lblB32: "Base32 シークレット（空欄＝自動生成）",
+    lblB32Hint: "160 ビットのシークレットを自動生成",
+    lblKdf: "KDF 強度",
+    lblKdfHigh: "最高セキュリティ（256 MiB）",
+    lblKdfLow: "省メモリ（64 MiB）",
+    lblKdfNote: "パック化後に QR コードが表示されます。認証アプリでスキャンして取り込んでください。",
+    digitsNote6: "6 桁：すべての認証アプリと互換（Google / Microsoft / ZOHO / Proton など）。",
+    digitsNote8: "⚠ 8 桁は Google・ZOHO・Proton Authenticator 推奨。Microsoft Authenticator は 6 桁のみ対応です。",
+    digitsShort: "桁",
+    lblSave: "保存先",
+    lblEntries: "件数",
+    lblCopyKey: "シークレットをコピー",
+    lblWarn: "Base32 シークレットを失うと TOTP 認証情報は復元できません。必ずバックアップを取ってください。",
+    // 按钮
+    btnBrowse: "参照…",
+    btnCancel: "キャンセル",
+    btnOpen: "開く",
+    btnStart: "パック化開始",
+    btnAdd: "追加",
+    btnGen: "生成",
+    btnDone: "完了",
+    btnOk: "OK",
+    btnUnlock: "ロック解除へ",
+    // 文件列表
+    colName: "名前",
+    colKindDir: "フォルダー",
+    colKindFile: "ファイル",
+    colSize: "サイズ",
+    colModified: "更新日時",
+    colKind: "種類",
+    lblFolderEmpty: "このフォルダーは空です",
+    lblNoContainer: "コンテナ未接続",
+    lblNoContainerSub: ".astbox ファイルを開くか、新しいコンテナを生成して始めましょう。",
+    lblReady: "コンテナ準備完了",
+    lblReadySub: "右側に認証アプリの表示する TOTP 認証コードを入力してロック解除<br>Argon2id の鍵導出には数秒かかります",
+    // 侧栏
+    lblOutDir: "出力フォルダー",
+    lblOutDirHint: "展開先…",
+    // 拖放
+    dropText: "離して .astbox コンテナを開く",
+    // 主题
+    themeAuto: "システムに従う",
+    themeLight: "ライト",
+    themeDark: "ダーク",
+    themeToggle: "外観: %s（クリックで切替）",
+    // 窗口
+    quitTitle: "ASTBOX を終了しました",
+    quitSub: "ローカルサービスを停止しました。このタブを閉じられます。",
+    // 口令包
+    packPassHint: "伝播パッケージのパスフレーズを設定（空欄＋確定でノンパスのクイックパッケージ）：",
+    packGenOk: "伝播パッケージを生成しました：%s",
+    // 新容器
+    genCreated: "コンテナを生成しました",
+    genCreatedSub: "コンテナはロック状態で開かれました。下の QR コードを認証アプリでスキャンして取り込んでください。シークレットは今回のみ表示されます",
+    // 提取
+    extracting: "展開中…",
+    packing: "パック化中…",
+    generating: "生成中…",
+    generateShort: "生成",
+    specifySave: "保存先を指定してください",
+    // about sub
+    aboutBody: "ASTBOX v1.0 仕様準拠の暗号化コンテナ<br>デコード / ブラウズ / 展開 / パック化ツール<br><br>暗号: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass Design System",
+    selftestBody: "Argon2id / HKDF / AEAD / TOTP すべて合格",
+    // 浏览器
+    openBrowse: "ファイルを選択…（この端末からアップロード）",
+    openPath: "サーバーのローカルパスを入力…",
+    // 其他
+    notFolder: "選択した項目はフォルダーではありません",
+    dlgOpenFile: ".astbox コンテナを選択",
+    dlgPackDir: "パック化するフォルダーを選択",
+    dlgSaveAs: ".astbox として保存",
+    dlgPickOutDir: "展開先フォルダーを選択",
+    ftAstbox: "ASTBOX コンテナ",
+    ftAll: "すべてのファイル",
+    ftPassbox: "ASTBOX 伝播パッケージ",
+    parsedUnlock: "コンテナ解析済み — 認証情報を入力してロック解除",
+    openOrSpecify: "まずコンテナを開いてロック解除するか、ソースフォルダーを指定してください",
+    copiedKey: "シークレットをコピーしました",
+    b32Prompt: "Base32 TOTP シークレットを入力（認証アプリのもの）:",
+    totpComputed: "TOTP(%d 桁) = %s",
+    ttClose: "ASTBOX を終了（ローカルサービス停止）",
+    ttMin: "最小化は Windows UI を使用",
+    ttZoom: "全画面を切り替え",
+    navBack: "戻る", navFwd: "進む", navUp: "上へ",
+    ttOpenBox: ".astbox コンテナを開く…", ttPackBox: ".astbox へパック化…",
+    ttAddBox: "現在のディレクトリへファイル追加…", ttExtractBox: "選択ファイルを展開",
+    ttVerifyBox: "整合性を検証", ttMore: "その他の操作",
+    ttLang: "言語を切り替え", ttTheme: "外観を切り替え",
+    unlockTopBtn: "ロック解除…",
+    ccEmptyTitle: "コンテナ未接続",
+    ccEmptySub: ".astbox ファイルを開くか、コンテナを生成して始めましょう。",
+    dtFiles: "ファイル数", dtCred: "認証情報",
+    otpHead: "TOTP 認証コードを入力",
+    btnUnlockSide: "ロック解除",
+    btnCalc: "Base32 計算…", ttCalc: "Base32 シークレットから現在のコードを計算",
+    btnLockSide: "ロックして認証情報を消去",
+    sideLocation: "場所", qRoot: "ルート", sideActions: "操作",
+    opOpen: "コンテナを開く…", opPack: "フォルダーをパック化…", opDemo: ".astbox コンテナを生成…",
+    opAddFiles: "ファイルを追加…", opAddFolder: "フォルダーを追加…",
+    opExtractAll: "すべて展開", opVerify: "整合性検証", opSelftest: "暗号セルフテスト",
+    heroSub: "暗号化コンテナの デコード · ブラウズ · 展開 · パック化<br>Argon2id + HKDF-SHA256 + XChaCha20-Poly1305",
+    btnHeroOpen: ".astbox ファイルを開く…", btnHeroDemo: ".astbox コンテナを生成",
+    heroDim: "このウィンドウへの .astbox ファイルのドロップも可能",
+    statusReady: "準備完了",
+    dlgAddFiles2: "追加するファイルを選択（複数可）",
+    dlgAddFolder2: "追加するフォルダーを選択",
+    items: "%d 件",
+    passGenOk: "伝播パッケージを保存しました：%s",
+    // 工具栏 aria 群组标签
+    grpNav: "ナビゲーション", grpOps: "操作", mainToolbar: "メインツールバー",
+    addrBar: "アドレスバー", sidePanel: "サイドバー", fileList: "ファイル一覧", stDot: "状態",
   }
 };
 
@@ -401,8 +583,10 @@ function _applyStatic() {
   document.querySelectorAll("[data-i18n-aria]").forEach(n => {
     n.setAttribute("aria-label", _t(n.dataset.i18nAria));
   });
-  document.title = _lang === "en"
-    ? "ASTBOX Container Manager · V3.0.0" : "ASTBOX 容器管理器 · V3.0.0";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.0.0",
+                       en: "ASTBOX Container Manager · V3.0.0",
+                       ja: "ASTBOX コンテナマネージャー · V3.0.0" })[_lang]
+                   || "ASTBOX 容器管理器 · V3.0.0";
 }
 
 /* 动态已渲染片段刷新（语言切换时） */
@@ -414,18 +598,70 @@ function _refreshI18n() {
   if (typeof renderAll === "function") renderAll();
 }
 
-/* 语言切换入口 */
+/* 语言切换入口(zh → en → ja 循环) */
+const _LANGS = ["zh", "en", "ja"];
 function _switchLang() {
-  _lang = (_lang === "zh") ? "en" : "zh";
+  _lang = _LANGS[(_LANGS.indexOf(_lang) + 1) % _LANGS.length] || "zh";
   localStorage.setItem(_LANG_KEY, _lang);
   document.documentElement.lang = _lang;
   _refreshI18n();
 }
 
 /* 启动：脚本位于 body 尾部，DOM 已就绪，直接执行 */
-if (localStorage.getItem(_LANG_KEY) === "en") _lang = "en";
+const _savedLang = localStorage.getItem(_LANG_KEY);
+if (_LANGS.includes(_savedLang)) _lang = _savedLang;
 document.documentElement.lang = _lang;
 _applyStatic();
+
+/* ---------------- 服务器错误消息本地化(ja) ----------------
+   服务器侧消息保持中文原样(双轨契约), 前端按 exact/pattern 两级查表映射。
+   未命中一律原样透传 —— 永不因新增服务器文案而裸崩。仅 ja 生效,
+   zh/en 维持既有透传行为。 */
+const _SRV_EXACT = {
+  "请先解锁容器": "先にコンテナをロック解除してください",
+  "尚未打开容器": "コンテナが開かれていません",
+  "请指定输出路径": "出力パスを指定してください",
+  "请指定输出目录": "出力フォルダーを指定してください",
+  "请指定目标文件": "保存先ファイルを指定してください",
+  "请指定保存位置": "保存先を指定してください",
+  "请手动输入路径": "パスを手動で入力してください",
+  "位数未知": "桁数不明",
+  "请求体过大": "リクエストボディが大きすぎます",
+  "目录不存在": "ディレクトリが存在しません",
+  "没有可添加的文件": "追加できるファイルがありません",
+  "所选项目中没有文件": "選択した項目にファイルがありません",
+  "无可用端口": "利用可能なポートがありません",
+  "文件为空或过大(上限 4 GiB)": "ファイルが空または大きすぎます（上限 4 GiB）",
+  "完整性验证通过：全部数据记录认证成功": "整合性検証に合格：全データレコードの認証に成功しました",
+  "口令连续错误，已放弃导入": "パスフレーズの誤入力が続いたため、インポートを中止しました",
+  "已取消导入": "インポートを取り消しました",
+  "请在封装该容器的设备上解锁，或重新封装。": "このコンテナを作成した端末でロック解除するか、再パック化してください。",
+  "本机没有该容器的密钥记录，无法生成传播包": "この端末にはこのコンテナのシークレット記録がないため、伝播パッケージを生成できません",
+  "本机没有该容器的密钥记录，无法校验验证码。": "この端末にはこのコンテナのシークレット記録がないため、認証コードを照合できません。",
+  "请先打开并解锁要封装的容器，或指定源文件夹": "まずコンテナを開いてロック解除するか、ソースフォルダーを指定してください",
+  "该传播包受口令保护，请输入口令：": "この伝播パッケージはパスフレーズで保護されています。パスフレーズを入力してください：",
+};
+const _SRV_PAT = [
+  [/^源文件夹不存在:\s*([\s\S]+)/,        "ソースフォルダーが存在しません: $1"],
+  [/^文件不存在:\s*([\s\S]+)/,            "ファイルが存在しません: $1"],
+  [/^未找到目录:\s*([\s\S]+)/,            "ディレクトリが見つかりません: $1"],
+  [/容器为 (\d+) 位验证码/,               "認証コードは $1 桁です"],
+  [/磁盘空间不足：需要约 ([\d.,]+) GiB，剩余 ([\d.,]+) GiB/, "ディスク容量が不足しています（必要 約$1 GiB ／ 空き $2 GiB）"],
+  [/^验证码不匹配（(.+?)）。[\s\S]*$/,    "認証コードが一致しません（$1）。確認事項: ① 認証アプリの時刻を本機と同期すること（±150 秒以内なら自動補正されます） ② このコンテナに対応するシークレットを使用していること"],
+  [/^无法打开系统对话框\((.+?)\)，?\s*$/, "システムダイアログを開けませんでした（$1）"],
+  [/^打开容器失败:\s*([\s\S]*)/,          "コンテナを開けませんでした: $1"],
+  [/^写入失败:\s*([\s\S]+)/,              "書き込みに失敗しました: $1"],
+  [/^生成失败:\s*([\s\S]*)/,              "生成に失敗しました: $1"],
+  [/^验证码正确但容器解锁失败:\s*/,       "コードは正しいもののロック解除に失敗しました: "],
+  [/客户端提前断开\(缺 (\d+) 字节\)/,     "クライアントが早期切断しました（残り $1 バイト欠損）"],
+  [/^保存上传副本失败:\s*([\s\S]+)/,      "アップロードの一時保存に失敗しました: $1"],
+];
+function _srv(s) {
+  if (typeof s !== "string" || s.length > 400) return s;   // 超长(如 dump)不处理
+  if (_SRV_EXACT[s] !== undefined) return _SRV_EXACT[s];
+  for (const [rx, rep] of _SRV_PAT) if (rx.test(s)) return s.replace(rx, rep);
+  return s;
+}
 
 /* ---------------- 基础工具 ---------------- */
 const $ = (sel) => document.querySelector(sel);
@@ -467,7 +703,8 @@ async function api(path, body, opts = {}) {
     let data = null;
     try { data = await res.json(); } catch { /* ignore */ }
     if (!res.ok || !data || data.ok === false) {
-      throw new Error((data && data.error) || (_t("errReq").replace("(%d)", " (" + res.status + ")")));
+      throw new Error((data && data.error) ? (_lang === "ja" ? _srv(data.error) : data.error)
+                                           : (_t("errReq").replace("(%d)", " (" + res.status + ")")));
     }
     if (data.state) applyState(data.state);
     return data;
