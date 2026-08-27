@@ -587,6 +587,8 @@ function _applyStatic() {
                        en: "ASTBOX Container Manager · V3.0.0",
                        ja: "ASTBOX コンテナマネージャー · V3.0.0" })[_lang]
                    || "ASTBOX 容器管理器 · V3.0.0";
+  const lc = document.getElementById("langCode");
+  if (lc) lc.textContent = _LANG_CODES[_lang] || _lang;
 }
 
 /* 动态已渲染片段刷新（语言切换时） */
@@ -598,14 +600,18 @@ function _refreshI18n() {
   if (typeof renderAll === "function") renderAll();
 }
 
-/* 语言切换入口(zh → en → ja 循环) */
+/* 语言切换入口(下拉菜单选择) */
 const _LANGS = ["zh", "en", "ja"];
-function _switchLang() {
-  _lang = _LANGS[(_LANGS.indexOf(_lang) + 1) % _LANGS.length] || "zh";
+const _LANG_CODES = { zh: "中", en: "EN", ja: "あ" };          // 按钮代码(各语言自称)
+const _LANG_MENU  = { zh: "中文(简体)", en: "English", ja: "日本語" }; // 菜单项(各自语言, 不走翻译)
+function _setLang(l) {
+  if (!_LANGS.includes(l) || l === _lang) return;
+  _lang = l;
   localStorage.setItem(_LANG_KEY, _lang);
   document.documentElement.lang = _lang;
   _refreshI18n();
 }
+function _switchLang() { _setLang(_LANGS[(_LANGS.indexOf(_lang) + 1) % _LANGS.length] || "zh"); }
 
 /* 启动：脚本位于 body 尾部，DOM 已就绪，直接执行 */
 const _savedLang = localStorage.getItem(_LANG_KEY);
@@ -1679,7 +1685,20 @@ function bind() {
   $("#btnBack").addEventListener("click", () => api("/api/back", {}));
   $("#btnFwd").addEventListener("click", () => api("/api/forward", {}));
   $("#btnUp").addEventListener("click", () => api("/api/up", {}));
-  $("#btnLang").addEventListener("click", () => { _switchLang(); });
+  /* 语言下拉菜单: 按钮下方弹出, 各项以自身语言显示;
+   当前项 ✓ 标记 —— 再次点击仅关闭菜单(不重选) */
+  function openLangMenu() {
+    const b = $("#btnLang");
+    const r = b.getBoundingClientRect();
+    openMenu(_LANGS.map(l => ({
+      label: (l === _lang ? "✓ " : "") + _LANG_MENU[l],
+      action: () => { if (l === _lang) { closeMenu(); return; } _setLang(l); },
+    })), r.left, r.bottom + 6);
+  }
+  $("#btnLang").addEventListener("click", () => {
+    if (menuEl) { closeMenu(); return; }   // 菜单已开 -> 按钮即关闭开关
+    openLangMenu();
+  });
 
   $("#btnOpen").addEventListener("click", (e) => openChoose(e.clientX, e.clientY));
   $("#btnPack").addEventListener("click", openPackSheet);
@@ -1815,7 +1834,7 @@ function bind() {
   /* 点击空白关闭菜单 */
   document.addEventListener("pointerdown", (e) => {
     if (menuEl && !menuEl.contains(e.target) &&
-        !e.target.closest("#btnMore")) closeMenu();
+        !e.target.closest("#btnMore,#btnLang")) closeMenu();
   });
   $("#scrim").addEventListener("pointerdown", (e) => {
     if (e.target === $("#scrim") && sheetDismissable) closeSheet();
