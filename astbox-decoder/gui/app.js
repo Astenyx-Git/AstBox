@@ -35,12 +35,14 @@ const _I18N = {
     errUnlock: "请先解锁容器",
     errSpecify: "请指定目标文件",
     errPaths: "请至少填写一个路径",
+    atLeastOnePath: "请至少填写一个路径",
     errBrowse: "无法打开系统对话框，请手动输入路径",
     errNoSel: "请先在列表中选择文件",
     // Toast/确认
     tUnlocked: "容器已解锁",
     tLocked: "已锁定",
     tCopied: "已复制",
+    file: "文件",
     tExtracted: "已提取 %d 个文件 → %s",
     tGen: "已生成",
     // 菜单
@@ -63,6 +65,7 @@ const _I18N = {
     shGenSub: "内置示例文件（说明文档、二进制样本等），自动生成 TOTP 凭据，生成后立即打开供体验",
     shVerify: "完整性验证通过",
     shSelftest: "密码学自检",
+    selftestPass: "密码学自检通过",
     shAbout: "ASTBOX 容器管理器",
     shAboutBody: "依据 ASTBOX v1.0 规范实现的加密容器<br>解码 / 浏览 / 提取 / 封装工具<br><br>密码学: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>界面: Liquid Glass Design System",
     packComplete: "封装完成",
@@ -70,6 +73,7 @@ const _I18N = {
     addFilesTitle: "添加文件到当前目录",
     addFolderTitle: "添加文件夹到当前目录",
     addFilesSub: "点击下方按钮浏览选择，或每行手动填写一个服务器本机路径",
+    recurseNote: "（将递归读取整个文件夹）",
     browseFiles: "浏览文件…",
     browseFolders: "浏览文件夹…",
     pathList: "路径列表",
@@ -139,6 +143,8 @@ const _I18N = {
     extracting: "正在提取…",
     packing: "正在封装…",
     generating: "正在生成…",
+    generateShort: "生成",
+    specifySave: "请指定保存位置",
     // about sub
     aboutBody: "依据 ASTBOX v1.0 规范实现的加密容器<br>解码 / 浏览 / 提取 / 封装工具<br><br>密码学: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>界面: Liquid Glass Design System",
     selftestBody: "Argon2id / HKDF / AEAD / TOTP 全部通过",
@@ -212,12 +218,14 @@ const _I18N = {
     errUnlock: "Please unlock the container first",
     errSpecify: "Please specify a target file",
     errPaths: "Please enter at least one path",
+    atLeastOnePath: "Enter at least one path",
     errBrowse: "Couldn't open file dialog — please type the path below",
     errNoSel: "Please select files in the list first",
     // Toast/确认
     tUnlocked: "Container unlocked",
     tLocked: "Container locked",
     tCopied: "Copied",
+    file: "File",
     tExtracted: "Extracted %d files → %s",
     tGen: "Generated",
     // 菜单
@@ -240,6 +248,7 @@ const _I18N = {
     shGenSub: "Includes sample files (docs, binary samples, etc.). TOTP secret is auto-generated — container opens immediately after creation.",
     shVerify: "Integrity verification passed",
     shSelftest: "Cryptography self-test",
+    selftestPass: "Crypto self-test passed",
     shAbout: "ASTBOX Container Manager",
     shAboutBody: "Encrypted container implementation per ASTBOX v1.0 spec<br>Decode / Browse / Extract / Pack tool<br><br>Cryptography: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass Design System",
     packComplete: "Packing complete",
@@ -247,6 +256,7 @@ const _I18N = {
     addFilesTitle: "Add files to current directory",
     addFolderTitle: "Add folder to current directory",
     addFilesSub: "Click buttons below to browse, or enter one server local path per line",
+    recurseNote: " (subfolders will be read recursively)",
     browseFiles: "Browse files…",
     browseFolders: "Browse folders…",
     pathList: "Path list",
@@ -316,6 +326,8 @@ const _I18N = {
     extracting: "Extracting…",
     packing: "Packing…",
     generating: "Generating…",
+    generateShort: "Generate",
+    specifySave: "Please choose where to save",
     // about sub
     aboutBody: "Encrypted container implementation per ASTBOX v1.0 spec<br>Decode / Browse / Extract / Pack tool<br><br>Cryptography: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass Design System",
     selftestBody: "Argon2id / HKDF / AEAD / TOTP all passed",
@@ -880,7 +892,7 @@ async function doExportPassbox() {
   const stem = name.replace(/\.astbox$/i, "");
   const paths = await browsePick("save", {
     title: _t("mExportPack"),
-    filetypes: [["ASTBOX 传播包", "*.passbox"]],
+    filetypes: [[_t("ftPassbox"), "*.passbox"]],
     defaultext: "passbox",
     initial: stem + ".passbox",
   });
@@ -1166,7 +1178,7 @@ function openAddSheet(foldersOnly) {
   if (state.phase !== "unlocked") { toast(_t("errUnlock"), "err"); return; }
   const sheet = openSheet(
     "<h2>" + (foldersOnly ? _t("addFolderTitle") : _t("addFilesTitle")) + "</h2>" +
-    '<p class="sheet-sub">' + _t("addFilesSub") + (foldersOnly ? "（将递归读取整个文件夹）" : "") + '</p>' +
+    '<p class="sheet-sub">' + _t("addFilesSub") + (foldersOnly ? _t("recurseNote") : "") + '</p>' +
     '<div class="add-tools">' +
     '<button class="btn btn-glass btn-mini" id="pBrowseFiles">' + _t("browseFiles") + '</button>' +
     '<button class="btn btn-glass btn-mini" id="pBrowseFolders">' + _t("browseFolders") + '</button>' +
@@ -1406,8 +1418,8 @@ async function doQuitApp() {
 function showQuitVeil() {
   if (document.querySelector(".quit-veil")) return;
   document.body.appendChild(el("div", "quit-veil",
-    "<strong>ASTBOX 已退出</strong>" +
-    "<span>本地服务已停止，可以关闭此标签页了。</span>"));
+    "<strong>" + _t("quitTitle") + "</strong>" +
+    "<span>" + _t("quitSub") + "</span>"));
 }
 
 function toggleFullscreen() {
