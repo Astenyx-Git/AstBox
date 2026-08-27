@@ -32,12 +32,12 @@ function extractObject(src, anchor) {
 
 const objText = extractObject(jsSrc, "const _I18N");
 const DICT = new Function("return (" + objText + ");")();
-const missing = { zh: {}, en: {} };
+const LANGS = ["zh", "en", "ja"];
+const missing = { zh: {}, en: {}, ja: {} };
 const has = (d, k) => Object.prototype.hasOwnProperty.call(d, k);
 
 function ref(site, key) {
-  if (!has(DICT.zh, key)) (missing.zh[key] ??= []).push(site);
-  if (!has(DICT.en, key)) (missing.en[key] ??= []).push(site);
+  for (const lang of LANGS) if (!has(DICT[lang], key)) (missing[lang][key] ??= []).push(site);
 }
 
 let htmlKeys = 0;
@@ -50,9 +50,9 @@ for (const m of jsSrc.matchAll(/\b_t\(\s*"([^"]+)"\s*\)/g)) {
 }
 
 console.log(`refs: html=${htmlKeys}  js-calls=${jsCalls}`);
-console.log(`dict: zh=${Object.keys(DICT.zh).length} keys  en=${Object.keys(DICT.en).length} keys`);
+console.log(`dict: ${LANGS.map(l => `${l}=${Object.keys(DICT[l]).length}`).join("  ")} keys`);
 let bad = false;
-for (const lang of ["zh", "en"]) {
+for (const lang of LANGS) {
   const ks = Object.keys(missing[lang]).sort();
   if (ks.length) {
     bad = true;
@@ -61,14 +61,25 @@ for (const lang of ["zh", "en"]) {
   } else console.log(`[OK]   ${lang}: no dangling keys`);
 }
 
-/* ---- 动态路径字符串字面量中的 CJK（字典区外、剥除注释后） ---- */
+/* ---- 动态路径字符串字面量中的 CJK（字典区外、剥除注释后） ----
+   豁免区：_SRV_EXACT/_SRV_PAT 服务器消息映射表 —— 中文原文即查表键，属有意保留 */
 const dictAnchor = jsSrc.indexOf("const _I18N");
 const dictClose = jsSrc.indexOf("\n};", dictAnchor);
 const tailLines = jsSrc.slice(dictClose).split("\n");
-// 允许清单：语言内建双语展示（document.title 三元）等有意为之的双语文本
+// 允许清单：语言内建展示(document.title 映射)等有意为之的多语文本
 const ALLOW = [/ASTBOX 容器管理器 · V3\.0\.0/];
+const srvStart = jsSrc.indexOf("/* ---------------- 服务器错误消息本地化");
+let srvEnd = -1;
+if (srvStart >= 0) {
+  const fnAt = jsSrc.indexOf("function _srv", srvStart);
+  if (fnAt >= 0) { const close = jsSrc.indexOf("\n}", fnAt); srvEnd = close + 2; }
+}
 const hits = [];
+let lineAbs = dictClose + 1;
 tailLines.forEach((line, i) => {
+  const abs = lineAbs;
+  lineAbs += line.length + 1;
+  if (srvStart >= 0 && abs >= srvStart && abs <= srvEnd) return;
   let l = line;
   l = l.replace(/\/\*[\s\S]*?\*\//g, "");
   const li = l.indexOf("//");
@@ -79,7 +90,7 @@ tailLines.forEach((line, i) => {
   for (const m of l.matchAll(/"([^"]*)"|'([^']*)'/g)) {
     const s = m[1] ?? m[2];
     if (/[\u4e00-\u9fff]/.test(s) && !ALLOW.some(rx => rx.test(s))) {
-      hits.push(`app.js:${dictAnchor + dictClose + 1 + i} (rel ~tail ${i + 2}): "${s.slice(0, 60)}"`);
+      hits.push(`app.js:${abs} (rel ~tail ${i + 2}): "${s.slice(0, 60)}"`);
     }
   }
 });
