@@ -53,7 +53,14 @@ python astbox-decoder/run_gui.pyw
 ```bash
 python installer/build.py
 ```
-说明: 生成最终安装包通常需要在 Windows 上使用 Inno Setup 编译 `installer/astbox.iss`。
+默认产出三件安装产物（写入 `installer/dist/`）：
+`AstboxSetup-V3.0.0.exe`（精简版 Inno）、`AstboxSetup-V3.0.0-Chromium.exe`（内核版
+Inno）、`AstboxSetup-V3.0.0-Chromium.msi`（内核版 WiX/MSI，per-user 安装至
+`LocalAppData\Programs\AstboxMSI`，安装时静默卸载旧 Inno 版完成无缝迁移）。
+
+说明: EXE 需要 Inno Setup 6（ISCC）；MSI 需要 WiX v6（`dotnet tool install -g
+wix --version 6.0.2`），缺任一工具时对应产物自动跳过、其余照常。MSI 的
+wxs 由 `installer/gen_wxs.py` 在构建期从 stage 负载全量收割生成，不入库。
 
 ### 其他
 - 测试目录: `astbox-decoder/tests/`，当前未检测到可运行的测试用例。

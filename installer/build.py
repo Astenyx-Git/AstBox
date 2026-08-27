@@ -444,6 +444,40 @@ def stage_chromium():
     log("内核就绪: chromium/ (%.0f MiB)" % mb)
 
 
+def find_wix():
+    """WiX v4+ 工具(dotnet 全局工具)。探测方式参考 C# 分支 build_cs.ps1。"""
+    exe = os.path.join(os.path.expanduser("~"), ".dotnet", "tools", "wix.exe")
+    if os.path.isfile(exe):
+        return exe
+    from shutil import which
+    return which("wix")
+
+
+def build_msi():
+    """生成 wxs(全量收割 stage 负载)并编译 Chromium 版 MSI; 失败软处理。"""
+    wix = find_wix()
+    if not wix:
+        log("未找到 wix.exe, 跳过 MSI "
+            "(安装: dotnet tool install -g wix --version 6.0.2)")
+        return None
+    try:
+        subprocess.run([sys.executable, os.path.join(HERE, "gen_wxs.py")],
+                       check=True, cwd=HERE)
+        out = os.path.join(DIST, "AstboxSetup-%s-Chromium.msi" % APP_VERSION)
+        log("wix build → %s" % os.path.basename(out))
+        subprocess.run([wix, "build", "-arch", "x64", "-pdbtype", "none",
+                        "-o", out, os.path.join(HERE, "wix", "AstboxChromium.wxs")],
+                       check=True, cwd=HERE)
+        if os.path.isfile(out):
+            log("MSI 安装包: %s (%.1f MiB)"
+                % (out, os.path.getsize(out) / 1048576))
+            sign_file(out)
+            return out
+    except subprocess.CalledProcessError as exc:
+        log("MSI 构建失败(exit %s), 已跳过; EXE 产物不受影响。" % exc.returncode)
+    return None
+
+
 def main():
     if sys.stdout is not None and hasattr(sys.stdout, "reconfigure"):
         try:
@@ -495,14 +529,18 @@ def main():
         make_portable_zip("Astbox-portable-Chromium.zip")
         compile_setup(["/DChromiumBuild"])
         report("AstboxSetup-%s-Chromium.exe" % APP_VERSION)
+        msi_path = build_msi()
 
     if not iscc:
         log("安装 EXE：安装 Inno Setup 6 后重跑本脚本，或手动执行 astbox.iss。")
 
+    channels = ["portable-chromium", "edge/chrome-app-window"]
+    if variant in ("both", "chromium") and msi_path:
+        channels.append("msi-chromium")
     manifest = {
         "python": PY_VER,
         "built": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "channels": ["portable-chromium", "edge/chrome-app-window"],
+        "channels": channels,
     }
     with open(os.path.join(DIST, "manifest.json"), "w",
               encoding="utf-8") as f:

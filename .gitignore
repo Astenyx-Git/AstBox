@@ -5,6 +5,8 @@ astbox-decoder/chromium-profile/
 # 构建产物
 installer/dist/
 installer/stage/
+# gen_wxs.py 每次构建全量收割生成
+installer/wix/AstboxChromium.wxs
 
 # Python 杂物
 __pycache__/
