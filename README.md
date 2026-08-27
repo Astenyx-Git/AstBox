@@ -5,25 +5,10 @@ License: Apache License 2.0
 
 ## 中文
 
-### 项目简介
-本分支是 AstBox 的 C#/.NET 10(NativeAOT)重写版:与 ASTBOX v1.0 规范及早期 Python 版产物**字节兼容**,移除了 Python 运行时。仓库包含四个 .NET 工程、三语化(中文 / English / 日本語)的静态 GUI、Windows 安装包构建器,以及根目录的格式与安全规范文档 `ASTBOX-v1.0-*.txt`。
+### 简介
+AstBox 的 C#/.NET 10(NativeAOT)重写版:与 ASTBOX v1.0 规范及早期 Python 版产物**字节兼容**,移除了 Python 运行时。包含核心库、单文件 AOT 命令行、无窗口本地服务(托管**三语 Web GUI**:工具栏按钮显示当前语言代码,点击下拉切换 zh / en / ja)、原生自测试套件与 Windows 安装包构建器。
 
-### 功能
-- `src/Astbox.Core`:核心库,模块与旧版一一对应 —— `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`。
-- `src/Astbox.Cli`:单文件 AOT 命令行 `astbox-cli.exe`,命令包括 `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
-- `src/Astbox.Server`:无窗口(WinExe)本地服务 `astbox-server.exe`,托管 `gui/` 前端与本地 HTTP API;支持 `.astbox` / `.passbox` 文件关联(含 `--import-passbox` 导入:校验→落盘→注册→删除传播包)。启动时自动检测默认打开方式被接管并引导手动确权(悬空选择自愈)。
-- `src/Astbox.TestsRunner`:原生自测试套件(36 项,含 CBOR 拒绝用例与互操作向量)。
-- 三语 Web 界面:工具栏按钮实时显示当前语言代码(`中` / `EN` / `あ`),点击弹出下拉选择;服务器返回的用户可见消息在日语界面下经查表映射为日语(未命中原样透传,永不裸崩);防回归审计工具 `tools/i18n_audit.mjs`(三方字典对齐 + 悬空键/残留 CJK 扫描)。
-- Windows 打包:`installer/` 含 `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI 通道)、`VERSION` 与 `assets`(签名证书可选导入)。应用本体图标(`app.ico`,嵌入 exe/快捷方式/ARP)与文件关联图标(`astbox.ico`)分离维护。
-
-### 技术栈
-- C# / .NET 10(NativeAOT 发布)
-- 依赖:NSec(libsodium)、Konscious.Security.Cryptography.Argon2、QRCoder、System.Security.Cryptography.ProtectedData
-- 测试:xUnit(互操作源码套件)+ 原生 TestsRunner
-- 前端:HTML / JavaScript / CSS(`gui/`,内置 zh/en/ja i18n 引擎与 179×3 键字典)
-- 许可证:Apache-2.0,详见根目录 LICENSE
-
-### 快速安装与运行
+### 快速开始
 ```bash
 git clone https://github.com/Astenyx-Git/AstBox.git
 cd AstBox
@@ -32,63 +17,32 @@ dotnet publish src/Astbox.Cli/Astbox.Cli.csproj -c Release -r win-x64 -o .cli-pu
 dotnet publish src/Astbox.Server/Astbox.Server.csproj -c Release -r win-x64 -o .server-publish
 dotnet publish src/Astbox.TestsRunner/Astbox.TestsRunner.csproj -c Release -r win-x64 -o .tests-publish
 ```
-运行原生测试套件
 ```powershell
-.tests-publish\astbox-tests.exe
+.tests-publish\astbox-tests.exe           # 原生自测试套件
+.server-publish\astbox-server.exe         # 默认端口 11920,自动打开浏览器(--port N --no-browser 可指定)
+.cli-publish\astbox-cli.exe --help        # CLI 帮助(info / unlock / extract / create / add / verify / selftest)
 ```
-CLI 帮助与常用示例
-```powershell
-.cli-publish\astbox-cli.exe --help
-.cli-publish\astbox-cli.exe info path\to\container.astbox
-.cli-publish\astbox-cli.exe unlock path\to\container.astbox --totp 123456 --list
-.cli-publish\astbox-cli.exe extract path\to\container.astbox --out .\extracted --totp 123456
-.cli-publish\astbox-cli.exe create demo.astbox --demo
-.cli-publish\astbox-cli.exe create my.astbox --qr myqr.png
-.cli-publish\astbox-cli.exe add my.astbox --from-dir .\to_add --totp 123456 --out new.astbox
-```
-启动本地图形界面
-```powershell
-.server-publish\astbox-server.exe            # 默认端口 11920,自动打开浏览器
-.server-publish\astbox-server.exe --port 21524 --no-browser
-```
-安装后双击 `.astbox` 直接打开容器;双击 `.passbox` 导入传播包(内嵌容器落盘至包同目录,成功后自动删除该包)。
+安装后双击 `.astbox` 直接打开容器;双击 `.passbox` 导入传播包。
 
 ### 构建安装器
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # 同时产出 精简版 + Chromium 内核版
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi          # 追加产出 Chromium 内核版 MSI
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # 仅精简版
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1          # 精简版 + Chromium 内核版
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi     # 追加 Chromium 内核版 MSI
 ```
-说明:需在 Windows 上安装 Inno Setup(ISCC);MSI 通道另需 WiX Toolset(`dotnet tool install -g wix --version 6.0.2`)。版本号取自 `installer/VERSION`,标签自动追加 `C#` 后缀;产物写入 `installer/dist/` 并生成 `manifest.json`(channels:slim / chromium / msi)。可选代码签名:设置环境变量 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(及时间戳 `ASTBOX_SIGN_TS`)后,负载与安装包将逐一 Authenticode 签名。MSI 为 per-user 安装(独立目录 `Programs\AstboxMSI`,不与 EXE 版同目录冲突),首次安装会**静默卸载检测到的旧 Inno 版**(S2 无缝迁移,关联自动切换)。
+依赖 Inno Setup(ISCC);MSI 通道需 WiX(`dotnet tool install -g wix --version 6.0.2`)。版本取自 `installer/VERSION`(自动追加 `C#` 后缀),产物写入 `installer/dist/` 并生成 `manifest.json`。可选 Authenticode 签名:设置 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(及 `ASTBOX_SIGN_TS`)。MSI 首次安装会静默卸载检测到的旧 Inno 版(S2 无缝迁移,关联自动切换)。
 
-### 其他
-- 构建链零 Python:安装器入口为 `installer/build_cs.ps1`;历史开发脚本已归档至 `scripts/legacy/`(非构建必需)。
-- 传播包加固(csha 容器摘要强制校验、导入成功即硬删除)见规范文档 `ASTBOX-v1.0-04-Lifecycle-Security.txt` §4。
-- 本分支与 `main`(Python 参考实现)保持独立演进,互不合并。
+### 备注
+- 构建链零 Python:安装器入口为 `installer/build_cs.ps1`,历史脚本归档于 `scripts/legacy/`。
+- 本分支与 `main`(Python 参考实现)独立演进,互不合并。
 
 ---
 
 ## English
 
 ### Overview
-This branch is the C#/.NET 10 (NativeAOT) rewrite of AstBox: **byte-compatible** with the ASTBOX v1.0 specification and artifacts produced by the earlier Python implementation, with the Python runtime removed. The repository hosts four .NET projects, a trilingual (Chinese / English / 日本語) static GUI, a Windows installer builder, and the format/security specifications `ASTBOX-v1.0-*.txt` at the root.
+The C#/.NET 10 (NativeAOT) rewrite of AstBox: **byte-compatible** with the ASTBOX v1.0 specification and the earlier Python artifacts, with the Python runtime removed. Includes the core library, a single-file AOT CLI, a windowless local service hosting a **trilingual web GUI** (toolbar button shows the current language code; click to pick zh / en / ja), a native self-test suite, and a Windows installer builder.
 
-### Features
-- `src/Astbox.Core`: core library whose modules map one-to-one to the legacy ones — `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`.
-- `src/Astbox.Cli`: single-file AOT command line `astbox-cli.exe`; commands include `selftest`, `info`, `unlock`, `extract`, `create`, `add`, `verify`.
-- `src/Astbox.Server`: windowless (WinExe) local service `astbox-server.exe` hosting the `gui/` front end and a local HTTP API; handles `.astbox` / `.passbox` file associations (including `--import-passbox`: verify → materialize → register → consume pack). On startup it detects hijacked file-type defaults and guides manual re-confirmation (dangling choices self-heal).
-- `src/Astbox.TestsRunner`: native self-test suite (36 checks, including CBOR rejection cases and interop vectors).
-- Trilingual web UI: the toolbar button always shows the current language code (`中` / `EN` / `あ`); clicking opens a dropdown selector. User-visible messages returned by the server are mapped to Japanese via a lookup table when the UI is in Japanese (unmatched messages pass through unchanged — never crashes on new server text). Anti-regression audit tool: `tools/i18n_audit.mjs` (three-way dictionary parity + dangling-key/residual-CJK scanning).
-- Windows packaging: `installer/` contains `build_cs.ps1`, `astbox-cs.iss`, `wix/` (MSI channel), `VERSION`, and `assets` (optional signing certificate). The application icon (`app.ico`, embedded in exe/shortcuts/ARP) is maintained separately from the file-association icon (`astbox.ico`).
-
-### Tech stack
-- C# / .NET 10 (NativeAOT publishing)
-- Dependencies: NSec (libsodium), Konscious.Security.Cryptography.Argon2, QRCoder, System.Security.Cryptography.ProtectedData
-- Testing: xUnit (interop source suite) + the native TestsRunner
-- Front end: HTML / JavaScript / CSS (`gui/`, with a built-in zh/en/ja i18n engine and a 179×3-key dictionary)
-- License: Apache-2.0 (`LICENSE` in repo root)
-
-### Quick install & run
+### Quick start
 ```bash
 git clone https://github.com/Astenyx-Git/AstBox.git
 cd AstBox
@@ -97,38 +51,22 @@ dotnet publish src/Astbox.Cli/Astbox.Cli.csproj -c Release -r win-x64 -o .cli-pu
 dotnet publish src/Astbox.Server/Astbox.Server.csproj -c Release -r win-x64 -o .server-publish
 dotnet publish src/Astbox.TestsRunner/Astbox.TestsRunner.csproj -c Release -r win-x64 -o .tests-publish
 ```
-Run the native test suite
 ```powershell
-.tests-publish\astbox-tests.exe
+.tests-publish\astbox-tests.exe           # native self-test suite
+.server-publish\astbox-server.exe         # default port 11920, opens the browser (--port N --no-browser to override)
+.cli-publish\astbox-cli.exe --help        # CLI help (info / unlock / extract / create / add / verify / selftest)
 ```
-CLI help and common examples
-```powershell
-.cli-publish\astbox-cli.exe --help
-.cli-publish\astbox-cli.exe info path\to\container.astbox
-.cli-publish\astbox-cli.exe unlock path\to\container.astbox --totp 123456 --list
-.cli-publish\astbox-cli.exe extract path\to\container.astbox --out .\extracted --totp 123456
-.cli-publish\astbox-cli.exe create demo.astbox --demo
-.cli-publish\astbox-cli.exe create my.astbox --qr myqr.png
-.cli-publish\astbox-cli.exe add my.astbox --from-dir .\to_add --totp 123456 --out new.astbox
-```
-Launch the local GUI
-```powershell
-.server-publish\astbox-server.exe            # default port 11920, opens the browser
-.server-publish\astbox-server.exe --port 21524 --no-browser
-```
-Once installed, double-clicking `.astbox` opens the container directly; double-clicking `.passbox` imports a propagation package (the embedded container is materialized next to the pack, and the pack is consumed on success).
+Once installed, double-clicking `.astbox` opens the container; double-clicking `.passbox` imports a propagation package.
 
 ### Build installer
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # builds both Slim and Chromium-bundled channels
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi          # additionally builds the Chromium-bundled MSI
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # Slim only
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1          # Slim + Chromium channels
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi     # additionally the Chromium MSI
 ```
-Note: Inno Setup (ISCC) on Windows is required; the MSI channel additionally needs the WiX Toolset (`dotnet tool install -g wix --version 6.0.2`). The version comes from `installer/VERSION` and gets a `C#` suffix automatically; artifacts land in `installer/dist/` together with `manifest.json` (channels: slim / chromium / msi). Optional Authenticode signing: set environment variables `ASTBOX_SIGN_PFX`, `ASTBOX_SIGN_PW` (and optionally `ASTBOX_SIGN_TS`); payload binaries and setup packages are then signed individually. The MSI installs per-user into its own folder (`Programs\AstboxMSI`, no clash with the EXE edition) and **silently uninstalls a detected legacy Inno install on first setup** (seamless S2 migration; file associations follow automatically).
+Requires Inno Setup (ISCC); the MSI channel needs WiX (`dotnet tool install -g wix --version 6.0.2`). The version comes from `installer/VERSION` (a `C#` suffix is appended); artifacts land in `installer/dist/` with a `manifest.json`. Optional Authenticode signing: set `ASTBOX_SIGN_PFX`, `ASTBOX_SIGN_PW` (and `ASTBOX_SIGN_TS`). On first setup the MSI silently uninstalls a detected legacy Inno install (seamless S2 migration; file associations follow automatically).
 
 ### Notes
-- The build chain is Python-free: the installer entry point is `installer/build_cs.ps1`; historical dev scripts are archived under `scripts/legacy/` (not required for building).
-- Propagation-package hardening (mandatory `csha` container digest; consume-on-success deletion) is specified in `ASTBOX-v1.0-04-Lifecycle-Security.txt` §4.
+- The build chain is Python-free: the installer entry point is `installer/build_cs.ps1`; historical scripts are archived under `scripts/legacy/`.
 - This branch evolves independently from `main` (the Python reference); no cross-merges.
 
 ---
@@ -136,24 +74,9 @@ Note: Inno Setup (ISCC) on Windows is required; the MSI channel additionally nee
 ## 日本語
 
 ### 概要
-このブランチは AstBox の C#/.NET 10(NativeAOT)による書き直しです。ASTBOX v1.0 仕様および旧 Python 実装が生成した成果物と**バイト互換**を保ち、Python ランタイムを廃しています。リポジトリには 4 つの .NET プロジェクト、三言語(中文 / English / 日本語)対応の静的 GUI、Windows インストーラ作成ツール、そしてルートの仕様文書 `ASTBOX-v1.0-*.txt` が含まれます。
+AstBox の C#/.NET 10(NativeAOT)による書き直し:ASTBOX v1.0 仕様および旧 Python 実装の成果物と**バイト互換**を保ち、Python ランタイムを廃しています。コアライブラリ、単一ファイル AOT の CLI、**三言語 Web GUI**(ツールバーのボタンに現在の言語コードを表示、クリックで zh / en / ja を選択)をホストするウィンドウなしローカルサービス、ネイティブ自己テストスイート、Windows インストーラ作成ツールを含みます。
 
-### 機能
-- `src/Astbox.Core`:コアライブラリ。モジュールは旧版と 1 対 1 に対応 —— `Constants` / `Errors` / `CborDet` / `Crypto` / `Container` / `Creator` / `Modifier` / `Extractor` / `PassboxFile` / `QrUtil` / `BinWriter`。
-- `src/Astbox.Cli`:単一ファイル AOT の CLI `astbox-cli.exe`。コマンドは `selftest`、`info`、`unlock`、`extract`、`create`、`add`、`verify`。
-- `src/Astbox.Server`:ウィンドウなし(WinExe)のローカルサービス `astbox-server.exe`。`gui/` フロントエンドとローカル HTTP API を提供し、`.astbox` / `.passbox` の関連付けに対応(`--import-passbox`:検証 → 展開 → 登録 → パック削除)。起動時に既定アプリの乗っ取りを検出し、手動確権へ誘導します(壊れた選択は自己修復)。
-- `src/Astbox.TestsRunner`:ネイティブ自己テストスイート(36 項目。CBOR 拒否ケースや相互運用ベクトルを含む)。
-- 三言語 Web UI:ツールバーのボタンには常に現在の言語コード(`中` / `EN` / `あ`)が表示され、クリックでドロップダウン選択できます。日本語 UI のとき、サーバーが返すユーザー可視メッセージは照合テーブルで日本語に変換されます(未一致は原文のまま透過 —— 新規サーバーテキストでも決してクラッシュしません)。回帰防止の監査ツール:`tools/i18n_audit.mjs`(3 言語辞書の対齐 + 未解決キー/残留 CJK の走査)。
-- Windows パッケージ:`installer/` に `build_cs.ps1`、`astbox-cs.iss`、`wix/`(MSI チャネル)、`VERSION`、`assets`(署名証明書は任意)。アプリ本体アイコン(`app.ico`、exe/ショートカット/ARP 埋め込み)とファイル関連付けアイコン(`astbox.ico`)は分けて管理します。
-
-### 技術スタック
-- C# / .NET 10(NativeAOT 公開)
-- 依存関係:NSec(libsodium)、Konscious.Security.Cryptography.Argon2、QRCoder、System.Security.Cryptography.ProtectedData
-- テスト:xUnit(相互運用ソーススイート)+ ネイティブ TestsRunner
-- フロントエンド:HTML / JavaScript / CSS(`gui/`、zh/en/ja i18n エンジンと 179×3 キーの辞書を内蔵)
-- ライセンス:Apache-2.0(リポジトリの LICENSE)
-
-### 簡単な導入と実行
+### クイックスタート
 ```bash
 git clone https://github.com/Astenyx-Git/AstBox.git
 cd AstBox
@@ -162,38 +85,22 @@ dotnet publish src/Astbox.Cli/Astbox.Cli.csproj -c Release -r win-x64 -o .cli-pu
 dotnet publish src/Astbox.Server/Astbox.Server.csproj -c Release -r win-x64 -o .server-publish
 dotnet publish src/Astbox.TestsRunner/Astbox.TestsRunner.csproj -c Release -r win-x64 -o .tests-publish
 ```
-ネイティブテストスイートの実行
 ```powershell
-.tests-publish\astbox-tests.exe
+.tests-publish\astbox-tests.exe           # ネイティブ自己テストスイート
+.server-publish\astbox-server.exe         # 既定ポート 11920、ブラウザを自動起動(--port N --no-browser で変更可)
+.cli-publish\astbox-cli.exe --help        # CLI ヘルプ(info / unlock / extract / create / add / verify / selftest)
 ```
-CLI ヘルプと主な例
-```powershell
-.cli-publish\astbox-cli.exe --help
-.cli-publish\astbox-cli.exe info path\to\container.astbox
-.cli-publish\astbox-cli.exe unlock path\to\container.astbox --totp 123456 --list
-.cli-publish\astbox-cli.exe extract path\to\container.astbox --out .\extracted --totp 123456
-.cli-publish\astbox-cli.exe create demo.astbox --demo
-.cli-publish\astbox-cli.exe create my.astbox --qr myqr.png
-.cli-publish\astbox-cli.exe add my.astbox --from-dir .\to_add --totp 123456 --out new.astbox
-```
-ローカル GUI の起動
-```powershell
-.server-publish\astbox-server.exe            # 既定ポート 11920、ブラウザを自動起動
-.server-publish\astbox-server.exe --port 21524 --no-browser
-```
-インストール後、`.astbox` のダブルクリックでコンテナを直接開き、`.passbox` のダブルクリックで伝播パッケージを取り込みます(埋め込まれたコンテナはパックと同じフォルダーに展開され、成功後パックは自動削除)。
+インストール後、`.astbox` のダブルクリックでコンテナを開き、`.passbox` のダブルクリックで伝播パッケージを取り込みます。
 
 ### インストーラのビルド
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1               # Slim 版 + Chromium 同梱版の両方を生成
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi          # 加えて Chromium 同梱 MSI を生成
-powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -NoChromium   # Slim 版のみ
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1          # Slim 版 + Chromium 同梱版
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\build_cs.ps1 -Msi     # 加えて Chromium 同梱 MSI
 ```
-注:Windows 上の Inno Setup(ISCC)が必要です。MSI チャネルにはさらに WiX Toolset(`dotnet tool install -g wix --version 6.0.2`)が必要です。バージョンは `installer/VERSION` から取得し、自動的に `C#` 接尾辞が付きます。成果物は `installer/dist/` に出力され、`manifest.json`(channels: slim / chromium / msi)が生成されます。オプションの Authenticode 署名:環境変数 `ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(および `ASTBOX_SIGN_TS`)を設定すると、ペイロードとインストーラーが個別に署名されます。MSI はユーザーごとインストールで専用フォルダー(`Programs\AstboxMSI`)を使い、EXE 版と衝突しません。初回セットアップ時に旧 Inno 版を検出すると**サイレントでアンインストール**します(S2 シームレス移行、関連付けも自動切替)。
+Inno Setup(ISCC)が必要です。MSI チャネルには WiX(`dotnet tool install -g wix --version 6.0.2`)も必要です。バージョンは `installer/VERSION` から取得し(`C#` 接尾辞を自動付与)、成果物は `installer/dist/` に `manifest.json` とともに出力されます。オプションの Authenticode 署名:`ASTBOX_SIGN_PFX`、`ASTBOX_SIGN_PW`(および `ASTBOX_SIGN_TS`)を設定します。MSI は初回セットアップ時に旧 Inno 版を検出すると**サイレントでアンインストール**します(S2 シームレス移行、関連付けも自動切替)。
 
 ### 備考
-- ビルドチェーンに Python は不要です。インストーラの入口は `installer/build_cs.ps1`。過去の開発スクリプトは `scripts/legacy/` に保管(ビルドには不要)。
-- 伝播パッケージの強化(csha コンテナダイジェストの強制検証、成功時のパック消費)は仕様書 `ASTBOX-v1.0-04-Lifecycle-Security.txt` §4 を参照。
+- ビルドチェーンに Python は不要:インストーラの入口は `installer/build_cs.ps1`。過去のスクリプトは `scripts/legacy/` に保管。
 - 本ブランチは `main`(Python リファレンス)とは独立して進化し、相互マージは行いません。
 
 ---
