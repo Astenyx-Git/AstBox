@@ -1730,10 +1730,10 @@ function _applyStatic() {
   document.querySelectorAll("[data-i18n-aria]").forEach(n => {
     n.setAttribute("aria-label", _t(n.dataset.i18nAria));
   });
-  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.5",
-                      en: "ASTBOX Container Manager · V3.1.5",
-                      ja: "ASTBOX コンテナマネージャー · V3.1.5" })[_lang]
-                   || "ASTBOX 容器管理器 · V3.1.5";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.6",
+                      en: "ASTBOX Container Manager · V3.1.6",
+                      ja: "ASTBOX コンテナマネージャー · V3.1.6" })[_lang]
+                   || "ASTBOX 容器管理器 · V3.1.6";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = _LANG_CODES[_lang] || _lang;
 }
@@ -2742,7 +2742,7 @@ function showAbout() {
     '<svg viewBox="0 0 64 64"><rect x="10" y="20" width="44" height="32" rx="9" fill="#fff" opacity=".95"/>' +
     '<path d="M18 22 L26 10 h12 l8 12 z" fill="#fff" opacity=".7"/></svg></div>' +
     "<h2>" + _t("shAbout") + "</h2>" +
-    '<p class="sheet-sub" style="text-align:center"><b>V3.1.5</b><br>' +
+    '<p class="sheet-sub" style="text-align:center"><b>V3.1.6</b><br>' +
     _t("aboutBody") + '</p>' +
     '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnOk") + '</button></div>');
   sheet.querySelector("#pDone").addEventListener("click", closeSheet);
