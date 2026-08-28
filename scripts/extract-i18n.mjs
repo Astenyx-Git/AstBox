@@ -87,12 +87,15 @@ function dedupeLang(lit, langName) {
 const zhLines = dedupeLang(i18n, "zh");
 const enLines = dedupeLang(i18n, "en");
 const jaLines = dedupeLang(i18n, "ja");
+const deLines = dedupeLang(i18n, "de");
 
 const out = `// Copyright 2026 Astenyx-Git
 // SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
 /* i18n 数据 —— 由 scripts/extract-i18n.mjs 从 gui/app.js 提取生成。
    键序与键值逐字保留;唯一格式差异:zh/en 的重复键 copied(同值)
-   已按 JS 语义去重留档。禁止手工编辑本文件:改 gui/app.js 后重新生成。 */
+   已按 JS 语义去重留档。禁止手工编辑本文件:改 gui/app.js 后重新生成。
+   de 为 Rust 线扩展语言(_I18N.de 由本移植新增, 非 C# 谱系逐字资产);
+   de 的服务器消息走透传(与 zh/en 同策略, _srv 仅 ja 生效)。 */
 
 export const I18N = {
   zh: {
@@ -104,15 +107,18 @@ ${enLines.join("\n")}
   ja: {
 ${jaLines.join("\n")}
   },
+  de: {
+${deLines.join("\n")}
+  },
 };
 
 export const SRV_EXACT = ${srvExact};
 
 export const SRV_PAT = ${srvPat};
 
-export const LANGS = ["zh", "en", "ja"];
-export const LANG_CODES = { zh: "中", en: "EN", ja: "あ" };          // 按钮代码(各语言自称)
-export const LANG_MENU = { zh: "中文(简体)", en: "English", ja: "日本語" }; // 菜单项(各自语言, 不走翻译)
+export const LANGS = ["zh", "en", "ja", "de"];
+export const LANG_CODES = { zh: "中", en: "EN", ja: "あ", de: "DE" };          // 按钮代码(各语言自称)
+export const LANG_MENU = { zh: "中文(简体)", en: "English", ja: "日本語", de: "Deutsch" }; // 菜单项(各自语言, 不走翻译)
 `;
 writeFileSync("frontend/src/i18n/dict.ts", out, "utf8");
 console.log("written frontend/src/i18n/dict.ts");

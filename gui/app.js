@@ -393,6 +393,194 @@ const _I18N = {
     addrBar: "Address bar", sidePanel: "Sidebar", fileList: "File list", stDot: "Status",
   },
 
+  /* ---- de:Rust 线扩展语言(TS 移植管线新增;非 C# 谱系逐字资产) ---- */
+  de: {
+    // 状态栏
+    sEmpty: "Bereit — öffnen Sie einen .astbox-Container, um zu starten",
+    sLocked: "Container geladen — geben Sie Ihren TOTP-Code zum Entsperren ein",
+    sUnlocked: "Entsperrt",
+    // 地址栏
+    addrEdit: "Doppelklicken, um den Pfad zu bearbeiten",
+    // OTP
+    otpEnter: "Bitte geben Sie den vollständigen %d-stelligen Code ein",
+    otpDigit: "Codeziffer %d",
+    otpDigitsLbl: "%d-stelliger Code",
+    // 错误
+    errConn: "Verbindung zum Server verloren",
+    errReq: "Anfrage fehlgeschlagen (%d)",
+    errFileSize: "Container überschreitet das 4-GiB-Limit; bitte stattdessen \"Durchsuchen (lokaler Pfad)\" verwenden",
+    errOutput: "Bitte geben Sie zuerst ein Ausgabeverzeichnis in der Seitenleiste an",
+    errUnlock: "Bitte entsperren Sie den Container zuerst",
+    errSpecify: "Bitte geben Sie eine Zieldatei an",
+    errPaths: "Bitte geben Sie mindestens einen Pfad ein",
+    atLeastOnePath: "Mindestens einen Pfad eingeben",
+    errBrowse: "Dateidialog konnte nicht geöffnet werden — bitte Pfad unten eingeben",
+    errNoSel: "Bitte wählen Sie zuerst Dateien in der Liste aus",
+    // Toast/确认
+    tUnlocked: "Container entsperrt",
+    tLocked: "Container gesperrt",
+    tCopied: "Kopiert",
+    file: "Datei",
+    tExtracted: "%d Dateien extrahiert → %s",
+    tGen: "Generiert",
+    // 菜单
+    mExtractSel: "Auswahl extrahieren",
+    mExtractAll: "Alles extrahieren",
+    mOpenFolder: "Ordner öffnen / betreten",
+    mRefresh: "Aktualisieren",
+    mExportPack: "Übertragungspaket exportieren",
+    mLock: "Container sperren",
+    mAbout: "Info",
+    // Sheet 标题
+    shOpen: "Container öffnen",
+    shOpenSub: "Wählen Sie eine .astbox-Datei auf dem Server oder geben Sie deren Pfad ein",
+    shPack: "In .astbox-Container packen",
+    shPackSub: "Packt einen Ordner in einen verschlüsselten Container. Ihr TOTP-Code ist der einzige Weg, ihn zu entsperren.",
+    shAddFile: "Dateien zum aktuellen Verzeichnis hinzufügen",
+    shAddFolder: "Ordner zum aktuellen Verzeichnis hinzufügen",
+    shAddSub: "Klicken Sie unten auf die Schaltflächen, oder geben Sie pro Zeile einen lokalen Serverpfad ein",
+    shGen: ".astbox-Container generieren",
+    shGenSub: "Enthält Beispieldateien (Dokumente, Binärproben usw.). Das TOTP-Geheimnis wird automatisch erzeugt — der Container lässt sich direkt nach der Erstellung öffnen.",
+    shVerify: "Integritätsprüfung bestanden",
+    shSelftest: "Kryptographie-Selbsttest",
+    selftestPass: "Kryptographie-Selbsttest bestanden",
+    shAbout: "ASTBOX Container-Manager",
+    shAboutBody: "Verschlüsselte-Container-Implementierung gemäß ASTBOX-v1.0-Spezifikation<br>Werkzeug zum Dekodieren / Durchsuchen / Extrahieren / Packen<br><br>Kryptographie: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid-Glass-Designsystem",
+    packComplete: "Packen abgeschlossen",
+    packCompleteSub: "Scannen Sie den untenstehenden QR-Code bitte umgehend mit Ihrer Authenticator-App; das Geheimnis wird nur einmal angezeigt",
+    addFilesTitle: "Dateien zum aktuellen Verzeichnis hinzufügen",
+    addFolderTitle: "Ordner zum aktuellen Verzeichnis hinzufügen",
+    addFilesSub: "Klicken Sie unten auf die Schaltflächen, oder geben Sie pro Zeile einen lokalen Serverpfad ein",
+    recurseNote: " (Unterordner werden rekursiv eingelesen)",
+    browseFiles: "Dateien durchsuchen…",
+    browseFolders: "Ordner durchsuchen…",
+    pathList: "Pfadliste",
+    pathListNote: "Das Hinzufügen wird als Generierungstransaktion geschrieben und der Container neu verschlüsselt",
+    addedFiles: "%d Dateien hinzugefügt (Generierung %d)",
+    copied: "Kopiert",
+    // 表单标签
+    lblFilePath: "Dateipfad",
+    lblSource: "Quellordner (leer lassen, um den gesamten Inhalt zu packen)",
+    lblTarget: "Ziel-.astbox-Datei",
+    lblDigits: "Codelänge",
+    lblB32: "Base32-Geheimnis (leer lassen für automatische Erzeugung)",
+    lblB32Hint: "160-Bit-Geheimnis automatisch erzeugen",
+    lblKdf: "KDF-Stärke",
+    lblKdfHigh: "Maximale Sicherheit (256 MiB RAM)",
+    lblKdfLow: "Minimaler RAM (64 MiB)",
+    lblKdfNote: "Nach dem Packen erscheint ein QR-Code. Scannen Sie ihn mit Ihrer Authenticator-App, um das Geheimnis zu importieren.",
+    digitsNote6: "6 Ziffern: kompatibel mit allen Authenticatoren (Google / Microsoft / ZOHO / Proton usw.)",
+    digitsNote8: "⚠ 8 Ziffern werden für Google-, ZOHO- und Proton-Authenticator empfohlen. Der Windows-Authenticator unterstützt nur 6 Ziffern.",
+    digitsShort: "Ziff.",
+    lblSave: "Speicherort",
+    lblEntries: "Einträge",
+    lblCopyKey: "Geheimnis kopieren",
+    lblWarn: "Wenn Sie das Base32-Geheimnis verlieren, sind Ihre TOTP-Codes unwiederbringlich. Sichern Sie das Geheimnis jetzt.",
+    // 按钮
+    btnBrowse: "Durchsuchen…",
+    btnCancel: "Abbrechen",
+    btnOpen: "Öffnen",
+    btnStart: "Packen",
+    btnAdd: "Hinzufügen",
+    btnGen: "Generieren",
+    btnDone: "Fertig",
+    btnOk: "OK",
+    btnUnlock: "Jetzt entsperren",
+    // 文件列表
+    colName: "Name",
+    colKindDir: "Ordner",
+    colKindFile: "Datei",
+    colSize: "Größe",
+    colModified: "Geändert",
+    colKind: "Typ",
+    lblFolderEmpty: "Dieser Ordner ist leer",
+    lblNoContainer: "Kein Container geöffnet",
+    lblNoContainerSub: "Öffnen Sie eine .astbox-Datei oder generieren Sie einen neuen Container, um zu starten.",
+    lblReady: "Container bereit",
+    lblReadySub: "Geben Sie rechts den in Ihrer Authenticator-App angezeigten TOTP-Code ein, um zu entsperren<br>Die Argon2id-Schlüsselableitung dauert einige Sekunden — bitte warten",
+    // 侧栏
+    lblOutDir: "Ausgabeverzeichnis",
+    lblOutDirHint: "Ziel zum Extrahieren…",
+    // 拖放
+    dropText: ".astbox-Datei hier ablegen, um sie zu öffnen",
+    // 主题
+    themeAuto: "System folgen",
+    themeLight: "Hell",
+    themeDark: "Dunkel",
+    themeToggle: "Design: %s",
+    // 窗口
+    quitTitle: "ASTBOX wurde beendet",
+    quitSub: "Server gestoppt. Sie können diesen Tab schließen.",
+    // 口令包
+    packPassHint: "Passphrase für das Übertragungspaket festlegen (leer lassen für ein schnelles Paket ohne Passphrase):",
+    packGenOk: "Übertragungspaket erzeugt: %s",
+    // 新容器
+    genCreated: "Container generiert",
+    genCreatedSub: "Der Container ist nun gesperrt; scannen Sie den untenstehenden QR-Code mit Ihrer Authenticator-App, um das Geheimnis zu importieren; es wird nur einmal angezeigt",
+    // 提取
+    extracting: "Extrahiere…",
+    packing: "Packe…",
+    generating: "Generiere…",
+    generateShort: "Generieren",
+    specifySave: "Bitte wählen Sie einen Speicherort",
+    // about sub
+    aboutBody: "Verschlüsselte-Container-Implementierung gemäß ASTBOX-v1.0-Spezifikation<br>Werkzeug zum Dekodieren / Durchsuchen / Extrahieren / Packen<br><br>Kryptographie: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid-Glass-Designsystem",
+    selftestBody: "Argon2id / HKDF / AEAD / TOTP alle bestanden",
+    // 浏览器
+    openBrowse: "Datei von diesem Gerät hochladen",
+    openPath: "Pfad auf dem Server eingeben…",
+    // 其他
+    notFolder: "Dieses Element ist kein Ordner",
+    items: "%d Objekte",
+    passGenOk: "Übertragungspaket gespeichert unter: %s",
+    // P5 .passbox import (double-click / launch-arg flow)
+    importTitle: "Übertragungspaket importieren",
+    importSub: "Schreibt den eingebetteten Container neben das Paket und registriert sein Geheimnis (keine Neuregistrierung)",
+    packPassLabel: "Passphrase",
+    btnImport: "Importieren",
+    importOk: "Übertragungspaket importiert — geben Sie den Prüfcode ein, um zu entsperren",
+    dlgOpenFile: ".astbox-Container auswählen",
+    dlgPackDir: "Zu packenden Ordner auswählen",
+    dlgSaveAs: "Als .astbox speichern",
+    dlgPickOutDir: "Ausgabeverzeichnis für die Extraktion wählen",
+    ftAstbox: "ASTBOX-Container",
+    ftAll: "Alle Dateien",
+    ftPassbox: "ASTBOX-Übertragungspakete",
+    parsedUnlock: "Container eingelesen — geben Sie Ihren Code ein, um zu entsperren",
+    openOrSpecify: "Öffnen und entsperren Sie zuerst einen Container, oder wählen Sie einen Quellordner",
+    copiedKey: "Geheimnis kopiert",
+    b32Prompt: "Base32-TOTP-Geheimnis eingeben (aus Ihrer Authenticator-App):",
+    totpComputed: "TOTP (%d-stellig) = %s",
+    ttClose: "ASTBOX beenden (stoppt den lokalen Dienst)",
+    ttMin: "Über die Windows-Benutzeroberfläche minimieren",
+    ttZoom: "Vollbild betreten/verlassen",
+    navBack: "Zurück", navFwd: "Vorwärts", navUp: "Eine Ebene höher",
+    ttOpenBox: ".astbox-Container öffnen…", ttPackBox: "Als .astbox packen…",
+    ttAddBox: "Dateien zum aktuellen Ordner hinzufügen…", ttExtractBox: "Ausgewählte Dateien extrahieren",
+    ttVerifyBox: "Container-Integrität prüfen", ttMore: "Weitere Aktionen",
+    ttLang: "Sprache wechseln", ttTheme: "Darstellung umschalten",
+    unlockTopBtn: "Entsperren…",
+    ccEmptyTitle: "Kein Container geöffnet",
+    ccEmptySub: "Öffnen Sie eine .astbox-Datei oder generieren Sie einen neuen Container, um zu starten.",
+    dtFiles: "Dateien", dtCred: "Zugangsdaten",
+    otpHead: "TOTP-Code eingeben",
+    btnUnlockSide: "Entsperren",
+    btnCalc: "Base32-Berechnung…", ttCalc: "Aktuellen Code aus Base32-Geheimnis berechnen",
+    btnLockSide: "Sperren und Zugangsdaten verwerfen",
+    sideLocation: "Speicherorte", qRoot: "Stamm", sideActions: "Aktionen",
+    opOpen: "Container öffnen…", opPack: "Ordner packen…", opDemo: ".astbox-Container generieren…",
+    opAddFiles: "Dateien hinzufügen…", opAddFolder: "Ordner hinzufügen…",
+    opExtractAll: "Alle Dateien extrahieren", opVerify: "Integrität prüfen", opSelftest: "Kryptographie-Selbsttest",
+    heroSub: "Dekodieren · Durchsuchen · Extrahieren · Packen verschlüsselter Container<br>Argon2id + HKDF-SHA256 + XChaCha20-Poly1305",
+    btnHeroOpen: ".astbox-Datei öffnen…", btnHeroDemo: ".astbox-Container generieren",
+    heroDim: "Sie können auch eine .astbox-Datei in dieses Fenster ziehen",
+    statusReady: "Bereit",
+    dlgAddFiles2: "Hinzuzufügende Dateien wählen (Mehrfachauswahl)",
+    dlgAddFolder2: "Hinzuzufügenden Ordner wählen",
+    grpNav: "Navigation", grpOps: "Aktionen", mainToolbar: "Hauptsymbolleiste",
+    addrBar: "Adressleiste", sidePanel: "Seitenleiste", fileList: "Dateiliste", stDot: "Status",
+  },
+
   ja: {
     // 状态栏
     sEmpty: "準備完了 — .astbox コンテナを開いて始めましょう",
@@ -601,10 +789,10 @@ function _applyStatic() {
   document.querySelectorAll("[data-i18n-aria]").forEach(n => {
     n.setAttribute("aria-label", _t(n.dataset.i18nAria));
   });
-  document.title = ({ zh: "ASTBOX 容器管理器 · V3.0.0",
-                      en: "ASTBOX Container Manager · V3.0.0",
-                      ja: "ASTBOX コンテナマネージャー · V3.0.0" })[_lang]
-                   || "ASTBOX 容器管理器 · V3.0.0";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.0",
+                      en: "ASTBOX Container Manager · V3.1.0",
+                      ja: "ASTBOX コンテナマネージャー · V3.1.0" })[_lang]
+                   || "ASTBOX 容器管理器 · V3.1.0";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = _LANG_CODES[_lang] || _lang;
 }
@@ -1613,7 +1801,7 @@ function showAbout() {
     '<svg viewBox="0 0 64 64"><rect x="10" y="20" width="44" height="32" rx="9" fill="#fff" opacity=".95"/>' +
     '<path d="M18 22 L26 10 h12 l8 12 z" fill="#fff" opacity=".7"/></svg></div>' +
     "<h2>" + _t("shAbout") + "</h2>" +
-    '<p class="sheet-sub" style="text-align:center"><b>V3.0.0</b><br>' +
+    '<p class="sheet-sub" style="text-align:center"><b>V3.1.0</b><br>' +
     _t("aboutBody") + '</p>' +
     '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnOk") + '</button></div>');
   sheet.querySelector("#pDone").addEventListener("click", closeSheet);
