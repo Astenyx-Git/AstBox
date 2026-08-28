@@ -30,3 +30,5 @@ obj/
 __pycache__/
 *.pyc
 .venv/
+
+.tests-publish2/
