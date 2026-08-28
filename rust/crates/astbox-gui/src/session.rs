@@ -154,6 +154,9 @@ pub struct AppState {
     uc: Option<UnlockedContainer>,
     file_path: Option<String>,
     cred: Option<String>,
+    /// Base32 secret actually used at unlock (self-verification channel for
+    /// /api/add); the entered TOTP code (cred) is display/log semantics only.
+    cred_secret: Option<String>,
     current_dir: Vec<u8>,
     history: Vec<Vec<u8>>,
     forward: Vec<Vec<u8>>,
@@ -168,6 +171,7 @@ impl AppState {
             uc: None,
             file_path: None,
             cred: None,
+            cred_secret: None,
             current_dir: Constants::ROOT_DIRECTORY_ID.to_vec(),
             history: Vec::new(),
             forward: Vec::new(),
@@ -390,6 +394,7 @@ impl AppState {
         self.pc = Some(pc);
         self.uc = None;
         self.cred = None;
+        self.cred_secret = None;
         self.file_path = Some(path.to_string());
         self.current_dir = Constants::ROOT_DIRECTORY_ID.to_vec();
         self.history.clear();
@@ -469,7 +474,7 @@ impl AppState {
         let pc = self.pc.take().expect("checked above");
         match Container::unlock_parsed(pc, None, Some(&b32)) {
             Ok(uc) => {
-                self.finish_unlock(uc, totp);
+                self.finish_unlock(uc, totp, &b32);
                 Ok(())
             }
             Err(exc) => Err(ApiError::api(
@@ -479,8 +484,9 @@ impl AppState {
         }
     }
 
-    fn finish_unlock(&mut self, uc: UnlockedContainer, cred: &str) {
+    fn finish_unlock(&mut self, uc: UnlockedContainer, cred: &str, cred_secret: &str) {
         self.cred = Some(cred.to_string());
+        self.cred_secret = Some(cred_secret.to_string());
         self.file_path = Some(uc.parsed.path.clone());
         self.current_dir = Constants::ROOT_DIRECTORY_ID.to_vec();
         self.history.clear();
@@ -494,6 +500,7 @@ impl AppState {
             self.pc = Some(uc.parsed);
         }
         self.cred = None;
+        self.cred_secret = None;
         self.current_dir = Constants::ROOT_DIRECTORY_ID.to_vec();
         self.history.clear();
         self.forward.clear();
@@ -782,10 +789,11 @@ impl AppState {
     }
 
     /// Add files from given paths (dirs recurse; relative logical paths).
-    /// Note the upstream-faithful deviation: the new generation is
-    /// self-verified with the unlock code credential, which cannot match a
-    /// secret-byte slot — the response is an auth error while the gen-1 file
-    /// was already committed to disk (python reference behaves identically).
+    /// The new generation is self-verified through the secret channel (the
+    /// KDF credential actually used at unlock); the TOTP ASCII code is not
+    /// a KDF credential and cannot pass self-verification for
+    /// secret-credential containers. (Absorbed from the C#-line review fix
+    /// 519061c; byte layout untouched.)
     pub fn add_paths(&mut self, paths: &[String]) -> Result<usize, ApiError> {
         let Some(uc) = self.uc.take() else {
             return Err(ApiError::api(eapi::NOT_UNLOCKED, "请先解锁容器"));
@@ -843,8 +851,14 @@ impl AppState {
             return Err(ApiError::api(eapi::NO_FILES, "没有可添加的文件"));
         }
         let out_path = self.file_path.clone().unwrap_or_default();
-        match Modifier::add_files(&uc, &files, &out_path, self.cred.as_deref())
-            .map_err(ApiError::from)
+        match Modifier::add_files(
+            &uc,
+            &files,
+            &out_path,
+            self.cred.as_deref(),
+            self.cred_secret.as_deref(),
+        )
+        .map_err(ApiError::from)
         {
             Ok(Some(uc2)) => {
                 self.uc = Some(uc2);

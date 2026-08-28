@@ -476,12 +476,13 @@ fn modify_replay_byte_identical() {
         &format!("{{\"paths\":[\"{}\"]}}", json_escape_path(&add_dir)),
     )
     .unwrap();
-    // KNOWN upstream-faithful deviation (REWRITE-PROGRESS): /api/add
-    // self-verifies the new generation with the unlock CODE credential,
-    // which cannot match a secret-byte slot — the response is an auth
-    // error, but the gen-1 container was already committed to disk.
-    // (Python reference behaves identically.) We therefore only require
-    // the committed generation to be 1.
+    // ABSORBED (C#-line review fix 519061c): /api/add self-verification now
+    // goes through the secret channel, so our server answers ok:true. The
+    // C#-reference artifact captured here predates that fix (its /api/add
+    // self-verified with the unlock CODE credential — not a KDF credential —
+    // and returned an auth error after the gen-1 container was committed).
+    // We therefore only require the committed generation to be 1; the byte
+    // replay below is unaffected (self-verify channel does not touch bytes).
     let _ = add;
     let gen_check = std::fs::read(&cs_path).unwrap();
     let gen = u64_be_at(&gen_check, 28);
@@ -538,6 +539,7 @@ fn modify_replay_byte_identical() {
         rs_added.to_str().unwrap(),
         None,
         Some(modified as i64),
+        None,
     )
     .unwrap();
 

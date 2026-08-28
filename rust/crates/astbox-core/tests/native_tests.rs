@@ -369,7 +369,7 @@ fn modify_add_file_generation_increments() {
     let note_text: &[u8] = "added by the C# port\n中文内容验证\n".as_bytes();
     let new_files = vec![("newdir/note.txt".to_string(), note_text.to_vec())];
     // C# parity: AddFiles(..., totp: null) returns null; reopen via secret.
-    Modifier::add_files(&uc, &new_files, out_path.to_str().unwrap(), None).unwrap();
+    Modifier::add_files(&uc, &new_files, out_path.to_str().unwrap(), None, None).unwrap();
     let reopened = Container::unlock_container(
         out_path.to_str().unwrap(),
         None,
@@ -406,6 +406,58 @@ fn modify_add_file_generation_increments() {
     }
     let _ = std::fs::remove_dir_all(&work);
     assert!(originals_intact, "original files intact after modify");
+}
+
+#[test]
+fn add_files_secret_channel_selfverifies() {
+    // Secret-channel self-verification (absorbed from C#-line 519061c):
+    // the Base32 secret is the actual KDF credential, so re-unlocking the
+    // committed generation succeeds and the reopened container is returned.
+    let uc = unlock_demo();
+    let work = new_work("add_secret_channel");
+    let out_path = work.join("added-secret.astbox");
+    let new_files = vec![("secret-note.txt".to_string(), b"secret channel\n".to_vec())];
+    let uc2 = Modifier::add_files(
+        &uc,
+        &new_files,
+        out_path.to_str().unwrap(),
+        None,
+        Some(FIXTURE_SECRET),
+    )
+    .unwrap()
+    .expect("secret-channel self-verification reopens the container");
+    assert_eq!(uc2.parsed.header.generation, 1, "self-verified generation 1");
+    let _ = std::fs::remove_dir_all(&work);
+}
+
+#[test]
+fn add_files_totp_channel_fails_after_commit() {
+    // Failure-semantics anchor: the TOTP ASCII code is not a KDF credential,
+    // so totp-channel self-verification fails for secret-credential
+    // containers — AFTER the new generation was already committed to disk.
+    let uc = unlock_demo();
+    let work = new_work("add_totp_fail");
+    let out_path = work.join("added-totp.astbox");
+    let new_files = vec![("totp-note.txt".to_string(), b"totp channel\n".to_vec())];
+    let err = Modifier::add_files(
+        &uc,
+        &new_files,
+        out_path.to_str().unwrap(),
+        Some("123456"),
+        None,
+    )
+    .err()
+    .expect("totp-channel self-verification must fail for secret-credential containers");
+    assert_eq!(
+        err.code,
+        E::AuthenticationFailed,
+        "auth error expected: {}",
+        err.code_name()
+    );
+    let committed = std::fs::read(&out_path).unwrap();
+    let gen = Container::parse_header(&committed).unwrap().generation;
+    assert_eq!(gen, 1, "generation 1 committed before self-verification failed");
+    let _ = std::fs::remove_dir_all(&work);
 }
 
 #[test]

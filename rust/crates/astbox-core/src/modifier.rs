@@ -117,15 +117,20 @@ pub struct Modifier;
 impl Modifier {
     /// Add files ({logical_path: bytes}) to an unlocked container and write
     /// the new generation to out_path. Returns the re-opened
-    /// UnlockedContainer (self-verified), or None without a TOTP code.
+    /// UnlockedContainer (self-verified), or None without a credential.
+    /// Self-verification prefers the secret channel: the Base32 secret is
+    /// the actual KDF credential of secret-credential containers, while the
+    /// TOTP ASCII code only works for legacy code-credential containers.
+    /// (Absorbed from the C#-line review fix 519061c; byte layout untouched.)
     pub fn add_files(
         uc: &UnlockedContainer,
         files: &[(String, Vec<u8>)],
         out_path: &str,
         totp: Option<&str>,
+        secret_b32: Option<&str>,
     ) -> Result<Option<UnlockedContainer>> {
         let mut rng = crate::rng::OsRandom;
-        Self::add_files_with(&mut rng, uc, files, out_path, totp, None)
+        Self::add_files_with(&mut rng, uc, files, out_path, totp, None, secret_b32)
     }
 
     /// Byte-compat harness variant: explicit random source + timestamp.
@@ -136,6 +141,7 @@ impl Modifier {
         out_path: &str,
         totp: Option<&str>,
         now_override: Option<i64>,
+        secret_b32: Option<&str>,
     ) -> Result<Option<UnlockedContainer>> {
         if files.is_empty() {
             return Err(AstboxError::new(E::InvalidArgument, "no files to add"));
@@ -596,6 +602,19 @@ impl Modifier {
         }
 
         // --- self-verification --------------------------------------------------------
+        // Self-verify by re-unlocking the committed container. The secret
+        // channel is the reliable one: secret bytes are the actual KDF
+        // credential of secret-credential containers, while the TOTP ASCII
+        // code is not a KDF credential and only works for legacy
+        // code-credential containers. Byte layout untouched.
+        if let Some(s) = secret_b32 {
+            return Ok(Some(Container::unlock_container(
+                out_path,
+                None,
+                None,
+                Some(s),
+            )?));
+        }
         if let Some(t) = totp {
             return Ok(Some(Container::unlock_container(out_path, Some(t), None, None)?));
         }

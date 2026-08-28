@@ -6,15 +6,15 @@
 //! Subcommands:
 //!     selftest                      run cryptographic self-tests
 //!     info   FILE                   structural info (no credentials)
-//!     unlock FILE [--totp C] [--list]
+//!     unlock FILE [--totp C] [--secret B32] [--list]
 //!                                   unlock and verify the container
-//!     extract FILE --out DIR [--totp C] [--path P] [--verify]
+//!     extract FILE --out DIR [--totp C] [--secret B32] [--path P] [--verify]
 //!                                   decrypt files to a local directory
 //!     create FILE [--totp-code C | --totp-secret B32] [--qr PNG]
 //!                   [--totp-digits N] [--seed-dir DIR] [--demo]
 //!                   [--profile high|constrained]
 //!                                   create a TOTP-only container
-//!     add    FILE --from-dir DIR [--totp C] [--out NEW]
+//!     add    FILE --from-dir DIR [--totp C] [--secret B32] [--out NEW]
 //!                                   add files to a container
 //!
 //! Arg parsing is hand-rolled exactly like the C# port: the argparse help
@@ -78,31 +78,35 @@ options:
 ";
 
 const UNLOCK_HELP: &str = "\
-usage: astbox-cli unlock [-h] [--totp TOTP] [--list] [--verify] file
+usage: astbox-cli unlock [-h] [--totp TOTP] [--secret SECRET]
+                         [--list] [--verify] file
 
 positional arguments:
   file
 
 options:
-  -h, --help   show this help message and exit
-  --totp TOTP  TOTP code (sole credential type)
-  --list       list contents
-  --verify     authenticate all Data Records
+  -h, --help        show this help message and exit
+  --totp TOTP       TOTP code (legacy code-credential containers)
+  --secret SECRET   Base32 TOTP secret (containers created with a
+                    secret credential; preferred)
+  --list            list contents
+  --verify          authenticate all Data Records
 ";
 
 const EXTRACT_HELP: &str = "\
-usage: astbox-cli extract [-h] --out OUT [--totp TOTP] [--path PATH]
-                          [--verify]
+usage: astbox-cli extract [-h] --out OUT [--totp TOTP]
+                          [--secret SECRET] [--path PATH] [--verify]
                           file
 
 positional arguments:
   file
 
 options:
-  -h, --help   show this help message and exit
+  -h, --help        show this help message and exit
   --out OUT
-  --totp TOTP  TOTP code (sole credential type)
-  --path PATH  extract only this logical path ('' = all)
+  --totp TOTP       TOTP code (legacy code-credential containers)
+  --secret SECRET   Base32 TOTP secret (preferred)
+  --path PATH       extract only this logical path ('' = all)
   --verify
 ";
 
@@ -131,7 +135,8 @@ options:
 ";
 
 const ADD_HELP: &str = "\
-usage: astbox-cli add [-h] --from-dir FROM_DIR [--out OUT] [--totp TOTP] file
+usage: astbox-cli add [-h] --from-dir FROM_DIR [--out OUT]
+                      [--totp TOTP] [--secret SECRET] file
 
 positional arguments:
   file
@@ -140,7 +145,9 @@ options:
   -h, --help           show this help message and exit
   --from-dir FROM_DIR  directory whose files are added
   --out OUT            output path (default: modify in place)
-  --totp TOTP          TOTP code (sole credential type)
+  --totp TOTP          TOTP code (legacy code-credential containers)
+  --secret SECRET      Base32 TOTP secret (preferred; enables reliable
+                       self-verification of the new generation)
 ";
 
 // ------------------------------------------------------------- helpers
@@ -233,6 +240,7 @@ struct Args {
     cmd: String,
     file: String,
     totp: Option<String>,
+    secret: Option<String>,
     list: bool,
     verify: bool,
     out: String,
@@ -288,7 +296,7 @@ fn specs() -> HashMap<&'static str, Spec> {
             "unlock",
             Spec {
                 usage: UNLOCK_HELP,
-                value_opts: &[("--totp", OptKind::Value)],
+                value_opts: &[("--totp", OptKind::Value), ("--secret", OptKind::Value)],
                 flags: &["--list", "--verify"],
                 required_opts: &[],
                 takes_file: true,
@@ -301,6 +309,7 @@ fn specs() -> HashMap<&'static str, Spec> {
                 value_opts: &[
                     ("--out", OptKind::Value),
                     ("--totp", OptKind::Value),
+                    ("--secret", OptKind::Value),
                     ("--path", OptKind::Value),
                 ],
                 flags: &["--verify"],
@@ -333,6 +342,7 @@ fn specs() -> HashMap<&'static str, Spec> {
                     ("--from-dir", OptKind::Value),
                     ("--out", OptKind::Value),
                     ("--totp", OptKind::Value),
+                    ("--secret", OptKind::Value),
                 ],
                 flags: &[],
                 required_opts: &["--from-dir"],
@@ -472,6 +482,7 @@ fn parse_args(argv: &[String]) -> Args {
     }
 
     args.totp = values.get("--totp").cloned();
+    args.secret = values.get("--secret").cloned();
     args.out = values.get("--out").cloned().unwrap_or_default();
     args.path = values.get("--path").cloned().unwrap_or_default();
     args.totp_code = values.get("--totp-code").cloned();
@@ -575,8 +586,15 @@ fn cmd_info(args: &Args) -> astbox_core::Result<()> {
 
 fn cmd_unlock(args: &Args) -> astbox_core::Result<()> {
     let pc = Container::parse_container(&args.file, None)?;
-    let totp = gather_totp(args.totp.as_deref());
-    let uc = Container::unlock_parsed(pc, Some(&totp), None)?;
+    // --secret 优先: secret 字节是 secret 凭据容器的真实 KDF 凭据;
+    // --totp 仅对 legacy code 凭据容器有效。(C# 线 519061c 对齐)
+    let uc = match args.secret.as_deref() {
+        Some(s) => Container::unlock_parsed(pc, None, Some(s))?,
+        None => {
+            let totp = gather_totp(args.totp.as_deref());
+            Container::unlock_parsed(pc, Some(&totp), None)?
+        }
+    };
     println!("unlocked OK");
     println!("vault id   : {}", hex(&uc.parsed.header.vault_id));
     println!("generation : {}", uc.parsed.header.generation);
@@ -623,8 +641,14 @@ fn cmd_unlock(args: &Args) -> astbox_core::Result<()> {
 
 fn cmd_extract(args: &Args) -> astbox_core::Result<()> {
     let pc = Container::parse_container(&args.file, None)?;
-    let totp = gather_totp(args.totp.as_deref());
-    let uc = Container::unlock_parsed(pc, Some(&totp), None)?;
+    // --secret 优先(同 unlock;C# 线 519061c 对齐)。
+    let uc = match args.secret.as_deref() {
+        Some(s) => Container::unlock_parsed(pc, None, Some(s))?,
+        None => {
+            let totp = gather_totp(args.totp.as_deref());
+            Container::unlock_parsed(pc, Some(&totp), None)?
+        }
+    };
     if args.verify {
         Container::verify_full(&uc)?;
         println!("verify: all Data Records authenticated OK");
@@ -799,8 +823,13 @@ fn cmd_create(args: &Args) -> astbox_core::Result<()> {
 
 fn cmd_add(args: &Args) -> astbox_core::Result<()> {
     let pc = Container::parse_container(&args.file, None)?;
-    let totp = gather_totp(args.totp.as_deref());
-    let uc = Container::unlock_parsed(pc, Some(&totp), None)?;
+    // 解锁通道与自验通道一致: secret 凭据容器用 secret 自验(验证码
+    // ASCII 不是 KDF 凭据, totp 通道自验必败且误导)。(C# 线 519061c 对齐)
+    let (totp, secret): (Option<String>, Option<&str>) = match args.secret.as_deref() {
+        Some(s) => (None, Some(s)),
+        None => (Some(gather_totp(args.totp.as_deref())), None),
+    };
+    let uc = Container::unlock_parsed(pc, totp.as_deref(), secret)?;
     let files = gather_dir_files(&args.from_dir)?;
     if files.is_empty() {
         return Err(astbox_core::err!(
@@ -814,7 +843,7 @@ fn cmd_add(args: &Args) -> astbox_core::Result<()> {
     } else {
         args.file.clone()
     };
-    let uc2 = Modifier::add_files(&uc, &files, &out_path, Some(&totp))?
+    let uc2 = Modifier::add_files(&uc, &files, &out_path, totp.as_deref(), secret)?
         .expect("self-verification returns the reopened container");
     println!(
         "added {} file(s); new generation {} -> {}",
