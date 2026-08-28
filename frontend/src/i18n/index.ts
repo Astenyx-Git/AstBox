@@ -56,12 +56,13 @@ export function _applyStatic(): void {
     const el = n as HTMLElement;
     el.setAttribute("aria-label", _t((el.dataset as any).i18nAria));
   });
-  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.1",
-                      en: "ASTBOX Container Manager · V3.1.1",
-                      ja: "ASTBOX コンテナマネージャー · V3.1.1",
-                      de: "ASTBOX Container-Manager · V3.1.1",
-                      fr: "ASTBOX Gestionnaire de conteneurs · V3.1.1" } as any)[lang]
-                   || "ASTBOX 容器管理器 · V3.1.1";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.2",
+                      en: "ASTBOX Container Manager · V3.1.2",
+                      ja: "ASTBOX コンテナマネージャー · V3.1.2",
+                      de: "ASTBOX Container-Manager · V3.1.2",
+                      fr: "ASTBOX Gestionnaire de conteneurs · V3.1.2",
+                      ko: "ASTBOX 컨테이너 관리자 · V3.1.2" } as any)[lang]
+                   || "ASTBOX 容器管理器 · V3.1.2";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = (LANG_CODES as Record<string, string>)[lang] || lang;
 }

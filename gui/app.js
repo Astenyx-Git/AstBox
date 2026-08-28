@@ -769,6 +769,194 @@ const _I18N = {
     addrBar: "Barre d'adresse", sidePanel: "Barre latérale", fileList: "Liste des fichiers", stDot: "État",
   },
 
+  /* ---- ko:Rust 线扩展语言(TS 移植管线新增;非 C# 谱系逐字资产) ---- */
+  ko: {
+    // 状态栏
+    sEmpty: "준비됨 — 시작하려면 .astbox 컨테이너를 여세요",
+    sLocked: "컨테이너가 로드되었습니다 — 잠금 해제하려면 TOTP 코드를 입력하세요",
+    sUnlocked: "잠금 해제됨",
+    // 地址栏
+    addrEdit: "두 번 클릭하여 경로 편집",
+    // OTP
+    otpEnter: "전체 %d자리 코드를 입력하세요",
+    otpDigit: "코드 자릿수 %d",
+    otpDigitsLbl: "%d자리 코드",
+    // 错误
+    errConn: "서버와의 연결이 끊겼습니다",
+    errReq: "요청 실패 (%d)",
+    errFileSize: "컨테이너가 4GiB 한도를 초과합니다. 대신 \"찾아보기(로컬 경로)\"를 사용하세요",
+    errOutput: "먼저 사이드바에서 출력 디렉터리를 지정하세요",
+    errUnlock: "먼저 컨테이너의 잠금을 해제하세요",
+    errSpecify: "대상 파일을 지정하세요",
+    errPaths: "경로를 하나 이상 입력하세요",
+    atLeastOnePath: "경로를 하나 이상 입력하세요",
+    errBrowse: "파일 대화상자를 열 수 없습니다 — 아래에 경로를 입력하세요",
+    errNoSel: "먼저 목록에서 파일을 선택하세요",
+    // Toast/确认
+    tUnlocked: "컨테이너 잠금 해제됨",
+    tLocked: "컨테이너 잠금됨",
+    tCopied: "복사됨",
+    file: "파일",
+    tExtracted: "파일 %d개를 추출했습니다 → %s",
+    tGen: "생성됨",
+    // 菜单
+    mExtractSel: "선택 항목 추출",
+    mExtractAll: "모두 추출",
+    mOpenFolder: "폴더 열기 / 이동",
+    mRefresh: "새로 고침",
+    mExportPack: "전송 패키지 내보내기",
+    mLock: "컨테이너 잠금",
+    mAbout: "정보",
+    // Sheet 标题
+    shOpen: "컨테이너 열기",
+    shOpenSub: "서버에서 .astbox 파일을 선택하거나 경로를 입력하세요",
+    shPack: ".astbox 컨테이너로 패키징",
+    shPackSub: "폴더를 암호화된 컨테이너로 패키징합니다. TOTP 코드가 잠금 해제를 위한 유일한 방법입니다.",
+    shAddFile: "현재 디렉터리에 파일 추가",
+    shAddFolder: "현재 디렉터리에 폴더 추가",
+    shAddSub: "아래 버튼을 클릭하거나, 한 줄에 서버 로컬 경로를 하나씩 입력하세요",
+    shGen: ".astbox 컨테이너 생성",
+    shGenSub: "샘플 파일(문서, 바이너리 샘플 등)이 포함됩니다. TOTP 시크릿이 자동 생성되며 — 컨테이너는 생성 직후 바로 열립니다.",
+    shVerify: "무결성 검증 통과",
+    shSelftest: "암호화 자가 진단",
+    selftestPass: "암호화 자가 진단 통과",
+    shAbout: "ASTBOX 컨테이너 관리자",
+    shAboutBody: "ASTBOX v1.0 사양에 따른 암호화 컨테이너 구현<br>디코딩 / 찾아보기 / 추출 / 패키징 도구<br><br>암호화: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass 디자인 시스템",
+    packComplete: "패키징 완료",
+    packCompleteSub: "아래 QR 코드를 즉시 Authenticator 앱으로 스캔하세요. 시크릿은 한 번만 표시됩니다",
+    addFilesTitle: "현재 디렉터리에 파일 추가",
+    addFolderTitle: "현재 디렉터리에 폴더 추가",
+    addFilesSub: "아래 버튼을 클릭하거나, 한 줄에 서버 로컬 경로를 하나씩 입력하세요",
+    recurseNote: " (하위 폴더는 재귀적으로 읽습니다)",
+    browseFiles: "파일 찾아보기…",
+    browseFolders: "폴더 찾아보기…",
+    pathList: "경로 목록",
+    pathListNote: "추가는 생성 트랜잭션으로 기록되며 컨테이너를 다시 암호화합니다",
+    addedFiles: "파일 %d개 추가됨 (생성 %d)",
+    copied: "복사됨",
+    // 表单标签
+    lblFilePath: "파일 경로",
+    lblSource: "원본 폴더 (비워 두면 전체 내용을 패키징)",
+    lblTarget: "대상 .astbox 파일",
+    lblDigits: "코드 길이",
+    lblB32: "Base32 시크릿 (비워 두면 자동 생성)",
+    lblB32Hint: "160비트 시크릿 자동 생성",
+    lblKdf: "KDF 강도",
+    lblKdfHigh: "최대 보안 (256 MiB RAM)",
+    lblKdfLow: "최소 RAM (64 MiB)",
+    lblKdfNote: "패키징 후 QR 코드가 나타납니다. Authenticator 앱으로 스캔하여 시크릿을 가져오세요.",
+    digitsNote6: "6자리: 모든 Authenticator와 호환 (Google / Microsoft / ZOHO / Proton 등)",
+    digitsNote8: "⚠ Google, ZOHO, Proton Authenticator에는 8자리를 권장합니다. Windows Authenticator는 6자리만 지원합니다.",
+    digitsShort: "자릿수",
+    lblSave: "저장 위치",
+    lblEntries: "항목",
+    lblCopyKey: "시크릿 복사",
+    lblWarn: "Base32 시크릿을 잃어버리면 TOTP 코드를 복구할 수 없습니다. 지금 시크릿을 백업하세요.",
+    // 按钮
+    btnBrowse: "찾아보기…",
+    btnCancel: "취소",
+    btnOpen: "열기",
+    btnStart: "패키징",
+    btnAdd: "추가",
+    btnGen: "생성",
+    btnDone: "완료",
+    btnOk: "확인",
+    btnUnlock: "지금 잠금 해제",
+    // 文件列表
+    colName: "이름",
+    colKindDir: "폴더",
+    colKindFile: "파일",
+    colSize: "크기",
+    colModified: "수정한 날짜",
+    colKind: "종류",
+    lblFolderEmpty: "이 폴더는 비어 있습니다",
+    lblNoContainer: "열린 컨테이너 없음",
+    lblNoContainerSub: "시작하려면 .astbox 파일을 열거나 새 컨테이너를 생성하세요.",
+    lblReady: "컨테이너 준비됨",
+    lblReadySub: "오른쪽에 Authenticator 앱에 표시된 TOTP 코드를 입력하여 잠금 해제<br>Argon2id 키 유도는 몇 초 정도 걸립니다 — 기다려 주세요",
+    // 侧栏
+    lblOutDir: "출력 디렉터리",
+    lblOutDirHint: "추출 대상…",
+    // 拖放
+    dropText: "열려면 .astbox 파일을 여기로 끌어다 놓으세요",
+    // 主题
+    themeAuto: "시스템 설정 따르기",
+    themeLight: "밝게",
+    themeDark: "어둡게",
+    themeToggle: "테마: %s",
+    // 窗口
+    quitTitle: "ASTBOX가 종료되었습니다",
+    quitSub: "서버가 중지되었습니다. 이 탭을 닫을 수 있습니다.",
+    // 口令包
+    packPassHint: "전송 패키지의 암호 문구를 설정하세요 (비워 두면 암호 문구 없는 빠른 패키지):",
+    packGenOk: "전송 패키지 생성됨: %s",
+    // 新容器
+    genCreated: "컨테이너 생성됨",
+    genCreatedSub: "컨테이너가 이제 잠겼습니다. 아래 QR 코드를 Authenticator 앱으로 스캔하여 시크릿을 가져오세요. 시크릿은 한 번만 표시됩니다",
+    // 提取
+    extracting: "추출 중…",
+    packing: "패키징 중…",
+    generating: "생성 중…",
+    generateShort: "생성",
+    specifySave: "저장 위치를 선택하세요",
+    // about sub
+    aboutBody: "ASTBOX v1.0 사양에 따른 암호화 컨테이너 구현<br>디코딩 / 찾아보기 / 추출 / 패키징 도구<br><br>암호화: Argon2id + HKDF-SHA-256 + XChaCha20-Poly1305<br>UI: Liquid Glass 디자인 시스템",
+    selftestBody: "Argon2id / HKDF / AEAD / TOTP 모두 통과",
+    // 浏览器
+    openBrowse: "이 기기에서 파일 업로드",
+    openPath: "서버 경로 입력…",
+    // 其他
+    notFolder: "이 항목은 폴더가 아닙니다",
+    items: "%d개 항목",
+    passGenOk: "전송 패키지를 저장했습니다: %s",
+    // P5 .passbox import (double-click / launch-arg flow)
+    importTitle: "전송 패키지 가져오기",
+    importSub: "패키지 옆에 내장 컨테이너를 기록하고 시크릿을 등록합니다 (재등록 불필요)",
+    packPassLabel: "암호 문구",
+    btnImport: "가져오기",
+    importOk: "전송 패키지를 가져왔습니다 — 잠금 해제하려면 확인 코드를 입력하세요",
+    dlgOpenFile: ".astbox 컨테이너 선택",
+    dlgPackDir: "패키징할 폴더 선택",
+    dlgSaveAs: ".astbox로 저장",
+    dlgPickOutDir: "추출 출력 디렉터리 선택",
+    ftAstbox: "ASTBOX 컨테이너",
+    ftAll: "모든 파일",
+    ftPassbox: "ASTBOX 전송 패키지",
+    parsedUnlock: "컨테이너를 분석했습니다 — 잠금 해제하려면 코드를 입력하세요",
+    openOrSpecify: "먼저 컨테이너를 열고 잠금을 해제하거나, 원본 폴더를 선택하세요",
+    copiedKey: "시크릿 복사됨",
+    b32Prompt: "Base32 TOTP 시크릿을 입력하세요 (Authenticator 앱에서):",
+    totpComputed: "TOTP (%d자리) = %s",
+    ttClose: "ASTBOX 종료 (로컬 서비스 중지)",
+    ttMin: "Windows 인터페이스로 최소화",
+    ttZoom: "전체 화면 전환",
+    navBack: "뒤로", navFwd: "앞으로", navUp: "위로 한 수준",
+    ttOpenBox: ".astbox 컨테이너 열기…", ttPackBox: ".astbox로 패키징…",
+    ttAddBox: "현재 폴더에 파일 추가…", ttExtractBox: "선택한 파일 추출",
+    ttVerifyBox: "컨테이너 무결성 검증", ttMore: "기타 작업",
+    ttLang: "언어 전환", ttTheme: "모양 전환",
+    unlockTopBtn: "잠금 해제…",
+    ccEmptyTitle: "열린 컨테이너 없음",
+    ccEmptySub: "시작하려면 .astbox 파일을 열거나 새 컨테이너를 생성하세요.",
+    dtFiles: "파일", dtCred: "자격 증명",
+    otpHead: "TOTP 코드 입력",
+    btnUnlockSide: "잠금 해제",
+    btnCalc: "Base32 계산…", ttCalc: "Base32 시크릿에서 현재 코드 계산",
+    btnLockSide: "잠금 및 자격 증명 지우기",
+    sideLocation: "위치", qRoot: "루트", sideActions: "작업",
+    opOpen: "컨테이너 열기…", opPack: "폴더 패키징…", opDemo: ".astbox 컨테이너 생성…",
+    opAddFiles: "파일 추가…", opAddFolder: "폴더 추가…",
+    opExtractAll: "모든 파일 추출", opVerify: "무결성 검증", opSelftest: "암호화 자가 진단",
+    heroSub: "암호화된 컨테이너 디코딩 · 찾아보기 · 추출 · 패키징<br>Argon2id + HKDF-SHA256 + XChaCha20-Poly1305",
+    btnHeroOpen: ".astbox 파일 열기…", btnHeroDemo: ".astbox 컨테이너 생성",
+    heroDim: "이 창으로 .astbox 파일을 끌어다 놓을 수도 있습니다",
+    statusReady: "준비됨",
+    dlgAddFiles2: "추가할 파일 선택 (다중 선택)",
+    dlgAddFolder2: "추가할 폴더 선택",
+    grpNav: "탐색", grpOps: "작업", mainToolbar: "기본 도구 모음",
+    addrBar: "주소 표시줄", sidePanel: "사이드바", fileList: "파일 목록", stDot: "상태",
+  },
+
   ja: {
     // 状态栏
     sEmpty: "準備完了 — .astbox コンテナを開いて始めましょう",
@@ -977,10 +1165,10 @@ function _applyStatic() {
   document.querySelectorAll("[data-i18n-aria]").forEach(n => {
     n.setAttribute("aria-label", _t(n.dataset.i18nAria));
   });
-  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.1",
-                      en: "ASTBOX Container Manager · V3.1.1",
-                      ja: "ASTBOX コンテナマネージャー · V3.1.1" })[_lang]
-                   || "ASTBOX 容器管理器 · V3.1.1";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.2",
+                      en: "ASTBOX Container Manager · V3.1.2",
+                      ja: "ASTBOX コンテナマネージャー · V3.1.2" })[_lang]
+                   || "ASTBOX 容器管理器 · V3.1.2";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = _LANG_CODES[_lang] || _lang;
 }
@@ -1989,7 +2177,7 @@ function showAbout() {
     '<svg viewBox="0 0 64 64"><rect x="10" y="20" width="44" height="32" rx="9" fill="#fff" opacity=".95"/>' +
     '<path d="M18 22 L26 10 h12 l8 12 z" fill="#fff" opacity=".7"/></svg></div>' +
     "<h2>" + _t("shAbout") + "</h2>" +
-    '<p class="sheet-sub" style="text-align:center"><b>V3.1.1</b><br>' +
+    '<p class="sheet-sub" style="text-align:center"><b>V3.1.2</b><br>' +
     _t("aboutBody") + '</p>' +
     '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnOk") + '</button></div>');
   sheet.querySelector("#pDone").addEventListener("click", closeSheet);
