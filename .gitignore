@@ -1,15 +1,23 @@
-# ==== 构建产物 / 发布输出 ====
+# ==== 构建产物 / 发布输出(参照 C# 分支;.tests-publish2 见 C# 40320cb)====
 installer/dist/
 installer/stage/
 .server-publish/
 .cli-publish/
 .tests-publish/
+.tests-publish2/
 
 # ==== 离线构建环境缓存(本机,可重建)====
 .dotnet-home/
 .local-feed/
 .nuget-appdata/
 .nuget-packages/
+
+# ==== 便携浏览器内核(参照 C# 分支保留该段;本线 chromium/ 已删除,为
+#      防御性条目 —— 防止未来从 C# 线同步或本地下载内核时误提交;
+#      C# 分支仍跟踪 chromium/README.txt,豁免与其保持一致)====
+chromium/*
+!chromium/README.txt
+chromium-profile/
 
 # ==== .NET 中间物(src/ 为字节兼容 oracle 源,保留)====
 bin/
