@@ -63,7 +63,7 @@ public static class Modifier
     /// UnlockedContainer (self-verified), or null without a TOTP code.</summary>
     public static UnlockedContainer? AddFiles(UnlockedContainer uc,
         IReadOnlyCollection<KeyValuePair<string, byte[]>> files,
-        string outPath, string? totp = null)
+        string outPath, string? totp = null, string? secretB32 = null)
     {
         if (files.Count == 0)
             throw new AstboxError(E.InvalidArgument, "no files to add");
@@ -420,6 +420,12 @@ public static class Modifier
         }
 
         // --- self-verification --------------------------------------------------------
+        // Self-verify by re-unlocking the committed container. secretB32 is the
+        // reliable channel (KDF credential for containers created with a Base32
+        // secret); the totp channel only works for legacy code-credential
+        // containers when the same code is presented. Byte layout untouched.
+        if (secretB32 is not null)
+            return Container.UnlockContainer(outPath, secretB32: secretB32);
         if (totp is not null)
             return Container.UnlockContainer(outPath, totp: totp);
         Container.ParseContainer(outPath);   // structural sanity check

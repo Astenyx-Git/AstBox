@@ -97,4 +97,18 @@ tailLines.forEach((line, i) => {
 if (hits.length) { console.log(`\n[CJK] Chinese string literals outside dictionary (${hits.length}):`); for (const h of hits) console.log("  " + h); }
 else console.log("[OK]   dynamic-path CJK literals: none");
 
-process.exit(bad ? 1 : 0);
+/* ---- 字典区内重复键 ----
+   JS 对象字面量重复键后者覆盖前者;同值无实害但属漂移隐患, 一律报告 */
+let dupBad = false;
+for (const lang of LANGS) {
+  const zone = extractObject(jsSrc, `${lang}: {`);
+  const seen = new Map();
+  for (const m of zone.matchAll(/(?:^|[{,\n]\s*)([A-Za-z_]\w*)\s*:/g)) {
+    const k = m[1];
+    if (seen.has(k)) { dupBad = true; console.log(`[DUP]  ${lang}: "${k}" 重定义于相对偏移 ${seen.get(k)} 与 ${m.index}`); }
+    else seen.set(k, m.index);
+  }
+}
+if (!dupBad) console.log("[OK]   no duplicate keys inside dictionary zones");
+
+process.exit(bad || dupBad ? 1 : 0);

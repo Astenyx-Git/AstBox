@@ -192,7 +192,6 @@ const _I18N = {
     dlgAddFiles2: "选择要添加的文件（可多选）",
     dlgAddFolder2: "选择要添加的文件夹",
     items: "%d 个对象",
-    copied: "已复制",
     passGenOk: "传播包已生成：%s",
     // 工具栏 aria 群组标签
     grpNav: "导航", grpOps: "操作", mainToolbar: "主导航",
@@ -337,7 +336,6 @@ const _I18N = {
     // 其他
     notFolder: "That item is not a folder",
     items: "%d objects",
-    copied: "Copied",
     passGenOk: "Transfer package saved to: %s",
     dlgOpenFile: "Select .astbox container",
     dlgPackDir: "Select folder to pack",

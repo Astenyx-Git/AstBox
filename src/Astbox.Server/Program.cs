@@ -168,7 +168,8 @@ public sealed class Session
     private ParsedContainer? _pc;          // ParsedContainer(可处于锁定态)
     private UnlockedContainer? _uc;        // UnlockedContainer(解锁后)
     private string? _filePath;
-    private string? _cred;                 // 最近一次成功解锁的 TOTP
+    private string? _cred;                 // 最近一次成功解锁的 TOTP 验证码(展示/日志语义)
+    private string? _credSecret;           // 解锁实际使用的 Base32 secret(自验通道)
     private byte[] _currentDir = Constants.RootDirectoryId;
     private readonly List<byte[]> _history = new();
     private readonly List<byte[]> _forward = new();
@@ -401,6 +402,7 @@ public sealed class Session
         _pc = Container.ParseContainer(path);
         _uc = null;
         _cred = null;
+        _credSecret = null;
         _filePath = path;
         _currentDir = Constants.RootDirectoryId;
         _history.Clear();
@@ -465,13 +467,15 @@ public sealed class Session
                 "验证码正确但容器解锁失败: " +
                 $"ASTBOX_E_{exc.Code:X4}: {exc.Message}");
         }
-        FinishUnlock(uc, totp);
+        FinishUnlock(uc, totp, entry.B32);
     }
 
-    private void FinishUnlock(UnlockedContainer uc, string cred)
+    private void FinishUnlock(UnlockedContainer uc, string cred,
+        string credSecret)
     {
         _uc = uc;
         _cred = cred;
+        _credSecret = credSecret;
         _pc = uc.Parsed;
         _filePath = uc.Parsed.Path;
         _currentDir = Constants.RootDirectoryId;
@@ -483,6 +487,7 @@ public sealed class Session
     {
         _uc = null;
         _cred = null;
+        _credSecret = null;
         _currentDir = Constants.RootDirectoryId;
         _history.Clear();
         _forward.Clear();
@@ -699,7 +704,10 @@ public sealed class Session
         if (files.Count == 0)
             throw new ApiError(EApi.NoFiles, "没有可添加的文件");
         var fileList = new List<KeyValuePair<string, byte[]>>(files);
-        var uc2 = Modifier.AddFiles(_uc!, fileList, _filePath!, totp: _cred);
+        // 自验走 secret 通道(验证码 ASCII 不是 KDF 凭据, 无法通过新代际自验)。
+        // 解锁必经 UnlockParsed(secretB32: entry.B32), _credSecret 恒非空。
+        var uc2 = Modifier.AddFiles(_uc!, fileList, _filePath!,
+            secretB32: _credSecret);
         if (uc2 is not null)
         {
             _uc = uc2;
@@ -707,7 +715,7 @@ public sealed class Session
         }
         else
         {
-            // 无 cred 时核心库只提交不回读(实践中不可达: 解锁必留 cred)
+            // secretB32 为 null 时核心库只提交不回读(防御分支, 现实不可达)
             _uc = null;
         }
         // 新一代容器中条目 ID 可能变化: 若当前目录失效则回到根目录
@@ -1943,8 +1951,9 @@ public static partial class Handlers
 
     // ------------------------------------------------ 关联错配检测与引导
 
-    /// <summary>本 Epoch 内每个安装版本只打扰一次; 升级或调整逻辑时递增日期。</summary>
-    private const string AssocNudgeEpoch = "2026-08-26";
+    /// <summary>关联确权引导的 epoch 标记。规范 §5.3: epoch 于版本升级时重置。
+    /// 此值须与 installer/VERSION 同步递增(版本升级或引导逻辑调整时)。</summary>
+    private const string AssocNudgeEpoch = "v3.0.0";
 
     private static readonly (string Ext, string ProgId)[] AssocPairs =
         { (".astbox", "Astbox.Container"), (".passbox", "Astbox.Passbox") };

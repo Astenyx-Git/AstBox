@@ -73,6 +73,7 @@ internal static class Program
         public string Cmd = "";
         public string File = "";
         public string? Totp;
+        public string? Secret;
         public bool List;
         public bool Verify;
         public string Out = "";
@@ -129,30 +130,34 @@ internal static class Program
         "  -h, --help  show this help message and exit\n";
 
     private const string UnlockHelp =
-        "usage: astbox-cli unlock [-h] [--totp TOTP] [--list] [--verify] file\n" +
+        "usage: astbox-cli unlock [-h] [--totp TOTP] [--secret SECRET]\n" +
+        "                         [--list] [--verify] file\n" +
         "\n" +
         "positional arguments:\n" +
         "  file\n" +
         "\n" +
         "options:\n" +
-        "  -h, --help   show this help message and exit\n" +
-        "  --totp TOTP  TOTP code (sole credential type)\n" +
-        "  --list       list contents\n" +
-        "  --verify     authenticate all Data Records\n";
+        "  -h, --help        show this help message and exit\n" +
+        "  --totp TOTP       TOTP code (legacy code-credential containers)\n" +
+        "  --secret SECRET   Base32 TOTP secret (containers created with a\n" +
+        "                    secret credential; preferred)\n" +
+        "  --list            list contents\n" +
+        "  --verify          authenticate all Data Records\n";
 
     private const string ExtractHelp =
-        "usage: astbox-cli extract [-h] --out OUT [--totp TOTP] [--path PATH]\n" +
-        "                          [--verify]\n" +
+        "usage: astbox-cli extract [-h] --out OUT [--totp TOTP]\n" +
+        "                          [--secret SECRET] [--path PATH] [--verify]\n" +
         "                          file\n" +
         "\n" +
         "positional arguments:\n" +
         "  file\n" +
         "\n" +
         "options:\n" +
-        "  -h, --help   show this help message and exit\n" +
+        "  -h, --help        show this help message and exit\n" +
         "  --out OUT\n" +
-        "  --totp TOTP  TOTP code (sole credential type)\n" +
-        "  --path PATH  extract only this logical path ('' = all)\n" +
+        "  --totp TOTP       TOTP code (legacy code-credential containers)\n" +
+        "  --secret SECRET   Base32 TOTP secret (preferred)\n" +
+        "  --path PATH       extract only this logical path ('' = all)\n" +
         "  --verify\n";
 
     private const string CreateHelp =
@@ -179,7 +184,8 @@ internal static class Program
         "  --profile {high,constrained}\n";
 
     private const string AddHelp =
-        "usage: astbox-cli add [-h] --from-dir FROM_DIR [--out OUT] [--totp TOTP] file\n" +
+        "usage: astbox-cli add [-h] --from-dir FROM_DIR [--out OUT]\n" +
+        "                      [--totp TOTP] [--secret SECRET] file\n" +
         "\n" +
         "positional arguments:\n" +
         "  file\n" +
@@ -188,7 +194,9 @@ internal static class Program
         "  -h, --help           show this help message and exit\n" +
         "  --from-dir FROM_DIR  directory whose files are added\n" +
         "  --out OUT            output path (default: modify in place)\n" +
-        "  --totp TOTP          TOTP code (sole credential type)\n";
+        "  --totp TOTP          TOTP code (legacy code-credential containers)\n" +
+        "  --secret SECRET      Base32 TOTP secret (preferred; enables reliable\n" +
+        "                       self-verification of the new generation)\n";
 
     [System.Runtime.CompilerServices.ModuleInitializer]
     internal static void Init()
@@ -255,7 +263,11 @@ internal static class Program
         ["unlock"] = new Spec
         {
             Usage = UnlockHelp,
-            ValueOpts = new() { ["--totp"] = OptKind.Value },
+            ValueOpts = new()
+            {
+                ["--totp"] = OptKind.Value,
+                ["--secret"] = OptKind.Value,
+            },
             Flags = new() { "--list", "--verify" },
         },
         ["extract"] = new Spec
@@ -265,6 +277,7 @@ internal static class Program
             {
                 ["--out"] = OptKind.Value,
                 ["--totp"] = OptKind.Value,
+                ["--secret"] = OptKind.Value,
                 ["--path"] = OptKind.Value,
             },
             Flags = new() { "--verify" },
@@ -292,6 +305,7 @@ internal static class Program
                 ["--from-dir"] = OptKind.Value,
                 ["--out"] = OptKind.Value,
                 ["--totp"] = OptKind.Value,
+                ["--secret"] = OptKind.Value,
             },
             RequiredOpts = new[] { "--from-dir" },
         },
@@ -389,6 +403,7 @@ internal static class Program
             SubUsageError(args.Cmd, "the following arguments are required: file");
 
         if (values.TryGetValue("--totp", out var totp)) args.Totp = totp;
+        if (values.TryGetValue("--secret", out var secretV)) args.Secret = secretV;
         if (values.TryGetValue("--out", out var outV)) args.Out = outV;
         if (values.TryGetValue("--path", out var pathV)) args.Path = pathV;
         if (values.TryGetValue("--totp-code", out var codeV)) args.TotpCode = codeV;
@@ -470,8 +485,11 @@ internal static class Program
     private static void CmdUnlock(Args args)
     {
         var pc = Container.ParseContainer(args.File);
-        string totp = GatherTotp(args.Totp);
-        var uc = Container.UnlockParsed(pc, totp: totp);
+        // --secret 优先: secret 字节是 secret 凭据容器的真实 KDF 凭据;
+        // --totp 仅对 legacy code 凭据容器有效。
+        var uc = args.Secret is not null
+            ? Container.UnlockParsed(pc, secretB32: args.Secret)
+            : Container.UnlockParsed(pc, totp: GatherTotp(args.Totp));
         Console.Out.WriteLine("unlocked OK");
         Console.Out.WriteLine("vault id   : " + Hex(uc.Parsed.Header.VaultId));
         Console.Out.WriteLine($"generation : {uc.Parsed.Header.Generation}");
@@ -506,8 +524,9 @@ internal static class Program
     private static void CmdExtract(Args args)
     {
         var pc = Container.ParseContainer(args.File);
-        string totp = GatherTotp(args.Totp);
-        var uc = Container.UnlockParsed(pc, totp: totp);
+        var uc = args.Secret is not null
+            ? Container.UnlockParsed(pc, secretB32: args.Secret)
+            : Container.UnlockParsed(pc, totp: GatherTotp(args.Totp));
         if (args.Verify)
         {
             Container.VerifyFull(uc);
@@ -621,8 +640,19 @@ internal static class Program
     private static void CmdAdd(Args args)
     {
         var pc = Container.ParseContainer(args.File);
-        string totp = GatherTotp(args.Totp);
-        var uc = Container.UnlockParsed(pc, totp: totp);
+        UnlockedContainer uc;
+        string? secretB32 = args.Secret;
+        string? totp;
+        if (secretB32 is not null)
+        {
+            totp = null;
+            uc = Container.UnlockParsed(pc, secretB32: secretB32);
+        }
+        else
+        {
+            totp = GatherTotp(args.Totp);
+            uc = Container.UnlockParsed(pc, totp: totp);
+        }
         var files = new List<KeyValuePair<string, byte[]>>();
         foreach (var full in Directory.EnumerateFiles(
                      args.FromDir, "*", SearchOption.AllDirectories))
@@ -634,7 +664,10 @@ internal static class Program
             throw new AstboxError(E.InvalidArgument,
                 $"no files found in {args.FromDir}");
         string outPath = args.Out.Length > 0 ? args.Out : args.File;
-        var uc2 = Modifier.AddFiles(uc, files, outPath, totp)!;
+        // 自验通道与解锁通道一致: secret 凭据容器用 secretB32 自验(验证码
+        // ASCII 不是 KDF 凭据, totp 通道自验必败且误导)。
+        var uc2 = Modifier.AddFiles(uc, files, outPath,
+            totp: totp, secretB32: secretB32)!;
         Console.Out.WriteLine(
             $"added {files.Count} file(s); new generation " +
             $"{uc.Parsed.Header.Generation} -> {uc2.Parsed.Header.Generation}");

@@ -323,7 +323,10 @@ internal static class Program
             {
                 KeyValuePair.Create("newdir/note.txt", noteText),
             };
-            Modifier.AddFiles(uc!, newFiles, outPath, totp: null);
+            var selfVerified = Modifier.AddFiles(uc!, newFiles, outPath,
+                secretB32: FixtureSecret);
+            Check(selfVerified is not null,
+                "add self-verification passes via secret channel");
             var reopened = Container.UnlockContainer(outPath,
                 secretB32: FixtureSecret);
             Check(reopened.Parsed.Header.Generation == 1UL,
@@ -347,6 +350,38 @@ internal static class Program
             }
             Check(originalsIntact, "original files intact after modify");
             uc = reopened;
+            try { Directory.Delete(work, true); } catch { }
+        }
+
+        // Modify_TotpChannelSelfVerify_FailsOnSecretContainers
+        // Kept as a semantic anchor for byte-compat parity with the python
+        // reference: presenting a TOTP code to the legacy self-verify channel
+        // of a secret-credential container can never re-derive the KDF
+        // credential. Commit happens first (atomic), so the caller sees an
+        // auth error although the new generation is on disk. Reliable channel
+        // is secretB32 (see previous test).
+        {
+            var work = NewWork("modify-totp");
+            string outPath = Path.Combine(work, "totp.astbox");
+            var ucX = Container.UnlockContainer(DemoContainer,
+                secretB32: FixtureSecret);
+            var newFiles = new List<KeyValuePair<string, byte[]>>
+            {
+                KeyValuePair.Create("note2.txt", "totp channel"u8.ToArray()),
+            };
+            AstboxError? err = null;
+            try
+            {
+                Modifier.AddFiles(ucX, newFiles, outPath, totp: "000000",
+                    secretB32: null);
+            }
+            catch (AstboxError e) { err = e; }
+            Check(err is not null &&
+                  err.Code == E.AuthenticationFailed &&
+                  File.Exists(outPath) &&
+                  Container.ParseContainer(outPath).Header.Generation == 1UL,
+                "legacy totp self-verify fails closed after commit (documented)",
+                err?.CodeName ?? "no error");
             try { Directory.Delete(work, true); } catch { }
         }
 
