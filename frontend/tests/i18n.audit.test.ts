@@ -8,16 +8,16 @@ import { I18N, SRV_EXACT, SRV_PAT, LANGS, LANG_CODES, LANG_MENU } from "../src/i
 import { _t, _fmt, _srv, setLang, lang } from "../src/i18n/index";
 
 describe("i18n 字典完整性", () => {
-  it("四种语言各 184 键(179 平移 + 5 导入;de 为 Rust 线扩展)", () => {
-    expect(LANGS).toEqual(["zh", "en", "ja", "de"]);
+  it("五种语言各 184 键(179 平移 + 5 导入;de/fr 为 Rust 线扩展)", () => {
+    expect(LANGS).toEqual(["zh", "en", "ja", "de", "fr"]);
     for (const l of LANGS) {
       expect(Object.keys(I18N[l]).length).toBe(184);
     }
   });
 
-  it("四语键集完全一致(缺失/多余都算漂移)", () => {
+  it("五语键集完全一致(缺失/多余都算漂移)", () => {
     const zh = new Set(Object.keys(I18N.zh));
-    for (const l of ["en", "ja", "de"]) {
+    for (const l of ["en", "ja", "de", "fr"]) {
       const keys = new Set(Object.keys(I18N[l]));
       const missing = [...zh].filter((k) => !keys.has(k));
       const extra = [...keys].filter((k) => !zh.has(k));
@@ -49,9 +49,10 @@ describe("i18n 字典完整性", () => {
   });
 
   it("语言按钮代码/菜单为各语言自称(不走翻译)", () => {
-    expect(LANG_CODES).toEqual({ zh: "中", en: "EN", ja: "あ", de: "DE" });
+    expect(LANG_CODES).toEqual({ zh: "中", en: "EN", ja: "あ", de: "DE", fr: "FR" });
     expect(LANG_MENU.ja).toBe("日本語");
     expect(LANG_MENU.de).toBe("Deutsch");
+    expect(LANG_MENU.fr).toBe("Français");
   });
 });
 

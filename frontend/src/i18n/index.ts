@@ -59,7 +59,8 @@ export function _applyStatic(): void {
   document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.0",
                       en: "ASTBOX Container Manager · V3.1.0",
                       ja: "ASTBOX コンテナマネージャー · V3.1.0",
-                      de: "ASTBOX Container-Manager · V3.1.0" } as any)[lang]
+                      de: "ASTBOX Container-Manager · V3.1.0",
+                      fr: "ASTBOX Gestionnaire de conteneurs · V3.1.0" } as any)[lang]
                    || "ASTBOX 容器管理器 · V3.1.0";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = (LANG_CODES as Record<string, string>)[lang] || lang;
