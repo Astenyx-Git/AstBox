@@ -30,42 +30,11 @@ function Log([string]$m) { Write-Output ('[build-rs] ' + $m) }
 function Fail([string]$m) { throw $m }
 
 # --- signing (build_cs.ps1 semantics + store-cert mode) ----------------------
-# env ASTBOX_SIGN_PFX (+ ASTBOX_SIGN_PW, ASTBOX_SIGN_TS)  — PFX 文件签名
-# env ASTBOX_SIGN_CN (+ optional ASTBOX_SIGN_TS)          — 证书库内签名(/n)
-# 都未设置 => signing silently skipped.
+# 签名语义抽取到 sign-common.ps1(build_rs 与 beforeBundleCommand 钩子
+# sign-app-exe.ps1 共用 —— 内嵌 app exe 与外壳产物同一套签名规则)。
+. (Join-Path $here 'sign-common.ps1')
 function Sign-File([string]$path) {
-    $pfx = $env:ASTBOX_SIGN_PFX
-    $cn  = $env:ASTBOX_SIGN_CN
-    if (-not $pfx -and -not $cn) { Log "signing skipped (no ASTBOX_SIGN_PFX/CN): $(Split-Path -Leaf $path)"; return }
-    $sigPath = $null
-    $sig = Get-Command signtool.exe -ErrorAction SilentlyContinue
-    if ($sig) { $sigPath = $sig.Source }
-    else {
-        $kits = 'C:\Program Files (x86)\Windows Kits\10\bin'
-        if (Test-Path $kits) {
-            $tool = Get-ChildItem $kits -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
-                Where-Object { $_.FullName -match 'x64' } | Sort-Object FullName -Descending |
-                Select-Object -First 1
-            if ($tool) { $sigPath = $tool.FullName }
-        }
-    }
-    if (-not $sigPath) { Log "signtool not found; skip"; return }
-    if ($pfx) {
-        $sargs = @('sign', '/fd', 'SHA256', '/f', $pfx)
-        if ($env:ASTBOX_SIGN_PW) { $sargs += @('/p', $env:ASTBOX_SIGN_PW) }
-    } else {
-        $sargs = @('sign', '/fd', 'SHA256', '/n', $cn)
-    }
-    if ($env:ASTBOX_SIGN_TS) {
-        $sargs += @('/tr', $env:ASTBOX_SIGN_TS, '/td', 'SHA256')
-    } elseif ($null -eq $env:ASTBOX_SIGN_TS) {
-        # 默认带 RFC3161 时间戳(签名在证书过期后仍可验真);ASTBOX_SIGN_TS='' 可关闭
-        $sargs += @('/tr', 'http://timestamp.digicert.com', '/td', 'SHA256')
-    }
-    $sargs += $path
-    & $sigPath @sargs | Out-Host
-    if ($LASTEXITCODE -ne 0) { Fail "signing failed: $path" }
-    Log "signed: $(Split-Path -Leaf $path)"
+    Invoke-AppSign $path | Out-Null
 }
 
 # --- version injection: installer/VERSION -> tauri.conf.json ---------------
@@ -79,6 +48,26 @@ if ($oldVersion -ne $semver) {
     Log ("version {0} -> {1} (from installer/VERSION)" -f $oldVersion, $semver)
     $confJson.version = $semver
     $confJson | ConvertTo-Json -Depth 20 | Set-Content $conf -Encoding UTF8
+}
+
+# --- tauri 原生签名(打包器在自身资源改写之后签 exe/卸载器/安装包)-----------
+# PFX 存在时导入 CurrentUser\My, 取指纹写入临时配置覆盖文件经 -c 传入
+# tauri(不直传 JSON 字符串 —— PS5.1 原生参数传递会剥掉内嵌引号);
+# 无签名环境时 $signExtra 为空, 构建保持无签名(语义不变)。
+$signExtra = @()
+if ($env:ASTBOX_SIGN_PFX) {
+    $pw = ConvertTo-SecureString -String "$(if ($env:ASTBOX_SIGN_PW) { $env:ASTBOX_SIGN_PW })" -AsPlainText -Force
+    $cert = Import-PfxCertificate -FilePath $env:ASTBOX_SIGN_PFX -CertStoreLocation Cert:\CurrentUser\My -Password $pw |
+        Sort-Object NotBefore -Descending | Select-Object -First 1
+    $thumb = $cert.Thumbprint
+    Log ("tauri native signing enabled: thumbprint {0}" -f $thumb)
+    $override = Join-Path $env:TEMP 'astbox-sign-override.json'
+    ('{"bundle":{"windows":{"certificateThumbprint":"' + $thumb +
+        '","digestAlgorithm":"sha256","timestampUrl":"http://timestamp.digicert.com","tsp":true}}}') |
+        Set-Content $override -Encoding Ascii
+    $signExtra = @('-c', $override)
+} elseif ($env:ASTBOX_SIGN_CN) {
+    Fail 'ASTBOX_SIGN_CN 暂不支持 tauri 原生签名路径 —— 请改用 ASTBOX_SIGN_PFX'
 }
 
 # --- build helpers -----------------------------------------------------------
@@ -132,13 +121,13 @@ New-Item -ItemType Directory -Force -Path $dist | Out-Null
 $artifacts = @()
 
 # --- build: default channel (embedBootstrapper) ------------------------------
-Invoke-TauriBuild @() 'default embedBootstrapper'
+Invoke-TauriBuild $signExtra 'default embedBootstrapper'
 $artifacts += (Split-Path -Leaf (Save-Setup "ASTBOX_$semver-setup.exe"))
 $artifacts += (Split-Path -Leaf (Save-Msi "ASTBOX_${semver}-x64.msi"))
 
 # --- build: offline channel (offlineInstaller) -------------------------------
 if (-not $SkipOffline) {
-    Invoke-TauriBuild @('-c', 'tauri.offline.json', '--bundles', 'nsis') 'offlineInstaller'
+    Invoke-TauriBuild ($signExtra + @('-c', 'tauri.offline.json', '--bundles', 'nsis')) 'offlineInstaller'
     $artifacts += (Split-Path -Leaf (Save-Setup "ASTBOX_${semver}-offline-setup.exe"))
 }
 

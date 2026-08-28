@@ -56,16 +56,16 @@ export function _applyStatic(): void {
     const el = n as HTMLElement;
     el.setAttribute("aria-label", _t((el.dataset as any).i18nAria));
   });
-  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.6",
-                      en: "ASTBOX Container Manager · V3.1.6",
-                      ja: "ASTBOX コンテナマネージャー · V3.1.6",
-                      de: "ASTBOX Container-Manager · V3.1.6",
-                      fr: "ASTBOX Gestionnaire de conteneurs · V3.1.6",
-                      ko: "ASTBOX 컨테이너 관리자 · V3.1.6",
-                      "zh-Hant": "ASTBOX 容器管理器 · V3.1.6",
-                      es: "ASTBOX Administrador de contenedores · V3.1.6",
-                      "pt-BR": "ASTBOX Gerenciador de contêineres · V3.1.6" } as any)[lang]
-                   || "ASTBOX 容器管理器 · V3.1.6";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.7",
+                      en: "ASTBOX Container Manager · V3.1.7",
+                      ja: "ASTBOX コンテナマネージャー · V3.1.7",
+                      de: "ASTBOX Container-Manager · V3.1.7",
+                      fr: "ASTBOX Gestionnaire de conteneurs · V3.1.7",
+                      ko: "ASTBOX 컨테이너 관리자 · V3.1.7",
+                      "zh-Hant": "ASTBOX 容器管理器 · V3.1.7",
+                      es: "ASTBOX Administrador de contenedores · V3.1.7",
+                      "pt-BR": "ASTBOX Gerenciador de contêineres · V3.1.7" } as any)[lang]
+                   || "ASTBOX 容器管理器 · V3.1.7";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = (LANG_CODES as Record<string, string>)[lang] || lang;
 }

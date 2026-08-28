@@ -5,6 +5,9 @@
 //! The 20-command IPC surface (P3) replaces the HTTP server; the state
 //! snapshot contract stays byte-compatible with the python/C# frontend.
 
+// 发布版隐藏控制台黑框(GUI 子系统);debug 保留控制台便于启动诊断。
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
 
