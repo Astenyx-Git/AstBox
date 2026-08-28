@@ -471,3 +471,4 @@ internal static class Program
         try { Directory.Delete(work, true); } catch { }
     }
 }
+// fresh hash: v3.0.1 gate retry
