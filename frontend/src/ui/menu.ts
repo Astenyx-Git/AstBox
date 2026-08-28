@@ -18,6 +18,19 @@ export function menuOpen(): boolean {
   return menuEl !== null;
 }
 
+/** 点外关闭(pointerdown)—— 在 bind() 时安装一次。
+    判定必须用菜单实例而非 querySelector(".menu"):宿主页存有静态诱饵
+    <div class="menu" id="ctxMenu" hidden>(C# 谱系遗留,排位在前),
+    DOM 查询永远命中它,导致菜单项一被按下就被"点外关闭"关掉,click
+    永远落空 —— 语言/右键/更多菜单全部点不中(真机 CDP 实证)。 */
+export function installOutsideClose(): void {
+  document.addEventListener("pointerdown", (e: any) => {
+    if (menuEl !== null && !menuEl.contains(e.target) &&
+        (e.target instanceof Element) &&
+        !e.target.closest("#btnMore,#btnLang")) closeMenu();
+  });
+}
+
 export function openMenu(items: MenuItem[], x: number, y: number): void {
   closeMenu();
   menuEl = el("div", "menu glass glass--regular");

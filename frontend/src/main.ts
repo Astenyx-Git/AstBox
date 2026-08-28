@@ -17,7 +17,7 @@ import {
 import { api, registerStateApplier, registerBusyApplier } from "./api";
 import { applyTheme } from "./theme";
 import { toast } from "./ui/toast";
-import { closeMenu, menuOpen } from "./ui/menu";
+import { closeMenu, installOutsideClose, menuOpen } from "./ui/menu";
 import { closeSheet, isSheetDismissable } from "./ui/sheet";
 import { otpFocus, maybeAutoUnlock } from "./ui/otp";
 import { applyState, renderAll, renderNavButtons } from "./views/render";
@@ -199,11 +199,8 @@ function bind(): void {
     }
   });
 
-  /* 点击空白关闭菜单 */
-  document.addEventListener("pointerdown", (e: any) => {
-    if (menuOpen() && !menuElContains(e.target) &&
-        !e.target.closest("#btnMore,#btnLang")) closeMenu();
-  });
+  /* 点击空白关闭菜单(判定逻辑在 ui/menu.installOutsideClose) */
+  installOutsideClose();
   ($("#scrim") as HTMLElement).addEventListener("pointerdown", (e: any) => {
     if (e.target === $("#scrim") && isSheetDismissable()) closeSheet();
   });
@@ -225,11 +222,6 @@ function bind(): void {
   /* 系统主题变化时刷新 auto 模式图标 */
   matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", applyTheme);
-}
-
-function menuElContains(target: EventTarget): boolean {
-  const menu = document.querySelector(".menu");
-  return menu ? menu.contains(target as Node) : false;
 }
 
 async function openByPath(path: string): Promise<void> {
