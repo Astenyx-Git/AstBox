@@ -1,0 +1,16 @@
+[package]
+name = "astbox-cli"
+description = "ASTBOX v1.0 command-line decoder (Rust port of Astbox.Cli)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "astbox-cli"
+path = "src/main.rs"
+
+[dependencies]
+astbox-core = { path = "../astbox-core" }
+# Local-time formatting for FmtTime (C# ToLocalTime("yyyy-MM-dd HH:mm:ss"))
+chrono = "0.4"

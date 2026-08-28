@@ -1,0 +1,48 @@
+NOTICE
+======
+
+ASTBOX 容器管理器 (Version Zero / V3.0.0)
+Copyright 2026 Astenyx-Git
+
+本产品在 MPL-2.0 / AGPL-3.0-only 双重许可下开源:
+一般使用依 MPL-2.0;云厂商、SaaS 提供商等以网络服务形态提供的主体
+强制适用 AGPL-3.0-only(第 13 条)。详见根目录 LICENSE、LICENSE-MPL-2.0、
+LICENSE-AGPL-3.0。
+
+------------------------------------------------------------------------
+Rust 线(Tauri v2 桌面壳)随安装包分发的第三方组件:
+------------------------------------------------------------------------
+
+1. Microsoft Edge WebView2 Runtime
+   - 默认包:embedBootstrapper(由引导器在线获取);offline 包:内嵌
+     Standalone 安装器
+   - 许可:Microsoft WebView2 Runtime 许可条款(系统组件,本仓库不
+     再分发其源码)
+
+2. Tauri v2 及其 Rust 依赖(cargo crate 随二进制链接分发)
+   - 许可:各 crate 自身许可(MIT / Apache-2.0 为主),清单见
+     rust/Cargo.lock 与 `cargo license`
+
+3. NSIS 打包器(Tauri 构建期调用,未随产物分发其本体)
+   - 许可:zlib/libpng/bzip2 组合许可
+
+------------------------------------------------------------------------
+C# 线(src\,存档保留、独立演进)的随构建/安装过程获取的
+第三方组件(不随源码仓库分发):
+------------------------------------------------------------------------
+
+1. CPython 3.14.6 Embeddable Distribution
+   - 来源: python.org 及国内镜像
+   - 许可: Python Software Foundation License Version 2
+
+2. ungoogled-chromium 151.0.7922.137-1.1 (Chromium 内核版可选组件)
+   - 来源: ungoogled-chromium-windows 项目 Releases
+   - 许可: BSD-3-Clause 及 Chromium 内嵌的各第三方许可,
+     详见内核目录内的 LICENSE 文件集合
+
+3. 运行期 Python 依赖 (经 bootstrap_deps.py / pip 获取):
+   - PyNaCl 及 libsodium 绑定 —— Apache License 2.0
+   - 其余依赖以 requirements.txt 声明为准, 许可见各自发行包
+
+上述第三方组件分别依其自身许可证提供; 本仓库源码部分仅涵盖
+ASTBOX 自有实现。

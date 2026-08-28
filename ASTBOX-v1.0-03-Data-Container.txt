@@ -1,0 +1,1475 @@
+ASTBOX-v1.0-03-Data-Container.txt
+ASTBOX v1.0
+BINARY ENCRYPTED CONTAINER FORMAT SPECIFICATION
+Document: ASTBOX-v1.0-03-Data-Container.txt
+Part: Metadata, Data Records, Footer, and Container Layout
+Status: Final Draft for Cryptographic Specification
+Format Name: ASTBOX
+File Extension: .astbox
+Integer Byte Order: Big-endian
+Metadata Encoding: Deterministic CBOR
+======================================================================
+1. SCOPE
+This document defines the physical representation of encrypted
+metadata, encrypted file data, directory entries, chunks, and the
+container footer.
+This document specifies:
+- metadata record format;
+- CBOR constraints;
+- FileID;
+- encrypted file records;
+- directory records;
+- chunking;
+- data nonces;
+- associated data;
+- footer format;
+- physical container layout;
+- creation behavior;
+- reading behavior;
+- modification behavior;
+- commit behavior;
+- crash-consistency rules.
+Cryptographic algorithms and key derivation are defined in:
+ASTBOX-v1.0-02-Key-Crypto.txt
+Core binary structures are defined in:
+ASTBOX-v1.0-01-Core-Format.txt
+Lifecycle, error codes, version compatibility, and security rules are
+defined in:
+ASTBOX-v1.0-04-Lifecycle-Security.txt
+======================================================================
+2. PHYSICAL CONTAINER ORDER
+======================================================================
+An ASTBOX v1 container has exactly five physical regions:
+1. Header
+2. Key Slot Array
+3. Metadata Record
+4. Data Record Region
+5. Footer
+The physical order MUST NOT change.
+The complete file layout is:
++------------------------------+
+| Header                       |
+| 128 bytes                    |
++------------------------------+
+| Key Slot Array               |
+| KeySlotCount * 192 bytes     |
++------------------------------+
+| Metadata Record              |
+| variable length              |
++------------------------------+
+| Data Record Region           |
+| variable length              |
++------------------------------+
+| Footer                       |
+| 112 bytes                    |
++------------------------------+
+No bytes may exist before Header.
+No bytes may exist after Footer.
+======================================================================
+3. REGION OFFSET EQUATIONS
+======================================================================
+The following equations MUST hold:
+KeySlotOffset = 128
+KeySlotLength = KeySlotCount * 192
+MetadataOffset = KeySlotOffset + KeySlotLength
+DataOffset = MetadataOffset + MetadataLength
+FooterOffset = DataOffset + DataLength
+FooterLength = 112
+FileSize = FooterOffset + FooterLength
+All arithmetic MUST be checked for unsigned integer overflow.
+======================================================================
+4. METADATA RECORD
+======================================================================
+The Metadata Record contains the encrypted canonical CBOR metadata
+object.
+The physical Metadata Record has the following structure:
+Offset  Size  Type       Field
+0       24    BYTE[24]   MetadataNonce
+24      N     BYTE[N]    MetadataCiphertext
+24+N    16    BYTE[16]   MetadataTag
+The physical MetadataLength is therefore:
+MetadataLength = 24 + MetadataCiphertextLength + 16
+MetadataCiphertextLength MUST equal the length of the plaintext
+canonical CBOR Metadata object.
+XChaCha20-Poly1305 encryption and authentication are defined in
+ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+5. METADATA NONCE
+======================================================================
+MetadataNonce is exactly 24 bytes.
+It MUST be generated using a CSPRNG.
+A new MetadataNonce MUST be generated whenever the Metadata plaintext
+is encrypted again.
+MetadataNonce MUST NOT be reused with MetadataKey.
+MetadataNonce is public and is stored in the Metadata Record.
+======================================================================
+6. METADATA AUTHENTICATION
+======================================================================
+Metadata is encrypted using:
+XChaCha20-Poly1305
+Key:
+MetadataKey
+Nonce:
+MetadataNonce
+Associated Data:
+ASCII("ASTBOX-METADATA-v1")
+||
+VaultID
+||
+Generation
+The resulting authentication tag is 16 bytes.
+The tag MUST be stored immediately after MetadataCiphertext.
+======================================================================
+7. METADATA PLAINTEXT
+======================================================================
+The plaintext Metadata object is encoded using deterministic CBOR.
+The plaintext MUST be a CBOR map.
+The top-level map MUST contain exactly the following keys:
+1
+2
+3
+4
+5
+The integer keys have the following meanings:
+1 = MetadataVersion
+2 = RootDirectoryID
+3 = Entries
+4 = ContainerCreated
+5 = ContainerModified
+No additional top-level keys are permitted in ASTBOX v1.
+======================================================================
+8. METADATA CBOR KEY 1
+======================================================================
+Key:
+1
+Type:
+CBOR unsigned integer
+Value:
+MetadataVersion
+Required value:
+1
+The value MUST be encoded as the canonical CBOR representation of
+unsigned integer 1.
+======================================================================
+9. METADATA CBOR KEY 2
+======================================================================
+Key:
+2
+Type:
+CBOR unsigned integer
+Value:
+RootDirectoryID
+RootDirectoryID is exactly 16 bytes.
+It MUST be represented as a CBOR byte string of length 16.
+The RootDirectoryID MUST be:
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+This value is FIXED in ASTBOX v1.
+The root directory is therefore identified by the all-zero FileID.
+No ordinary File Entry may use the all-zero FileID.
+======================================================================
+10. METADATA CBOR KEY 3
+======================================================================
+Key:
+3
+Type:
+CBOR array
+Value:
+Entries
+Entries contains all file and directory entries in the container.
+The array MAY contain zero or more entries.
+Each entry MUST be a CBOR map.
+Entries MUST NOT contain duplicate FileID values.
+The RootDirectoryID MUST NOT appear as an ordinary entry.
+======================================================================
+11. METADATA CBOR KEY 4
+======================================================================
+Key:
+4
+Type:
+CBOR unsigned integer
+Value:
+ContainerCreated
+The value is Unix time in seconds.
+It MUST be encoded as a CBOR unsigned integer.
+The value represents the creation time of the container.
+The value MUST NOT be used as cryptographic randomness.
+======================================================================
+12. METADATA CBOR KEY 5
+======================================================================
+Key:
+5
+Type:
+CBOR unsigned integer
+Value:
+ContainerModified
+The value is Unix time in seconds.
+It MUST be encoded as a CBOR unsigned integer.
+The value represents the most recent successful metadata modification.
+The value MUST NOT be used as cryptographic randomness.
+======================================================================
+13. CBOR CANONICALIZATION
+======================================================================
+ASTBOX v1 requires deterministic CBOR encoding.
+The encoding MUST comply with the deterministic encoding requirements
+of RFC 8949.
+In particular:
+- definite-length items MUST be used;
+- indefinite-length arrays MUST NOT be used;
+- indefinite-length maps MUST NOT be used;
+- indefinite-length byte strings MUST NOT be used;
+- indefinite-length text strings MUST NOT be used;
+- integers MUST use the shortest permitted representation;
+- map keys MUST be sorted according to deterministic CBOR ordering;
+- floating-point values MUST NOT be used;
+- tags MUST NOT be used unless explicitly defined by ASTBOX v1;
+- duplicate map keys MUST NOT occur.
+======================================================================
+14. CBOR INTEGER RULE
+======================================================================
+All ASTBOX metadata integer values MUST use the smallest valid CBOR
+integer representation.
+For example:
+0 through 23:
+    single-byte CBOR representation.
+24 through 255:
+    major type 0 with additional information 24.
+No non-minimal integer encoding is permitted.
+A decoder MUST reject non-canonical integer encodings.
+======================================================================
+15. CBOR MAP KEY RULE
+======================================================================
+All metadata map keys are unsigned integer CBOR values.
+Map keys MUST be encoded in canonical deterministic CBOR order.
+The canonical order of the top-level keys is therefore:
+1
+2
+3
+4
+5
+An implementation MUST NOT serialize the map in arbitrary insertion
+order.
+======================================================================
+16. CBOR STRING RULE
+======================================================================
+ASTBOX v1 does not use CBOR text strings for cryptographic protocol
+constants.
+Where metadata requires textual file names or paths, the values are
+UTF-8 CBOR text strings.
+Unicode normalization for metadata strings is:
+NFC
+A filename MUST NOT contain:
+- U+0000;
+- path separators "/" or "";
+- platform-specific path traversal semantics.
+File names are logical names inside the ASTBOX namespace and are not
+filesystem paths.
+======================================================================
+17. CBOR FLOATING-POINT RULE
+======================================================================
+Floating-point values are prohibited in ASTBOX v1 metadata.
+A decoder encountering any CBOR floating-point value MUST reject the
+metadata.
+======================================================================
+18. CBOR TAG RULE
+======================================================================
+CBOR semantic tags are prohibited unless explicitly specified by this
+document.
+A metadata object containing an unsupported CBOR tag MUST be rejected.
+======================================================================
+19. CBOR DUPLICATE KEY RULE
+======================================================================
+Duplicate map keys are prohibited.
+A decoder MUST detect duplicate keys.
+A decoder MUST NOT silently use:
+- first occurrence;
+- last occurrence;
+- merged occurrence.
+Duplicate keys MUST result in metadata rejection.
+======================================================================
+20. FILEID
+======================================================================
+Every non-root file or directory entry has a FileID.
+FileID length:
+16 bytes
+FileID MUST be generated randomly using a CSPRNG.
+FileID MUST be unique within the container.
+FileID MUST NOT be derived from:
+- filename;
+- path;
+- file contents;
+- VaultID;
+- TOTP credential.
+The all-zero FileID is reserved exclusively for RootDirectoryID.
+======================================================================
+21. ENTRY TYPES
+======================================================================
+Each metadata entry contains a Type field.
+ASTBOX v1 defines:
+0 = DIRECTORY
+1 = FILE
+No other Entry Type is valid.
+======================================================================
+22. ENTRY CBOR STRUCTURE
+======================================================================
+Each Entry is a CBOR map.
+The permitted integer keys are:
+1 = FileID
+2 = ParentID
+3 = Type
+4 = Name
+5 = Size
+6 = DataStart
+7 = DataLength
+8 = Modified
+9 = FileMode
+All nine keys MUST be present.
+No additional keys are permitted.
+======================================================================
+23. ENTRY KEY 1: FILEID
+======================================================================
+Key:
+1
+Value:
+FileID
+Type:
+CBOR byte string
+Length:
+16 bytes
+The FileID MUST be unique.
+======================================================================
+24. ENTRY KEY 2: PARENTID
+======================================================================
+Key:
+2
+Value:
+ParentID
+Type:
+CBOR byte string
+Length:
+16 bytes
+ParentID identifies the parent directory.
+For an immediate child of the root directory:
+ParentID = RootDirectoryID
+A file MUST NOT be its own parent.
+A directory MUST NOT be its own parent.
+======================================================================
+25. ENTRY KEY 3: TYPE
+======================================================================
+Key:
+3
+Value:
+Type
+Type:
+CBOR unsigned integer
+Valid values:
+0 = DIRECTORY
+1 = FILE
+======================================================================
+26. ENTRY KEY 4: NAME
+======================================================================
+Key:
+4
+Value:
+Name
+Type:
+CBOR text string
+Encoding:
+UTF-8
+Normalization:
+NFC
+The Name MUST be non-empty.
+The Name MUST NOT contain:
+U+0000
+"/"
+""
+The Name MUST NOT equal:
+"."
+".."
+Names are interpreted within the parent directory only.
+Two entries with the same ParentID MUST NOT have the same normalized
+Name.
+======================================================================
+27. ENTRY KEY 5: SIZE
+======================================================================
+Key:
+5
+Value:
+Size
+Type:
+CBOR unsigned integer
+For a FILE:
+Size = exact plaintext file size in bytes.
+For a DIRECTORY:
+Size = 0
+A directory MUST have Size = 0.
+======================================================================
+28. ENTRY KEY 6: DATASTART
+======================================================================
+Key:
+6
+Value:
+DataStart
+Type:
+CBOR unsigned integer
+For a FILE:
+DataStart identifies the byte offset of the first Data Chunk belonging
+to that file.
+For a DIRECTORY:
+DataStart = 0
+DataStart is an absolute byte offset from the beginning of the
+ASTBOX file.
+======================================================================
+29. ENTRY KEY 7: DATALENGTH
+======================================================================
+Key:
+7
+Value:
+DataLength
+Type:
+CBOR unsigned integer
+For a FILE:
+DataLength is the total physical length occupied by all Data Records
+belonging to the file.
+For a DIRECTORY:
+DataLength = 0
+DataLength includes all per-record headers, ciphertext, and
+authentication tags.
+======================================================================
+30. ENTRY KEY 8: MODIFIED
+======================================================================
+Key:
+8
+Value:
+Modified
+Type:
+CBOR unsigned integer
+The value is Unix time in seconds.
+It identifies the logical modification time of the entry.
+======================================================================
+31. ENTRY KEY 9: FILEMODE
+======================================================================
+Key:
+9
+Value:
+FileMode
+Type:
+CBOR unsigned integer
+ASTBOX v1 defines FileMode as a portable logical attribute field.
+No platform-specific permission bits are interpreted by the core
+format.
+The default value is:
+0
+Implementations MAY use FileMode internally, but portable
+interoperability requires treating unknown bits as unsupported.
+======================================================================
+32. DIRECTORY RULES
+======================================================================
+A DIRECTORY entry:
+Type = 0
+MUST have:
+Size = 0
+DataStart = 0
+DataLength = 0
+A directory does not have Data Records.
+A directory's children are identified by their ParentID.
+======================================================================
+33. FILE RULES
+======================================================================
+A FILE entry:
+Type = 1
+MUST have:
+Size >= 0
+DataLength > 0 when Size > 0.
+For an empty file:
+Size = 0
+DataLength = 0
+An empty file therefore has no Data Records.
+======================================================================
+34. EMPTY CONTAINER
+======================================================================
+An ASTBOX container MAY contain no user files.
+The RootDirectoryID still exists logically.
+Entries MAY therefore be an empty CBOR array.
+The Metadata Record remains mandatory.
+The Data Record region has:
+DataLength = 0
+======================================================================
+35. DATA CHUNKING
+======================================================================
+ASTBOX v1 divides file data into plaintext chunks.
+Maximum plaintext chunk size:
+1 MiB
+Exact value:
+1048576 bytes
+A file larger than 1 MiB MUST be divided into multiple chunks.
+A file smaller than or equal to 1 MiB MAY be represented by one chunk.
+======================================================================
+36. CHUNK SIZE
+======================================================================
+The maximum plaintext chunk size is FIXED:
+1048576 bytes
+An implementation MUST NOT change the chunk size based on:
+- user settings;
+- filesystem;
+- filename;
+- file type.
+The final chunk MAY be smaller than 1048576 bytes.
+======================================================================
+37. DATA RECORD
+======================================================================
+Each Data Record has the following structure:
+Offset  Size  Type       Field
+0       16    BYTE[16]   FileID
+16      8     UINT64     ChunkIndex
+24      4     UINT32     PlaintextLength
+28      24    BYTE[24]   DataNonce
+52      N     BYTE[N]    Ciphertext
+52+N    16    BYTE[16]   DataTag
+The physical record length is:
+52 + PlaintextLength + 16
+Therefore:
+DataRecordLength = 68 + PlaintextLength
+======================================================================
+38. FILEID IN DATA RECORD
+======================================================================
+The Data Record FileID identifies the logical file to which the
+encrypted chunk belongs.
+It MUST correspond to a FILE entry in Metadata.
+The all-zero RootDirectoryID MUST NOT occur in a Data Record.
+======================================================================
+39. CHUNKINDEX
+======================================================================
+ChunkIndex is a zero-based UINT64.
+The first chunk of a file has:
+ChunkIndex = 0
+The second chunk has:
+ChunkIndex = 1
+and so forth.
+ChunkIndex values MUST be contiguous for each file.
+No duplicate ChunkIndex is permitted for the same FileID.
+======================================================================
+40. PLAINTEXTLENGTH
+======================================================================
+PlaintextLength is a UINT32.
+It specifies the exact number of plaintext bytes represented by the
+Data Record.
+Valid values:
+0 through 1048576
+A Data Record with PlaintextLength = 0 MUST NOT exist.
+An empty file has no Data Records.
+======================================================================
+41. DATA NONCE
+======================================================================
+DataNonce is exactly 24 bytes.
+It MUST be generated using a CSPRNG.
+A DataNonce MUST NOT be reused with DataKey.
+Every newly encrypted Data Record MUST receive a fresh DataNonce.
+DataNonce is public.
+======================================================================
+42. DATA ENCRYPTION
+======================================================================
+Each Data Record uses:
+XChaCha20-Poly1305
+Key:
+DataKey
+Nonce:
+DataNonce
+Plaintext:
+the exact file-data chunk
+Ciphertext:
+same length as plaintext
+Authentication tag:
+16 bytes
+The authentication tag is stored immediately after ciphertext.
+======================================================================
+43. DATA ASSOCIATED DATA
+======================================================================
+The Data Record associated data is:
+ASCII("ASTBOX-DATA-v1")
+||
+VaultID
+||
+Generation
+||
+FileID
+||
+ChunkIndex
+||
+PlaintextLength
+The fields are encoded as:
+VaultID:
+    16 raw bytes
+Generation:
+    UINT64 big-endian
+FileID:
+    16 raw bytes
+ChunkIndex:
+    UINT64 big-endian
+PlaintextLength:
+    UINT32 big-endian
+No textual conversion is performed.
+No NUL terminators are included.
+======================================================================
+44. DATA DOMAIN LABEL
+======================================================================
+The Data AEAD domain label is:
+ASTBOX-DATA-v1
+US-ASCII.
+No NUL terminator.
+This value is FIXED.
+======================================================================
+45. DATA RECORD ORDER
+======================================================================
+Data Records MUST be ordered by physical file position.
+For each individual FileID, ChunkIndex values MUST appear in strictly
+increasing order.
+The recommended and canonical physical ordering is:
+FileID ascending lexicographically by raw 16-byte value,
+then ChunkIndex ascending.
+The canonical ordering MUST be used when writing a new or fully
+rewritten container.
+A reader MUST NOT rely on physical ordering alone to reconstruct a
+file; FileID and ChunkIndex are authoritative.
+======================================================================
+46. DATA OFFSET IN METADATA
+======================================================================
+For every FILE entry with non-zero Size:
+DataStart MUST equal the physical offset of its first Data Record.
+DataLength MUST equal the sum of the physical lengths of all Data
+Records belonging to that FileID.
+The following relationship MUST hold:
+DataStart + DataLength <= FooterOffset
+A violation MUST cause container rejection.
+======================================================================
+47. FILE CHUNK COUNT
+======================================================================
+For a file with plaintext Size S:
+If S = 0:
+ChunkCount = 0
+If S > 0:
+ChunkCount = ceil(S / 1048576)
+The final chunk length is:
+S mod 1048576
+except that an exact multiple of 1048576 produces a final chunk of
+1048576 bytes.
+======================================================================
+48. CHUNK PLAINTEXT LENGTH VALIDATION
+======================================================================
+For a file containing N chunks:
+ChunkIndex values MUST be:
+0 through N-1
+All chunks except the final chunk MUST have:
+PlaintextLength = 1048576
+The final chunk MUST have:
+1 through 1048576 bytes.
+The sum of all PlaintextLength values MUST equal the Metadata Size.
+======================================================================
+49. DATA RECORD PHYSICAL LENGTH
+======================================================================
+For each Data Record:
+PhysicalLength =
+    16
+    + 8
+    + 4
+    + 24
+    + PlaintextLength
+    + 16
+Therefore:
+PhysicalLength =
+    68 + PlaintextLength
+The implementation MUST validate this before reading the next record.
+======================================================================
+50. DATA REGION VALIDATION
+======================================================================
+The sum of all Data Record physical lengths MUST equal:
+Header.DataLength
+No Data Record may begin before DataOffset.
+No Data Record may extend beyond FooterOffset.
+No bytes in the Data region may remain unaccounted for.
+Trailing bytes inside the declared Data region are invalid.
+======================================================================
+51. METADATA/DATA CONSISTENCY
+======================================================================
+After successful Metadata decryption, the implementation MUST verify:
+1. Every FileID is unique.
+2. Every ParentID refers to an existing directory or RootDirectoryID.
+3. No file is its own parent.
+4. No directory is its own parent.
+5. No duplicate sibling names exist.
+6. Directory entries have zero data fields.
+7. File entries have valid size and data fields.
+8. Every referenced Data Record corresponds to a FILE.
+9. Every FILE's DataStart and DataLength match its Data Records.
+10. Every Data Record belongs to exactly one FILE.
+11. Every File's ChunkIndex sequence is complete.
+12. The sum of chunk plaintext lengths equals File Size.
+======================================================================
+52. DIRECTORY TREE VALIDATION
+======================================================================
+The metadata MUST describe a valid rooted directory tree.
+Every non-root entry MUST eventually resolve to RootDirectoryID through
+its ParentID.
+Cycles are prohibited.
+A cycle of any length MUST cause metadata rejection.
+The maximum directory depth MAY be limited by an implementation.
+Such a limit MUST be enforced before recursive processing can exhaust
+resources.
+======================================================================
+53. METADATA HASH
+======================================================================
+ASTBOX v1 does not store a separate plaintext MetadataHash in the
+Header.
+Metadata integrity is provided by XChaCha20-Poly1305 authentication.
+A separate plaintext hash is therefore unnecessary for cryptographic
+integrity.
+Any future MetadataHash field requires a future format version.
+======================================================================
+54. FOOTER
+======================================================================
+The Footer is exactly 112 bytes.
+Footer layout:
+Offset  Size  Type       Field
+0       8     BYTE[8]    FooterMagic
+8       2     UINT16     FooterVersion
+10      2     UINT16     FooterFlags
+12      8     UINT64     FooterGeneration
+20      8     UINT64     ContainerLength
+28      16    BYTE[16]   MetadataDigest
+44      16    BYTE[16]   DataDigest
+60      16    BYTE[16]   FooterMAC
+76      36    BYTE[36]   Reserved
+Total: 112 bytes.
+======================================================================
+55. FOOTER MAGIC
+======================================================================
+FooterMagic:
+ASTBOXF1
+ASCII bytes:
+41 53 54 42 4F 58 46 31
+The value is FIXED.
+No NUL terminator is included.
+======================================================================
+56. FOOTER VERSION
+======================================================================
+FooterVersion:
+UINT16
+Required value:
+1
+Serialized:
+00 01
+The value is FIXED.
+======================================================================
+57. FOOTER FLAGS
+======================================================================
+FooterFlags:
+UINT16
+Required value:
+0
+Serialized:
+00 00
+No FooterFlags are defined in ASTBOX v1.
+A non-zero value MUST be rejected.
+======================================================================
+58. FOOTER GENERATION
+======================================================================
+FooterGeneration:
+UINT64
+It MUST equal Header.Generation.
+A mismatch MUST cause container rejection.
+======================================================================
+59. CONTAINER LENGTH
+======================================================================
+ContainerLength:
+UINT64
+It MUST equal the actual physical file size.
+It MUST also equal:
+FooterOffset + FooterLength
+A mismatch MUST cause container rejection.
+======================================================================
+60. METADATA DIGEST
+======================================================================
+MetadataDigest is exactly 16 bytes.
+It is the first 16 bytes of:
+SHA-256(MetadataRecord)
+The complete physical Metadata Record is hashed, including:
+MetadataNonce
+MetadataCiphertext
+MetadataTag
+MetadataDigest does not replace AEAD authentication.
+It provides an additional compact structural reference for the Footer.
+======================================================================
+61. DATA DIGEST
+======================================================================
+DataDigest is exactly 16 bytes.
+It is the first 16 bytes of:
+SHA-256(DataRecordRegion)
+The complete physical Data Record region is hashed.
+If DataLength = 0, the digest is:
+first 16 bytes of SHA-256(empty byte string)
+======================================================================
+62. FOOTER MAC
+======================================================================
+FooterMAC is exactly 16 bytes.
+It is calculated using:
+HMAC-SHA-256
+Key:
+FooterKey
+The HMAC message is:
+ASCII("ASTBOX-FOOTER-MAC-v1")
+||
+FooterWithoutMAC
+FooterWithoutMAC is the complete 112-byte Footer with:
+FooterMAC replaced by 16 zero bytes.
+The resulting HMAC is truncated to the first 16 bytes.
+======================================================================
+63. FOOTER RESERVED
+======================================================================
+Footer Reserved is 36 bytes.
+All bytes MUST be zero.
+Serialized value:
+36 zero bytes.
+Any non-zero byte MUST cause rejection.
+======================================================================
+64. FOOTER VALIDATION ORDER
+======================================================================
+After VaultKey recovery and key derivation, a reader SHOULD validate:
+1. Footer location.
+2. Footer length.
+3. FooterMagic.
+4. FooterVersion.
+5. FooterFlags.
+6. FooterGeneration.
+7. ContainerLength.
+8. Footer Reserved bytes.
+9. FooterMAC.
+10. MetadataDigest.
+11. DataDigest.
+12. Metadata AEAD.
+13. Data AEAD and logical consistency.
+An implementation MAY reorder independent checks provided that no
+invalid cryptographic state is exposed to an attacker.
+======================================================================
+65. CONTAINER CREATION
+======================================================================
+Container creation MUST proceed as follows:
+1. Generate VaultID.
+2. Generate VaultKey.
+3. Create at least one Key Slot.
+4. Generate each SlotID.
+5. Generate each Salt.
+6. Generate each WrapNonce.
+7. Derive each UnlockKey.
+8. Wrap VaultKey independently for each Key Slot.
+9. Construct initial metadata.
+10. Set Generation = 0.
+11. Encrypt Metadata.
+12. Encrypt Data Records.
+13. Construct Footer.
+14. Calculate Footer authentication.
+15. Calculate Header authentication.
+16. Write the complete container.
+17. Verify the resulting container before reporting successful creation.
+A partially written container MUST NOT be reported as successfully
+created.
+======================================================================
+66. INITIAL METADATA
+======================================================================
+At creation:
+MetadataVersion = 1
+RootDirectoryID =
+    16 zero bytes
+Entries =
+    empty array unless files/directories are created atomically with
+    the container
+ContainerCreated =
+    current Unix time in seconds
+ContainerModified =
+    current Unix time in seconds
+Generation = 0
+======================================================================
+67. FILE ADDITION
+======================================================================
+To add a file:
+1. Unlock the container.
+2. Verify container integrity.
+3. Create a new random FileID.
+4. Validate the parent directory.
+5. Validate the filename.
+6. Read the plaintext file.
+7. Divide it into chunks of at most 1048576 bytes.
+8. Generate a new DataNonce for every chunk.
+9. Encrypt every chunk.
+10. Construct the updated metadata.
+11. Increase Generation by exactly one.
+12. Re-encrypt metadata using a new MetadataNonce.
+13. Recalculate Footer.
+14. Atomically commit the new container.
+======================================================================
+68. FILE MODIFICATION
+======================================================================
+Modifying a file MUST NOT reuse old DataNonce values.
+All modified chunks MUST receive fresh DataNonce values.
+If a modified file is fully rewritten, all of its Data Records SHOULD
+be replaced.
+The implementation MUST ensure that no DataNonce is reused with
+DataKey.
+Generation MUST increase by exactly one for the successful modification.
+======================================================================
+69. FILE DELETION
+======================================================================
+Deleting a file removes its metadata Entry and associated Data Records
+from the logical container state.
+The VaultKey remains unchanged.
+The operation MUST produce a new Generation.
+The resulting metadata MUST no longer reference the deleted FileID.
+A secure implementation SHOULD overwrite or otherwise securely discard
+obsolete plaintext and cryptographic working buffers where practical.
+ASTBOX does not claim secure deletion of old encrypted bytes from
+storage media.
+======================================================================
+70. DIRECTORY CREATION
+======================================================================
+Creating a directory:
+1. Generate a random FileID.
+2. Set Type = DIRECTORY.
+3. Set Size = 0.
+4. Set DataStart = 0.
+5. Set DataLength = 0.
+6. Set ParentID to the selected parent.
+7. Validate Name uniqueness.
+8. Increment Generation.
+9. Re-encrypt metadata.
+10. Commit atomically.
+======================================================================
+71. DIRECTORY DELETION
+======================================================================
+A directory MUST be empty before deletion unless the implementation
+explicitly performs recursive deletion.
+Recursive deletion MUST delete all descendants as one logical
+transaction.
+Generation MUST increase once for the complete transaction.
+======================================================================
+72. RENAME
+======================================================================
+Renaming a file or directory changes only its metadata Name field.
+The FileID MUST remain unchanged.
+Data Records MUST NOT require re-encryption.
+Generation MUST increase by exactly one.
+Metadata MUST be re-encrypted using a fresh MetadataNonce.
+======================================================================
+73. CREDENTIAL ADDITION
+======================================================================
+Adding a credential:
+1. Unlock the container.
+2. Verify the container.
+3. Generate a new SlotID.
+4. Generate a new Salt.
+5. Generate a new WrapNonce.
+6. Derive UnlockKey.
+7. Wrap the existing VaultKey.
+8. Construct SlotMAC.
+9. Increase KeySlotCount.
+10. Update Header.
+11. Increase Generation.
+12. Recalculate affected authentication values.
+13. Commit atomically.
+Adding a credential MUST NOT change VaultKey.
+======================================================================
+74. CREDENTIAL REMOVAL
+======================================================================
+A credential MAY be removed only if at least one other valid Key Slot
+remains.
+KeySlotCount MUST remain at least 1.
+The VaultKey MUST remain unchanged.
+The removed SlotID MUST disappear from the Key Slot Array.
+Generation MUST increase.
+======================================================================
+75. CREDENTIAL CHANGE
+======================================================================
+Changing a credential is equivalent to:
+1. Authenticate the existing container.
+2. Retain the existing VaultKey.
+3. Generate a fresh Salt.
+4. Generate a fresh WrapNonce.
+5. Derive a new UnlockKey.
+6. Wrap the same VaultKey.
+7. Replace the old Key Slot.
+8. Increase Generation.
+9. Commit atomically.
+The old credential MUST no longer be able to unlock the resulting
+container.
+======================================================================
+76. METADATA MODIFICATION
+======================================================================
+Any metadata modification MUST:
+- increase Generation by exactly one;
+- generate a fresh MetadataNonce;
+- produce canonical CBOR;
+- encrypt the complete metadata object again;
+- update MetadataLength;
+- update all affected offsets;
+- regenerate Footer;
+- regenerate HeaderMAC.
+======================================================================
+77. DATA MODIFICATION
+======================================================================
+Any Data Record modification MUST:
+- use fresh DataNonce values;
+- update DataLength;
+- update affected metadata;
+- increase Generation;
+- update Footer;
+- update HeaderMAC if Header fields changed.
+======================================================================
+78. GENERATION SEMANTICS
+======================================================================
+Generation identifies the logical container state.
+Generation 0:
+initial container state.
+Generation N+1:
+the state resulting from one successful logical modification from
+Generation N.
+A single transaction containing multiple low-level writes MUST increase
+Generation only once.
+A failed transaction MUST NOT create an externally valid intermediate
+Generation.
+======================================================================
+79. TRANSACTION MODEL
+======================================================================
+ASTBOX updates MUST be performed transactionally.
+The implementation MUST construct the new logical state before
+committing it.
+The existing valid container MUST remain recoverable until the new
+container state has been durably committed.
+======================================================================
+80. COMMIT MODEL
+======================================================================
+The canonical commit strategy is:
+1. Open existing container.
+2. Authenticate and unlock it.
+3. Build modified state in a temporary representation.
+4. Generate all required new cryptographic material.
+5. Write the new container to a temporary file.
+6. Flush buffered writes.
+7. Perform filesystem synchronization where supported.
+8. Atomically replace the old file with the new file.
+9. Synchronize the containing directory where supported.
+The exact filesystem API is platform-specific.
+The logical operation MUST be atomic from the application's
+perspective.
+======================================================================
+81. CRASH BEFORE COMMIT
+======================================================================
+If the process crashes before replacement of the old file:
+The old valid container MUST remain usable.
+The temporary file MAY remain and MUST NOT be treated as the current
+container.
+======================================================================
+82. CRASH DURING COMMIT
+======================================================================
+The implementation SHOULD use the platform's atomic file replacement
+primitive.
+The implementation MUST NOT intentionally expose a partially rewritten
+ASTBOX file as the canonical file.
+On filesystems where atomic replacement cannot be guaranteed, the
+implementation MUST document the limitation.
+======================================================================
+83. CRASH AFTER COMMIT
+======================================================================
+After successful atomic replacement, the new Generation is the current
+logical state.
+If the process crashes immediately afterward, reopening the file MUST
+either:
+- recover the new valid state; or
+- recover the previous valid state only if the filesystem itself
+  rolled back the atomic replacement.
+The implementation MUST NOT accept a partially written mixed state.
+======================================================================
+84. READING A CONTAINER
+======================================================================
+A reader MUST perform structural validation before allocating memory
+based on untrusted lengths.
+The recommended sequence is:
+1. Read Header.
+2. Validate Header structure.
+3. Validate offsets and lengths.
+4. Read Key Slot Array.
+5. Attempt credential-based VaultKey recovery.
+6. Derive container keys.
+7. Verify HeaderMAC.
+8. Verify SlotMAC.
+9. Read Footer.
+10. Verify Footer.
+11. Read Metadata Record.
+12. Verify Metadata AEAD.
+13. Decode canonical CBOR.
+14. Validate metadata tree.
+15. Read Data Records as required.
+16. Verify Data AEAD.
+17. Reconstruct requested plaintext.
+======================================================================
+85. LAZY DATA DECRYPTION
+======================================================================
+A reader MAY decrypt Data Records lazily.
+For example, opening a directory listing does not require decrypting all
+file contents.
+However, metadata authentication MUST succeed before metadata is
+trusted.
+A file's Data Records MUST be authenticated before their plaintext is
+returned to the caller.
+======================================================================
+86. RANDOM ACCESS
+======================================================================
+The DataStart and DataLength fields allow an implementation to locate
+the physical Data Record region for a file.
+ChunkIndex permits individual chunks to be identified.
+An implementation MAY construct an internal index after authenticating
+metadata.
+The physical index MUST NOT override authenticated metadata.
+======================================================================
+87. LARGE FILES
+======================================================================
+A file MAY be larger than 4 GiB.
+File Size is represented in metadata as a CBOR unsigned integer.
+DataStart and DataLength in metadata use CBOR unsigned integers.
+The physical Header and Data structures use UINT64 offsets and lengths.
+Implementations MUST use overflow-safe arithmetic.
+======================================================================
+88. MAXIMUM CBOR SIZE
+======================================================================
+MetadataLength is untrusted until authenticated.
+An implementation MUST enforce a practical maximum metadata size
+before allocating memory.
+The ASTBOX core format does not define a single platform-independent
+maximum beyond the UINT64 physical field limit.
+An implementation-defined lower limit MAY be used as a resource
+protection mechanism.
+======================================================================
+89. UNKNOWN METADATA KEYS
+======================================================================
+ASTBOX v1 does not define extensible metadata keys.
+A metadata Entry containing an unknown key MUST be rejected.
+A top-level metadata map containing an unknown key MUST be rejected.
+This rule ensures deterministic interpretation.
+Future extensions require a future format version.
+======================================================================
+90. UNKNOWN DATA RECORD TYPES
+======================================================================
+ASTBOX v1 defines only the Data Record structure specified in this
+document.
+No record-type discriminator is present.
+Therefore a byte sequence in the Data region MUST be interpreted using
+the exact v1 Data Record structure.
+Future alternative record types require a future format version.
+======================================================================
+91. CANONICAL RE-ENCODING
+======================================================================
+When modifying metadata, an implementation MUST NOT attempt to preserve
+the original CBOR byte representation.
+It MUST:
+1. decode authenticated metadata;
+2. construct the new logical metadata object;
+3. encode it using deterministic CBOR;
+4. encrypt the resulting bytes.
+======================================================================
+92. METADATA SIZE CHANGES
+======================================================================
+If MetadataLength changes:
+DataOffset changes.
+Consequently:
+FooterOffset changes.
+Consequently:
+ContainerLength changes.
+The Header MUST be regenerated accordingly.
+HeaderMAC MUST be regenerated.
+Footer MUST be regenerated.
+======================================================================
+93. DATA SIZE CHANGES
+======================================================================
+If DataLength changes:
+FooterOffset changes.
+ContainerLength changes.
+The Header MUST be regenerated.
+HeaderMAC MUST be regenerated.
+Footer MUST be regenerated.
+======================================================================
+94. FOOTER DIGEST VALIDATION
+======================================================================
+The reader MUST calculate:
+SHA-256(MetadataRecord)
+and compare the first 16 bytes with MetadataDigest.
+The reader MUST calculate:
+SHA-256(DataRecordRegion)
+and compare the first 16 bytes with DataDigest.
+The comparison MUST be constant-time.
+A mismatch MUST cause container rejection.
+======================================================================
+95. FOOTER MAC VALIDATION
+======================================================================
+The reader MUST reconstruct FooterWithoutMAC.
+It MUST calculate:
+HMAC-SHA-256(
+    FooterKey,
+    ASCII("ASTBOX-FOOTER-MAC-v1") || FooterWithoutMAC
+)
+The result MUST be truncated to 16 bytes.
+The calculated value MUST equal FooterMAC.
+Comparison MUST be constant-time.
+======================================================================
+96. METADATA AUTHENTICATION FAILURE
+======================================================================
+If Metadata AEAD authentication fails:
+- metadata MUST NOT be trusted;
+- no filenames MUST be returned;
+- no directory structure MUST be returned;
+- no file sizes MUST be returned as authenticated metadata;
+- the container MUST be treated as invalid.
+======================================================================
+97. DATA AUTHENTICATION FAILURE
+======================================================================
+If an individual Data Record fails authentication:
+The plaintext MUST NOT be returned.
+The affected file operation MUST fail.
+The implementation MUST NOT substitute unauthenticated ciphertext.
+======================================================================
+98. ZERO-LENGTH FILE
+======================================================================
+A zero-length file is represented by:
+Type = FILE
+Size = 0
+DataStart = 0
+DataLength = 0
+No Data Record is created.
+======================================================================
+99. FILE NAME COLLISION
+======================================================================
+Two entries with identical normalized Name values MUST NOT exist
+under the same ParentID.
+Comparison MUST be performed after NFC normalization.
+The comparison is exact Unicode scalar-value comparison.
+Case folding is NOT performed by the ASTBOX core specification.
+Therefore:
+"File.txt"
+and
+"file.txt"
+are distinct names at the ASTBOX format level.
+======================================================================
+100. PATH SEMANTICS
+======================================================================
+ASTBOX stores hierarchical relationships through FileID and ParentID.
+It does not store complete paths.
+A path is reconstructed by traversing:
+Entry
+    ->
+ParentID
+    ->
+Parent
+    ->
+...
+until RootDirectoryID is reached.
+A reader MUST detect cycles during reconstruction.
+======================================================================
+101. ROOT DIRECTORY
+======================================================================
+The root directory is implicit.
+Its FileID is:
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+It is not represented as an ordinary Entry.
+The root directory has no ParentID.
+The root directory cannot be renamed.
+The root directory cannot be deleted.
+======================================================================
+102. DATA RECORD AUTHORITY
+======================================================================
+Metadata is authoritative for:
+- existence of files;
+- file names;
+- directory structure;
+- file size;
+- DataStart;
+- DataLength.
+Data Records are authoritative for:
+- ciphertext;
+- ChunkIndex;
+- PlaintextLength;
+- encrypted file content.
+Both layers MUST agree.
+A mismatch MUST cause the container to be rejected.
+======================================================================
+103. NO IMPLICIT DATA
+======================================================================
+Bytes not belonging to a valid Data Record are invalid.
+An implementation MUST NOT silently ignore:
+- trailing bytes;
+- gaps;
+- unknown records;
+- duplicate chunks;
+- unreferenced chunks.
+======================================================================
+104. SECURE DELETION LIMITATION
+======================================================================
+ASTBOX logical deletion does not guarantee physical destruction of
+previous ciphertext.
+Filesystem journaling, copy-on-write storage, SSD wear leveling,
+snapshots, backups, and temporary files may preserve old ciphertext.
+ASTBOX therefore provides logical deletion, not guaranteed forensic
+erasure.
+======================================================================
+105. COPY OPERATION
+======================================================================
+Copying an ASTBOX file byte-for-byte preserves:
+- VaultID;
+- VaultKey;
+- credentials;
+- Generation;
+- encrypted data;
+- metadata;
+- cryptographic state.
+A copied file is therefore cryptographically equivalent to the
+original container.
+Applications SHOULD treat the copied container as an independent
+backup rather than a newly created container.
+======================================================================
+106. CONTAINER DUPLICATION
+======================================================================
+If an application creates a logically independent new container from
+an existing container's contents, it MUST generate:
+- new VaultID;
+- new VaultKey;
+- new SlotID values;
+- new Salts;
+- new nonces.
+It MUST NOT simply copy cryptographic state into the new container.
+======================================================================
+107. BACKUP
+======================================================================
+A backup MUST preserve the complete ASTBOX byte stream.
+Partial copying is not sufficient unless the implementation has an
+explicit authenticated export mechanism.
+A backup MAY be made while the container is locked.
+======================================================================
+108. RECOVERY
+======================================================================
+ASTBOX v1 does not define a recovery key separate from Key Slots.
+Recovery requires at least one valid Key Slot credential.
+If all valid credentials are permanently lost, the VaultKey cannot be
+reconstructed from the container.
+======================================================================
+109. FORWARD COMPATIBILITY
+======================================================================
+ASTBOX v1 intentionally uses strict parsing.
+Unknown fields, unknown flags, unknown metadata keys, unknown
+CredentialType values, unknown KDF profiles, and non-zero reserved
+fields MUST NOT be silently accepted.
+Future extensions require an explicitly versioned format.
+======================================================================
+110. FIXED DATA-CONTAINER PARAMETERS
+======================================================================
+The following values are FIXED in ASTBOX v1:
+Metadata encoding:
+    deterministic CBOR
+Metadata top-level keys:
+    1 through 5
+RootDirectoryID:
+    16 zero bytes
+FileID:
+    16 bytes
+Entry Type:
+    0 = DIRECTORY
+    1 = FILE
+Maximum plaintext Chunk size:
+    1048576 bytes
+DataNonce:
+    24 bytes
+Data authentication tag:
+    16 bytes
+Footer:
+    112 bytes
+FooterMagic:
+    ASTBOXF1
+FooterVersion:
+    1
+FooterFlags:
+    0
+MetadataDigest:
+    first 16 bytes of SHA-256(MetadataRecord)
+DataDigest:
+    first 16 bytes of SHA-256(DataRecordRegion)
+FooterMAC:
+    first 16 bytes of HMAC-SHA-256
+======================================================================
+111. NON-CONFIGURABLE DATA PARAMETERS
+======================================================================
+The following MUST NOT be customized per container:
+- metadata encoding;
+- CBOR canonicalization rules;
+- FileID length;
+- root FileID;
+- Entry Type values;
+- maximum plaintext chunk size;
+- DataNonce length;
+- Data authentication tag length;
+- Footer length;
+- Footer structure;
+- FooterMagic;
+- FooterVersion;
+- FooterFlags;
+- digest algorithm;
+- digest truncation length;
+- FooterMAC algorithm;
+- FooterMAC truncation length;
+- root directory semantics;
+- path separator restrictions.
+======================================================================
+112. CONTAINER CREATION CONFORMANCE
+======================================================================
+A conforming writer MUST produce a container satisfying all equations
+and structural constraints in:
+ASTBOX-v1.0-01-Core-Format.txt
+and all cryptographic requirements in:
+ASTBOX-v1.0-02-Key-Crypto.txt
+A newly written container MUST be self-validating before it is
+reported as successfully created.
+======================================================================
+113. CONTAINER READER CONFORMANCE
+======================================================================
+A conforming reader MUST:
+- reject malformed Header structures;
+- reject invalid offsets;
+- reject invalid lengths;
+- reject invalid CBOR;
+- reject duplicate CBOR keys;
+- reject non-canonical CBOR;
+- reject invalid directory trees;
+- reject duplicate FileIDs;
+- reject duplicate sibling names;
+- reject invalid Data Records;
+- reject missing Data Records;
+- reject duplicate chunks;
+- reject unexpected Data bytes;
+- authenticate Metadata;
+- authenticate Data before releasing plaintext;
+- authenticate Footer;
+- enforce all fixed ASTBOX v1 values.
+======================================================================
+114. MODIFICATION CONFORMANCE
+======================================================================
+A conforming writer modifying a container MUST:
+- authenticate the current container first;
+- preserve the VaultKey;
+- preserve unchanged FileIDs;
+- generate fresh nonces where encryption occurs;
+- increment Generation exactly once per logical transaction;
+- regenerate affected authenticated structures;
+- use deterministic CBOR;
+- atomically commit the resulting state.
+======================================================================
+115. END OF DOCUMENT
+======================================================================
+Document:
+    ASTBOX-v1.0-03-Data-Container.txt
+Format:
+    ASTBOX v1.0
+End of ASTBOX-v1.0-03-Data-Container.txt

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 Astenyx-Git | SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0 -->
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASTBOX 容器管理器 · V3.0.0</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<!-- ============ SVG 图标库（SF Symbols 风格线性图标） ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="folder-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8ec5ff"/><stop offset="1" stop-color="#3f7df6"/>
+    </linearGradient>
+    <symbol id="i-chev-left" viewBox="0 0 16 16"><path d="M10 3 5.5 8 10 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev-right" viewBox="0 0 16 16"><path d="M6 3l4.5 5L6 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev-up" viewBox="0 0 16 16"><path d="M3 10l5-4.5L13 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 16 16"><path d="M1.5 4.5A2 2 0 0 1 3.5 3h2.6c.5 0 1 .2 1.4.6l.9.9h4.1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-7Z" fill="url(#folder-grad)"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 16 16"><path d="M4 1.8h5.2L13 5.6V14a.9.9 0 0 1-.9.9H4.9A.9.9 0 0 1 4 14V1.8Z" fill="#fff" stroke="rgba(0,0,0,.18)" stroke-width=".6"/><path d="M9.2 1.8 13 5.6H9.2V1.8Z" fill="#d8e4ff"/></symbol>
+    <symbol id="i-box-open" viewBox="0 0 16 16"><path d="M8 1.7 14 4.6v6.8L8 14.3 2 11.4V4.6L8 1.7Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 4.6 8 7.5l6-2.9M8 7.5v6.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 16 16"><path d="m3 13 7.5-7.5M11.5 4.5l1-1M13 7h1.4M8.5 2.6V1.2M13.4 10.8l1 .9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 16 16"><path d="M8 2.2v7.6M4.8 7 8 10.2 11.2 7M2.8 13.4h10.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 16 16"><path d="M8 1.5 13.2 3.4v4.2c0 3.2-2.2 5.6-5.2 6.9-3-1.3-5.2-3.7-5.2-6.9V3.4L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m5.7 7.8 1.7 1.7 3-3.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3.2" y="7" width="9.6" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="10.5" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 16 16"><rect x="3.2" y="7" width="9.6" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5-.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="10.5" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-folder-plus" viewBox="0 0 16 16"><path d="M1.5 4.5A2 2 0 0 1 3.5 3h2.6c.5 0 1 .2 1.4.6l.9.9h4.1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-7Z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 6.8v4M6 8.8h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.5"/><path d="M4 3a6 6 0 0 0 8 10M12 3a6 6 0 0 0-8 10" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-ellipsis" viewBox="0 0 16 16"><circle cx="3.4" cy="8" r="1.25" fill="currentColor"/><circle cx="8" cy="8" r="1.25" fill="currentColor"/><circle cx="12.6" cy="8" r="1.25" fill="currentColor"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M12.8 3.2l-1.1 1.1M4.3 11.7l-1.1 1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 16 16"><path d="M13.6 9.8A5.8 5.8 0 0 1 6.2 2.4a5.8 5.8 0 1 0 7.4 7.4Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+    <symbol id="i-xmark" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.6 3.2 3.2L13 4.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 3.5h-6a1 1 0 0 0-1 1v6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 16 16"><path d="M8 1.8 9.5 6 13.7 7.5 9.5 9 8 13.2 6.5 9 2.3 7.5 6.5 6 8 1.8Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M12.8 11.4l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6.6-1.6Z" fill="currentColor" opacity=".75"/></symbol>
+    <symbol id="i-key" viewBox="0 0 16 16"><circle cx="5.2" cy="10.8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m7.4 8.6 5.4-5.4M11 5l1.8 1.8M9.2 6.8l1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2 14.4 13H1.6L8 2Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.4v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.2" r=".9" fill="currentColor"/></symbol>
+    <symbol id="i-arrow-upto" viewBox="0 0 16 16"><path d="M8 12.5V4M4.8 7.2 8 4l3.2 3.2M3 14h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6 5 5M11 11l1.4 1.4M12.4 3.6 11 5M5 11l-1.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ 壁纸层（供玻璃折射的动态背景） ============ -->
+<div class="wallpaper" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="blob b4"></div><div class="grain"></div>
+</div>
+
+<!-- ============ 应用主体 ============ -->
+<div id="app">
+
+  <!-- 浮动玻璃工具栏（功能层） -->
+  <header class="toolbar glass glass--regular" role="toolbar" aria-label="主导航" data-i18n-aria="mainToolbar">
+    <div class="traffic">
+      <button class="tl tl-close" id="tlClose" data-i18n-title="ttClose" title="退出 ASTBOX（关闭本地服务）"></button><button class="tl tl-min" id="tlMin" data-i18n-title="ttMin" title="最小化请使用WindowsUI" disabled></button><button class="tl tl-zoom" id="tlZoom" data-i18n-title="ttZoom" title="进入/退出全屏"></button>
+    </div>
+    <div class="tb-app" aria-hidden="true">
+      <img class="appglyph" src="/icon.png" alt="">
+      <span class="tb-title">ASTBOX</span>
+    </div>
+
+    <div class="tb-cluster" role="group" aria-label="导航" data-i18n-aria="grpNav">
+      <button class="btn-icon" id="btnBack" data-i18n-title="navBack" title="后退" aria-label="后退" disabled><svg><use href="#i-chev-left"/></svg></button>
+      <button class="btn-icon" id="btnFwd" data-i18n-title="navFwd" title="前进" aria-label="前进" disabled><svg><use href="#i-chev-right"/></svg></button>
+      <button class="btn-icon" id="btnUp" data-i18n-title="navUp" title="上级目录" aria-label="上级目录" disabled><svg><use href="#i-chev-up"/></svg></button>
+    </div>
+
+    <nav class="address glass-inset" id="addressBar" aria-label="地址栏" data-i18n-aria="addrBar"></nav>
+
+    <div class="tb-cluster" role="group" aria-label="操作" data-i18n-aria="grpOps">
+      <button class="btn-icon" id="btnOpen" data-i18n-title="ttOpenBox" title="打开 .astbox 容器…" aria-label="打开容器"><svg><use href="#i-box-open"/></svg></button>
+      <button class="btn-icon" id="btnPack" data-i18n-title="ttPackBox" title="封装为 .astbox…" aria-label="封装"><svg><use href="#i-wand"/></svg></button>
+      <button class="btn-icon" id="btnAdd" data-i18n-title="ttAddBox" title="添加文件到当前目录…" aria-label="添加文件"><svg><use href="#i-plus"/></svg></button>
+      <button class="btn-icon" id="btnExtractSel" data-i18n-title="ttExtractBox" title="提取选中文件" aria-label="提取选中"><svg><use href="#i-download"/></svg></button>
+      <button class="btn-icon" id="btnVerify" data-i18n-title="ttVerifyBox" title="验证容器完整性" aria-label="验证完整性"><svg><use href="#i-shield"/></svg></button>
+      <button class="btn-icon" id="btnMore" data-i18n-title="ttMore" title="更多操作" aria-label="更多"><svg><use href="#i-ellipsis"/></svg></button>
+      <span class="tb-sep" aria-hidden="true"></span>
+      <button class="btn-icon" id="btnLang" data-i18n-title="ttLang" title="切换语言" aria-label="切换语言"><span id="langCode">中</span></button>
+      <button class="btn-icon" id="btnTheme" data-i18n-title="ttTheme" title="切换外观" aria-label="切换外观"><svg id="themeIcon"><use href="#i-moon"/></svg></button>
+      <button class="btn btn-primary btn-unlock" id="btnUnlockTop" hidden data-i18n="unlockTopBtn">解锁…</button>
+    </div>
+  </header>
+
+  <!-- 主区域 -->
+  <div class="main">
+
+    <!-- 玻璃侧栏 -->
+    <aside class="sidebar glass glass--regular" aria-label="边栏" data-i18n-aria="sidePanel">
+      <div class="side-scroll">
+
+        <!-- 容器卡片 -->
+        <section class="card container-card" id="containerCard">
+          <div class="cc-empty" id="ccEmpty">
+            <p class="hint-title" data-i18n="ccEmptyTitle">未打开容器</p>
+            <p class="hint-sub" data-i18n="ccEmptySub">打开一个 .astbox 文件，或生成 .astbox 容器开始体验。</p>
+          </div>
+          <div class="cc-body" id="ccBody" hidden>
+            <div class="cc-row">
+              <svg class="cc-icon" aria-hidden="true"><use href="#i-box-open"/></svg>
+              <div class="cc-meta">
+                <strong id="ccName">—</strong>
+                <span class="mono dim" id="ccVault">—</span>
+              </div>
+              <span class="badge" id="ccStatus">—</span>
+            </div>
+            <dl class="cc-stats">
+              <div><dt>Generation</dt><dd class="mono" id="ccGen">—</dd></div>
+              <div><dt data-i18n="dtFiles">文件数</dt><dd class="mono" id="ccFiles">—</dd></div>
+              <div><dt data-i18n="dtCred">凭据</dt><dd id="ccSlots">TOTP</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <!-- TOTP 解锁模块（锁定态） -->
+        <section class="card unlock-card" id="unlockCard" hidden>
+          <h3><svg class="ic"><use href="#i-key"/></svg> <span data-i18n="otpHead">输入 TOTP 验证码</span></h3>
+          <div class="otp" id="otpBoxes" role="group" aria-label="TOTP 验证码输入"></div>
+          <div class="unlock-actions">
+            <button class="btn btn-primary" id="btnUnlockSide" data-i18n="btnUnlockSide">解锁</button>
+            <button class="btn btn-ghost" id="btnCalcTotp" data-i18n="btnCalc" data-i18n-title="ttCalc" title="用 Base32 密钥计算当前验证码">Base32 计算…</button>
+          </div>
+          <button class="btn btn-ghost btn-lock" id="btnLock" data-i18n="btnLockSide">锁定并清除凭据</button>
+        </section>
+
+        <!-- 快捷位置 -->
+        <section class="side-group" id="quickGroup">
+          <h4 class="side-head" data-i18n="sideLocation">位置</h4>
+          <button class="side-item active" id="qRoot"><svg class="ic"><use href="#i-folder"/></svg><span data-i18n="qRoot">根目录</span></button>
+          <div class="outrow">
+            <label class="side-head" for="outDir" data-i18n="lblOutDir">输出目录</label>
+            <div class="path-row">
+              <input class="text-input mono" id="outDir" type="text" spellcheck="false"
+                     placeholder="提取文件保存到…" data-i18n-ph="lblOutDirHint">
+              <button class="btn btn-glass btn-mini" id="outBrowse" title="浏览…" data-i18n="btnBrowse">浏览…</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 操作列表 -->
+        <section class="side-group">
+          <h4 class="side-head" data-i18n="sideActions">操作</h4>
+          <button class="side-item" id="opOpen"><svg class="ic"><use href="#i-box-open"/></svg><span data-i18n="opOpen">打开容器…</span></button>
+          <button class="side-item" id="opPack"><svg class="ic"><use href="#i-wand"/></svg><span data-i18n="opPack">封装文件夹…</span></button>
+          <button class="side-item" id="opDemo"><svg class="ic"><use href="#i-sparkle"/></svg><span data-i18n="opDemo">生成 .astbox 容器…</span></button>
+          <button class="side-item" id="opAddFiles"><svg class="ic"><use href="#i-plus"/></svg><span data-i18n="opAddFiles">添加文件…</span></button>
+          <button class="side-item" id="opAddFolder"><svg class="ic"><use href="#i-folder-plus"/></svg><span data-i18n="opAddFolder">添加文件夹…</span></button>
+          <button class="side-item" id="opExtractAll"><svg class="ic"><use href="#i-arrow-upto"/></svg><span data-i18n="opExtractAll">提取全部文件</span></button>
+          <button class="side-item" id="opVerify"><svg class="ic"><use href="#i-shield"/></svg><span data-i18n="opVerify">验证完整性</span></button>
+          <button class="side-item" id="opSelftest"><svg class="ic"><use href="#i-gear"/></svg><span data-i18n="opSelftest">密码学自检</span></button>
+        </section>
+      </div>
+    </aside>
+
+    <!-- 内容层（文件浏览器，内容从玻璃栏下穿过） -->
+    <section class="content" aria-label="文件列表" data-i18n-aria="fileList">
+      <div class="content-veil" aria-hidden="true"></div>
+      <div class="edge-fade top" aria-hidden="true"></div>
+      <div class="edge-fade bottom" aria-hidden="true"></div>
+
+      <!-- 列表头 -->
+      <div class="list-head" id="listHead" hidden>
+        <button class="lh-cell lh-name sortable" data-sort="name"><span data-i18n="colName">名称</span><span class="arrow"></span></button>
+        <button class="lh-cell lh-size sortable" data-sort="size"><span data-i18n="colSize">大小</span><span class="arrow"></span></button>
+        <button class="lh-cell lh-date sortable" data-sort="modified"><span data-i18n="colModified">修改时间</span><span class="arrow"></span></button>
+        <button class="lh-cell lh-kind" ><span data-i18n="colKind">类型</span></button>
+      </div>
+
+      <div class="list-scroll" id="listScroll" tabindex="0">
+        <ul class="rows" id="rows"></ul>
+
+        <!-- 空状态：未打开 -->
+        <div class="hero" id="heroEmpty">
+          <div class="hero-orb" aria-hidden="true">
+            <img src="/icon.png" alt="">
+          </div>
+          <h1 data-i18n="shAbout">ASTBOX 容器管理器</h1>
+          <p class="hero-sub" data-i18n-html="heroSub">加密容器的解码 · 浏览 · 提取 · 封装<br>Argon2id + HKDF-SHA256 + XChaCha20-Poly1305</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" id="heroOpen" data-i18n="btnHeroOpen">打开 .astbox 文件…</button>
+            <button class="btn btn-glass btn-lg" id="heroDemo" data-i18n="btnHeroDemo">生成 .astbox 容器</button>
+          </div>
+          <p class="hero-dim" data-i18n="heroDim">也可以把 .astbox 文件拖进本窗口</p>
+        </div>
+
+        <!-- 空状态：已锁定 -->
+        <div class="hero" id="heroLocked" hidden>
+          <div class="hero-orb orb-lock" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><use href="#i-lock" width="34" height="34" x="15" y="15"/></svg>
+          </div>
+          <h1 data-i18n="lblReady">容器已就绪</h1>
+          <p class="hero-sub" data-i18n-html="lblReadySub">在右侧输入验证器显示的 TOTP 验证码解锁<br>Argon2id 密钥派生需要数秒，请耐心等待</p>
+        </div>
+
+        <!-- 空状态：空文件夹 -->
+        <div class="hero hero-slim" id="heroFolderEmpty" hidden>
+          <div class="hero-orb" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><use href="#i-folder" width="40" height="40" x="12" y="14"/></svg>
+          </div>
+          <h1 data-i18n="lblFolderEmpty">此文件夹为空</h1>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 底部玻璃状态条 -->
+  <footer class="statusbar glass glass--regular" role="status">
+    <span class="st-left" id="stLeft" data-i18n="statusReady">就绪</span>
+    <div class="progress" id="progress" hidden><div class="progress-fill"></div></div>
+    <span class="st-right"><span id="stCount"></span><span class="phase-dot" id="phaseDot" title="状态" data-i18n-title="stDot"></span></span>
+  </footer>
+</div>
+
+<!-- ============ 覆盖层 ============ -->
+
+<!-- 拖放遮罩 -->
+<div class="drop-veil" id="dropVeil" hidden>
+  <div class="drop-card glass glass--regular">
+    <svg class="drop-ic"><use href="#i-box-open"/></svg>
+    <p data-i18n="dropText">松开以打开 .astbox 容器</p>
+  </div>
+</div>
+
+<!-- 右键菜单 / 弹出菜单 -->
+<div class="menu glass glass--regular" id="ctxMenu" role="menu" hidden></div>
+
+<!-- 模态表单（Sheet） -->
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet glass glass--regular" id="sheet" role="dialog" aria-modal="true"></div>
+</div>
+
+<!-- Toast 通知 -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<input type="file" id="filePick" accept=".astbox" hidden>
+
+<script src="/app.js"></script>
+</body>
+</html>

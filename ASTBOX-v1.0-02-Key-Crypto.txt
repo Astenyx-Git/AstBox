@@ -1,0 +1,1124 @@
+ASTBOX-v1.0-02-Key-Crypto.txt
+ASTBOX v1.0
+BINARY ENCRYPTED CONTAINER FORMAT SPECIFICATION
+Document: ASTBOX-v1.0-02-Key-Crypto.txt
+Part: Key Derivation and Cryptographic Specification
+Status: Final Draft for Cryptographic Specification
+Format Name: ASTBOX
+File Extension: .astbox
+Cryptographic Version: 1
+Integer Byte Order: Big-endian
+======================================================================
+1. SCOPE
+This document defines the cryptographic behavior of ASTBOX v1.
+This document specifies:
+- credential processing;
+- TOTP processing;
+- Argon2id parameters;
+- key hierarchy;
+- HKDF usage;
+- VaultKey generation;
+- VaultKey wrapping;
+- Header authentication;
+- Key Slot authentication;
+- Metadata and Data authentication inputs;
+- cryptographic nonce requirements;
+- associated-data construction;
+- cryptographic domain separation.
+This document MUST be read together with:
+ASTBOX-v1.0-01-Core-Format.txt
+ASTBOX-v1.0-03-Data-Container.txt
+ASTBOX-v1.0-04-Lifecycle-Security.txt
+If a cryptographic rule in this document conflicts with an
+implementation-specific behavior, this document takes precedence.
+======================================================================
+2. CRYPTOGRAPHIC DESIGN PRINCIPLE
+======================================================================
+ASTBOX uses a randomly generated high-entropy VaultKey as the root
+container encryption key.
+User credentials are not themselves used directly as encryption keys.
+A credential is processed into an UnlockKey.
+The UnlockKey is then used to unwrap the VaultKey stored in the
+corresponding Key Slot.
+The resulting hierarchy is:
+Credential
+    |
+    v
+Credential Normalization
+    |
+    v
+Argon2id
+    |
+    v
+UnlockKey
+    |
+    v
+XChaCha20-Poly1305
+    |
+    v
+VaultKey
+    |
+    +----> Metadata encryption
+    |
+    +----> Data encryption
+    |
+    +----> container authentication subkeys
+The VaultKey MUST be generated independently of all user credentials.
+======================================================================
+3. CRYPTOGRAPHIC ALGORITHMS
+======================================================================
+ASTBOX v1 uses the following algorithms:
+TOTP KDF:
+    Argon2id
+Key expansion:
+    HKDF-SHA-256
+Authenticated encryption:
+    XChaCha20-Poly1305
+Hash:
+    SHA-256
+TOTP:
+    RFC 6238-compatible TOTP
+TOTP HMAC:
+    HMAC-SHA-1
+TOTP time step:
+    30 seconds
+Supported TOTP digit counts:
+    6
+    8
+VaultKey length:
+    32 bytes
+All algorithm selections in this section are FIXED in ASTBOX v1.
+An implementation MUST NOT silently substitute another algorithm.
+======================================================================
+4. CRYPTOGRAPHIC RANDOMNESS
+======================================================================
+All cryptographically random values MUST be generated using a
+cryptographically secure operating-system-provided random number
+generator or an equivalent CSPRNG.
+The following values MUST be generated using a CSPRNG:
+- VaultID;
+- SlotID;
+- VaultKey;
+- Salt;
+- WrapNonce;
+- MetadataNonce;
+- Data nonce material;
+- any other ASTBOX random secret or nonce value.
+A pseudo-random generator seeded only from:
+- current time;
+- process ID;
+- filename;
+- system clock;
+- TOTP value;
+MUST NOT be used.
+======================================================================
+5. VAULTKEY
+======================================================================
+VaultKey is the root secret of an ASTBOX container.
+VaultKey length:
+32 bytes
+VaultKey MUST be generated randomly during container creation.
+VaultKey MUST contain 256 bits of entropy when generated correctly.
+VaultKey MUST NOT be derived from:
+- TOTP;
+- VaultID;
+- SlotID;
+- filename;
+- metadata;
+- filesystem path.
+VaultKey MUST NOT be stored in plaintext in the ASTBOX container.
+VaultKey MUST remain available only in protected process memory while
+the container is unlocked.
+An implementation SHOULD erase VaultKey material from memory as soon as
+it is no longer required.
+======================================================================
+6. CREDENTIAL TYPES
+======================================================================
+ASTBOX v1 defines exactly one credential type:
+CredentialType = 0x0002
+    TOTP
+TOTP is the sole credential type of ASTBOX v1.
+The legacy value 0x0001 (PASSWORD) is NOT part of the ASTBOX v1 design
+and MUST be rejected by a conforming reader.
+A Key Slot contains exactly one credential type.
+A container MAY contain multiple Key Slots.
+Different Key Slots MAY use different TOTP digit counts.
+All valid Key Slots for the same container unwrap the same VaultKey.
+======================================================================
+7. PASSWORD CREDENTIAL (REMOVED)
+======================================================================
+This section was removed in the corrected revision.
+ASTBOX v1 defines TOTP as the sole credential type;
+no password credential exists in the format.
+======================================================================
+8. TOTP CREDENTIAL
+======================================================================
+REVISED IN ASTBOX V2.0.1:
+The Key Slot credential is the decoded byte sequence of the Base32
+TOTP secret, not the decimal digits of a displayed TOTP value.
+Rationale: a 6/8-digit time window value is low-entropy and changes
+every period; binding the wrapping credential to it mathematically
+locks a container to its creation window. The Base32 secret is stable,
+high-entropy, and independent of wall-clock time.
+
+The TOTP value supplied by an external authenticator is an interactive
+authorization factor only:
+- The reader computes the expected TOTP values for the active time
+  windows (current window and neighbouring windows of the container
+  creation timestamp).
+- The supplied value is compared against each candidate using a
+  constant-time comparison.
+- Only after such a comparison succeeds MAY the reader attempt Key
+  Slot unwrapping with the secret-derived credential.
+
+Legacy note (ASTBOX v1.0 containers):
+Containers whose slots were wrapped under the v1.0 rule (credential =
+ASCII digits of the TOTP value) can only be unlocked by codes inside
+the creation-time window; readers SHOULD report this limitation when
+v1.0 semantics are detected.
+
+The digit count is specified by CredentialParameters in the Key Slot.
+The displayed TOTP value is treated as a decimal ASCII character
+sequence for verification purposes.
+Example:
+TOTP value:
+    042381
+Verification bytes (constant-time comparison input):
+30 34 32 33 38 31
+No integer conversion is performed.
+Leading zeroes are significant.
+======================================================================
+9. TOTP PARAMETERS
+======================================================================
+ASTBOX v1 fixes the following TOTP parameters:
+Algorithm:
+    HMAC-SHA-1
+Time step:
+    30 seconds
+T0:
+    0
+Time counter:
+T = floor((UnixTime - T0) / 30)
+Dynamic truncation:
+    RFC 6238 / RFC 4226
+Output:
+    decimal representation with exactly the configured digit count
+Supported digit counts:
+6
+8
+ASTBOX v1 does not permit:
+- custom TOTP periods;
+- custom T0;
+- SHA-256 TOTP;
+- SHA-512 TOTP;
+- arbitrary digit counts;
+- HOTP counters;
+- proprietary truncation.
+======================================================================
+10. TOTP TIME WINDOW
+======================================================================
+The cryptographic specification defines the TOTP value as the value
+generated for the current 30-second time step.
+An implementation MAY accept adjacent time steps to compensate for
+clock skew.
+The default ASTBOX v1 acceptance policy is:
+current time step only
+A reader MAY additionally attempt:
+previous time step
+next time step
+only when explicitly enabled by the application.
+Such alternate-step acceptance does not alter the container format.
+An implementation MUST NOT permanently store an accepted alternate TOTP
+as if it were the current TOTP.
+======================================================================
+11. TOTP SECRET
+======================================================================
+The TOTP secret is external to the ASTBOX container.
+The TOTP secret MUST NOT be stored in plaintext inside the ASTBOX file.
+The ASTBOX container does not contain sufficient information to
+reconstruct the TOTP secret.
+A normal compatible TOTP authenticator is responsible for storing the
+TOTP secret and generating the dynamic code.
+The ASTBOX container receives only the generated TOTP value during an
+unlock attempt.
+======================================================================
+12. TOTP OFFLINE SECURITY MODEL
+======================================================================
+A TOTP value has low entropy compared with a cryptographically random
+256-bit key.
+For a 6-digit TOTP:
+maximum code space:
+    1,000,000
+For an 8-digit TOTP:
+maximum code space:
+    100,000,000
+Therefore TOTP MUST NOT be treated as equivalent to a 128-bit or
+256-bit random key.
+Argon2id is used to make each offline credential guess expensive.
+Argon2id does not mathematically prevent offline brute-force attacks
+against a 6-digit or 8-digit TOTP.
+An attacker possessing the complete ASTBOX container can perform
+offline guesses against a TOTP-based Key Slot.
+The security benefit of Argon2id is therefore cost amplification, not
+elimination of offline guessing.
+======================================================================
+13. ARGON2ID
+======================================================================
+ASTBOX v1 uses:
+Argon2id
+Argon2id MUST be used according to the Argon2 specification.
+The following parameters are defined by ASTBOX profiles.
+======================================================================
+14. ARGON2ID_HIGH PROFILE
+======================================================================
+KDFProfile:
+0x0001
+Algorithm:
+Argon2id
+Memory:
+262144 KiB
+Time cost:
+3
+Parallelism:
+1
+Output length:
+32 bytes
+Therefore:
+Argon2MemoryKiB = 262144
+Argon2Time = 3
+Argon2Parallelism = 1
+Serialized parameter values:
+Argon2MemoryKiB:
+00 04 00 00
+Argon2Time:
+00 00 00 03
+Argon2Parallelism:
+00 00 00 01
+This is the RECOMMENDED profile.
+======================================================================
+15. ARGON2ID_MEMORY_CONSTRAINED PROFILE
+======================================================================
+KDFProfile:
+0x0002
+Algorithm:
+Argon2id
+Memory:
+65536 KiB
+Time cost:
+3
+Parallelism:
+1
+Output length:
+32 bytes
+Therefore:
+Argon2MemoryKiB = 65536
+Argon2Time = 3
+Argon2Parallelism = 1
+Serialized parameter values:
+Argon2MemoryKiB:
+00 01 00 00
+Argon2Time:
+00 00 00 03
+Argon2Parallelism:
+00 00 00 01
+This profile exists for systems that cannot reliably allocate the
+recommended 256 MiB Argon2 working set.
+It provides lower resistance to offline guessing than
+ARGON2ID_HIGH.
+A new container SHOULD use ARGON2ID_HIGH unless platform constraints
+prevent it.
+======================================================================
+16. ARGON2 PROFILE CONSISTENCY
+======================================================================
+Argon2MemoryKiB, Argon2Time, and Argon2Parallelism are serialized in
+each Key Slot for deterministic implementation and inspection.
+However, these values MUST match the selected KDFProfile exactly.
+A mismatch between KDFProfile and its parameters MUST cause the Key
+Slot to be rejected.
+An implementation MUST NOT interpret arbitrary attacker-controlled
+Argon2 parameters from the file without first verifying that they are
+one of the defined profile combinations.
+======================================================================
+17. ARGON2 SALT
+======================================================================
+Every Key Slot has an independent 32-byte Salt.
+Salt MUST be unique with overwhelming probability.
+Salt is public.
+Salt prevents identical credentials in different Key Slots or
+containers from producing identical Argon2 inputs.
+Salt MUST NOT be treated as a secret.
+======================================================================
+18. ARGON2 INPUT DOMAIN SEPARATION
+======================================================================
+The raw credential MUST NOT be passed directly to Argon2id.
+The Argon2 input is constructed using the following exact
+ASCII domain label:
+ASTBOX-KDF-v1
+The label is encoded as US-ASCII.
+Its bytes are:
+41 53 54 42 4F 58 2D 4B 44 46 2D 76 31
+The effective Argon2 input is:
+CredentialType || CredentialParameters || DomainLabel ||
+NormalizedCredential
+where:
+CredentialType:
+    UINT16 big-endian
+CredentialParameters:
+    UINT8
+DomainLabel:
+    ASCII bytes "ASTBOX-KDF-v1"
+NormalizedCredential:
+    decoded bytes of the Base32 TOTP secret
+    (ASTBOX V2.0.1; v1.0 used decimal ASCII TOTP digits).
+This construction provides cryptographic domain separation of the TOTP
+secret credential.
+======================================================================
+19. ARGON2 SALT INPUT
+======================================================================
+The 32-byte Key Slot Salt is supplied directly as the Argon2 salt.
+No hashing or textual encoding of Salt is performed before Argon2id.
+======================================================================
+20. UNLOCKKEY
+======================================================================
+Argon2id output length:
+32 bytes
+The resulting 32-byte value is called:
+UnlockKey
+UnlockKey MUST NOT be stored in the container.
+UnlockKey exists only as intermediate key material.
+UnlockKey is independently derived for each Key Slot.
+The same credential MAY produce different UnlockKeys because each
+Key Slot has an independent Salt.
+======================================================================
+21. KEY WRAPPING
+======================================================================
+The VaultKey is wrapped independently for each Key Slot.
+Wrapping algorithm:
+XChaCha20-Poly1305
+Key:
+UnlockKey
+Nonce:
+WrapNonce
+Plaintext:
+VaultKey
+Plaintext length:
+32 bytes
+Authentication tag:
+16 bytes
+Ciphertext:
+32 bytes
+Complete WrappedVaultKey:
+48 bytes
+The 48-byte field consists of:
+32-byte ciphertext
+followed by
+16-byte authentication tag
+======================================================================
+22. WRAP NONCE
+======================================================================
+WrapNonce is exactly 24 bytes.
+It MUST be randomly generated for every VaultKey wrapping operation.
+A WrapNonce MUST NOT be reused with the same UnlockKey.
+The nonce MUST be stored in the Key Slot because XChaCha20-Poly1305
+requires it for decryption.
+WrapNonce is not secret.
+======================================================================
+23. WRAPPING ASSOCIATED DATA
+======================================================================
+XChaCha20-Poly1305 wrapping uses associated data.
+The exact associated-data byte sequence is:
+ASCII domain label:
+    ASTBOX-WRAP-v1
+followed by:
+VaultID
+SlotID
+CredentialType
+CredentialParameters
+KDFProfile
+Argon2MemoryKiB
+Argon2Time
+Argon2Parallelism
+Salt
+WrapNonce
+All integer fields use their serialized big-endian representation.
+The associated data MUST be constructed from the exact bytes present in
+the Key Slot and Header.
+No textual serialization is permitted.
+The associated data MUST NOT contain:
+WrappedVaultKey
+SlotMAC
+HeaderMAC
+======================================================================
+24. WRAP DOMAIN LABEL
+======================================================================
+The wrapping domain label is:
+ASTBOX-WRAP-v1
+US-ASCII bytes:
+41 53 54 42 4F 58 2D 57 52 41 50 2D 76 31
+The label is FIXED.
+======================================================================
+25. VAULTKEY UNWRAPPING
+======================================================================
+To attempt unlocking through a Key Slot:
+1. Validate the Key Slot structure.
+2. Obtain the required credential: the decoded bytes of the Base32
+   TOTP secret (ASTBOX V2.0.1).
+3. Verify interactively that the supplied TOTP code matches an active
+   window candidate using constant-time comparison before unwrapping.
+4. Construct the Argon2id input.
+5. Run Argon2id.
+6. Obtain UnlockKey.
+7. Construct wrapping associated data.
+8. Run XChaCha20-Poly1305 decryption using WrapNonce.
+9. Verify the authentication tag.
+10. If authentication succeeds, obtain the VaultKey.
+11. Verify that the resulting VaultKey is valid for the container.
+12. Continue with container authentication.
+If XChaCha20-Poly1305 authentication fails, the Key Slot MUST NOT be
+treated as successfully unlocked.
+The implementation MUST NOT expose whether:
+- the credential was syntactically valid;
+- Argon2 completed;
+- the SlotMAC was valid;
+- the wrapping authentication failed;
+as separate externally observable authentication errors.
+======================================================================
+26. VAULTKEY VERIFICATION
+======================================================================
+A successfully unwrapped VaultKey is not sufficient by itself to
+declare the entire container valid.
+The implementation MUST subsequently authenticate the container
+according to the Header, Metadata, Data, and Footer rules defined by
+the remaining ASTBOX documents.
+This prevents an attacker from modifying unrelated container
+structures while retaining a valid wrapped VaultKey.
+======================================================================
+27. HKDF
+======================================================================
+ASTBOX v1 uses:
+HKDF-SHA-256
+HKDF is used only for deterministic derivation of independent
+subkeys from VaultKey.
+HKDF-Extract and HKDF-Expand MUST follow RFC 5869.
+Hash function:
+SHA-256
+Hash output length:
+32 bytes
+======================================================================
+28. HKDF SALT
+======================================================================
+ASTBOX v1 uses the following rule for HKDF-Extract:
+HKDF-Extract(salt, IKM)
+where the VaultID-derived salt is used as specified below.
+HKDF salt:
+ASCII domain label:
+ASTBOX-HKDF-SALT-v1
+followed by VaultID.
+The exact byte sequence is:
+ASCII("ASTBOX-HKDF-SALT-v1") || VaultID
+This value is supplied as the HKDF salt.
+======================================================================
+29. HKDF INPUT KEY MATERIAL
+======================================================================
+HKDF input key material:
+IKM = VaultKey
+VaultKey is exactly 32 bytes.
+No TOTP value, SlotID, or WrappedVaultKey is supplied directly as
+HKDF IKM.
+======================================================================
+30. HKDF CONTEXT RULE
+======================================================================
+Every ASTBOX HKDF expansion uses a fixed ASCII context string.
+The context string is not a human-readable user-provided setting.
+It is a protocol constant used for domain separation.
+The following contexts are defined:
+ASTBOX-META-v1
+ASTBOX-DATA-v1
+ASTBOX-HDRM-v1
+ASTBOX-SLOTM-v1
+ASTBOX-FOOT-v1
+Each is encoded as US-ASCII with no NUL terminator.
+These context strings are FIXED.
+======================================================================
+31. HKDF SUBKEYS
+======================================================================
+ASTBOX derives independent subkeys from VaultKey.
+The following conceptual subkeys are defined:
+HeaderKey
+MetadataKey
+DataKey
+SlotMACKey
+FooterKey
+Each subkey is 32 bytes.
+The exact derivation is:
+PRK = HKDF-Extract(
+    ASCII("ASTBOX-HKDF-SALT-v1") || VaultID,
+    VaultKey
+)
+HeaderKey =
+    HKDF-Expand(PRK, ASCII("ASTBOX-HDRM-v1"), 32)
+MetadataKey =
+    HKDF-Expand(PRK, ASCII("ASTBOX-META-v1"), 32)
+DataKey =
+    HKDF-Expand(PRK, ASCII("ASTBOX-DATA-v1"), 32)
+SlotMACKey =
+    HKDF-Expand(PRK, ASCII("ASTBOX-SLOTM-v1"), 32)
+FooterKey =
+    HKDF-Expand(PRK, ASCII("ASTBOX-FOOT-v1"), 32)
+======================================================================
+32. KEY DOMAIN SEPARATION
+======================================================================
+The subkeys defined above MUST NOT be reused for another purpose.
+In particular:
+HeaderKey MUST NOT be used for data encryption.
+MetadataKey MUST NOT be used for data encryption.
+DataKey MUST NOT be used for HeaderMAC.
+SlotMACKey MUST NOT be used for Footer authentication.
+FooterKey MUST NOT be used for AEAD encryption.
+======================================================================
+33. HEADER AUTHENTICATION
+======================================================================
+Header authentication uses:
+HMAC-SHA-256
+Key:
+HeaderKey
+Output:
+first 16 bytes of HMAC-SHA-256
+Therefore HeaderMAC length is:
+16 bytes
+The HeaderMAC input is the complete 128-byte Header with:
+- HeaderMAC bytes replaced by zero bytes;
+- Reserved bytes included exactly as stored.
+The resulting 32-byte HMAC is truncated to its first 16 bytes.
+The exact byte sequence is therefore:
+Header[0:108]
+|| 16 zero bytes
+|| Header[124:128]
+The resulting first 16 bytes are stored at Header offset 108.
+======================================================================
+34. HEADER AUTHENTICATION DOMAIN
+======================================================================
+The HeaderMAC input is additionally domain-separated.
+The actual HMAC message is:
+ASCII("ASTBOX-HEADER-MAC-v1")
+||
+HeaderWithoutMAC
+The ASCII domain label is:
+ASTBOX-HEADER-MAC-v1
+No NUL terminator is included.
+This domain label is FIXED.
+======================================================================
+35. SLOT AUTHENTICATION
+======================================================================
+Each Key Slot is authenticated using:
+HMAC-SHA-256
+Key:
+SlotMACKey
+Output:
+first 16 bytes of HMAC-SHA-256
+The SlotMAC field itself is excluded from the SlotMAC input.
+The Reserved3 field is included.
+The exact input is:
+ASCII("ASTBOX-SLOT-MAC-v1")
+||
+SlotBytes[0:140]
+||
+SlotBytes[156:192]
+The result is truncated to 16 bytes.
+The first 16 bytes are stored as SlotMAC.
+======================================================================
+36. SLOT MAC DOMAIN
+======================================================================
+The SlotMAC domain label is:
+ASTBOX-SLOT-MAC-v1
+US-ASCII.
+No NUL terminator is included.
+The label is FIXED.
+======================================================================
+37. HEADER/SLOT AUTHENTICATION ORDER
+======================================================================
+HeaderMAC and SlotMAC are authenticated using VaultKey-derived keys.
+Therefore a reader cannot fully authenticate HeaderMAC or SlotMAC
+before obtaining the VaultKey.
+The required unlock order is:
+1. Structural parse.
+2. Validate fixed structural fields.
+3. Attempt valid Key Slots.
+4. Recover VaultKey.
+5. Derive VaultKey subkeys.
+6. Verify HeaderMAC.
+7. Verify SlotMAC values.
+8. Verify Metadata.
+9. Verify Data.
+10. Verify Footer.
+An implementation MUST NOT treat an authenticated Key Slot as proof
+that the entire container is valid.
+======================================================================
+38. KEY SLOT ATTACK RESISTANCE
+======================================================================
+Each TOTP attempt requires the applicable Argon2id
+operation before VaultKey unwrapping can be attempted.
+For a TOTP Key Slot, the attack cost is therefore:
+candidate TOTP
+    ->
+Argon2id
+    ->
+UnlockKey
+    ->
+XChaCha20-Poly1305 verification
+An attacker with the complete container can perform this process
+offline.
+No property of the file format can impose a reliable attempt counter
+on an attacker who possesses a copy of the file.
+======================================================================
+39. TOTP ATTEMPT RATE
+======================================================================
+ASTBOX v1 does not claim that TOTP provides offline attempt limiting.
+An application MAY implement online or interactive throttling.
+Such throttling is external to the cryptographic container and MUST
+NOT be relied upon for protection of a stolen ASTBOX file.
+Argon2id is the cryptographic cost-amplification mechanism.
+======================================================================
+40. SIX-DIGIT TOTP
+======================================================================
+For a 6-digit TOTP:
+Candidate space:
+000000 through 999999
+Total:
+1,000,000 possible values
+The verification code is the six ASCII decimal digits.
+It is NOT the Key Slot credential (see Section 8, ASTBOX V2.0.1).
+A leading zero MUST be preserved.
+Example:
+Numeric interpretation:
+    12345
+Credential representation:
+    "012345"
+Credential bytes:
+30 31 32 33 34 35
+======================================================================
+41. EIGHT-DIGIT TOTP
+======================================================================
+For an 8-digit TOTP:
+Candidate space:
+00000000 through 99999999
+Total:
+100,000,000 possible values
+The verification code is the eight ASCII decimal digits.
+It is NOT the Key Slot credential (see Section 8, ASTBOX V2.0.1).
+A leading zero MUST be preserved.
+======================================================================
+42. TOTP KEY SLOT PARAMETERS
+======================================================================
+For a TOTP Key Slot:
+CredentialType:
+0x0002
+CredentialParameters:
+0x06 or 0x08
+KDFProfile:
+0x0001 or 0x0002
+The selected Argon2 parameters MUST match KDFProfile.
+======================================================================
+43. PASSWORD KEY SLOT PARAMETERS (REMOVED)
+======================================================================
+This section was removed in the corrected revision.
+ASTBOX v1 defines TOTP as the sole credential type;
+no password Key Slot exists.
+======================================================================
+44. MULTIPLE CREDENTIAL SLOTS
+======================================================================
+A container MAY have multiple Key Slots.
+For example:
+Slot 0:
+    TOTP-6
+Slot 1:
+    TOTP-8
+Both slots independently unwrap the same VaultKey.
+Adding a new Key Slot MUST NOT re-encrypt the existing Metadata or
+Data.
+Removing a Key Slot MUST NOT change the VaultKey.
+Changing a credential MUST create a new wrapping operation for the same
+VaultKey using a new Salt and new WrapNonce.
+======================================================================
+45. VAULTKEY WRAP INDIVIDUALITY
+======================================================================
+Each Key Slot MUST have:
+- independent Salt;
+- independent WrapNonce;
+- independent SlotID.
+Even when two Key Slots use the same credential, the resulting
+UnlockKeys and wrapped ciphertexts MUST be independently derived.
+======================================================================
+46. AEAD FOR METADATA
+======================================================================
+Metadata encryption uses:
+XChaCha20-Poly1305
+Key:
+MetadataKey
+Nonce:
+MetadataNonce
+Plaintext:
+canonical CBOR Metadata structure
+Authentication tag:
+16 bytes
+The exact Metadata record layout is defined in
+ASTBOX-v1.0-03-Data-Container.txt.
+MetadataNonce MUST be generated randomly.
+MetadataNonce MUST NOT be reused with MetadataKey.
+======================================================================
+47. METADATA ASSOCIATED DATA
+======================================================================
+Metadata AEAD associated data is:
+ASCII("ASTBOX-METADATA-v1")
+||
+VaultID
+||
+Generation
+Generation is encoded as UINT64 big-endian.
+The domain label is US-ASCII and has no NUL terminator.
+The associated data is not encrypted.
+It is authenticated by XChaCha20-Poly1305.
+======================================================================
+48. AEAD FOR DATA
+======================================================================
+Encrypted file data uses:
+XChaCha20-Poly1305
+Key:
+DataKey
+Each encrypted Chunk has independent nonce material.
+A nonce MUST NOT be reused with DataKey.
+The exact Chunk nonce construction and record layout are defined in
+ASTBOX-v1.0-03-Data-Container.txt.
+======================================================================
+49. DATA ASSOCIATED DATA
+======================================================================
+Each encrypted Data Chunk uses associated data containing, at minimum:
+ASCII("ASTBOX-DATA-v1")
+||
+VaultID
+||
+Generation
+||
+FileID
+||
+ChunkIndex
+||
+PlaintextLength
+All integer values use their canonical big-endian representations.
+The exact field ordering and lengths are defined in
+ASTBOX-v1.0-03-Data-Container.txt.
+======================================================================
+50. FOOTER AUTHENTICATION
+======================================================================
+Footer authentication uses:
+HMAC-SHA-256
+Key:
+FooterKey
+The result is truncated to 16 bytes.
+The FooterMAC input is defined in
+ASTBOX-v1.0-03-Data-Container.txt.
+======================================================================
+51. CRYPTOGRAPHIC DOMAIN SEPARATION
+======================================================================
+The following domain labels are FIXED:
+ASTBOX-KDF-v1
+ASTBOX-WRAP-v1
+ASTBOX-HKDF-SALT-v1
+ASTBOX-HDRM-v1
+ASTBOX-META-v1
+ASTBOX-DATA-v1
+ASTBOX-SLOTM-v1
+ASTBOX-FOOT-v1
+ASTBOX-HEADER-MAC-v1
+ASTBOX-SLOT-MAC-v1
+ASTBOX-METADATA-v1
+ASTBOX-DATA-v1
+ASTBOX-FOOTER-MAC-v1
+These strings are protocol constants.
+They are not user-configurable.
+They are not secrets.
+They MUST be encoded as US-ASCII.
+They MUST NOT include a terminating NUL byte.
+======================================================================
+52. HKDF CONTEXT ENCODING
+======================================================================
+HKDF context strings are byte strings, not human-readable metadata.
+For example:
+ASTBOX-META-v1
+is encoded as:
+41 53 54 42 4F 58 2D 4D 45 54 41 2D 76 31
+No quotation marks are included.
+No NUL byte is included.
+No Unicode normalization is performed.
+======================================================================
+53. CONSTANT-TIME COMPARISON
+======================================================================
+Authentication tags, MAC values, hashes, and other secret-dependent
+fixed-length byte strings MUST be compared using a constant-time
+comparison operation.
+A simple early-exit byte-by-byte comparison MUST NOT be used for
+cryptographic authentication values.
+======================================================================
+54. AUTHENTICATION FAILURE
+======================================================================
+A failed cryptographic verification MUST be treated as an
+authentication failure.
+The implementation SHOULD return a generic unlock failure rather than
+revealing which internal cryptographic test failed.
+An implementation MUST NOT distinguish externally between:
+- incorrect TOTP;
+- modified Salt;
+- modified WrappedVaultKey;
+- modified SlotMAC;
+- modified HeaderMAC.
+======================================================================
+55. KEY MATERIAL LIFETIME
+======================================================================
+Sensitive key material includes:
+- VaultKey;
+- UnlockKey;
+- HeaderKey;
+- MetadataKey;
+- DataKey;
+- SlotMACKey;
+- FooterKey.
+Implementations SHOULD minimize their lifetime in memory.
+When the container is locked, these values SHOULD NOT remain resident
+in ordinary application memory.
+Where the platform provides secure memory wiping, implementations
+SHOULD use it.
+Memory wiping cannot be assumed to be perfectly reliable on every
+platform.
+======================================================================
+56. NO CREDENTIAL-BASED VAULTKEY
+======================================================================
+ASTBOX MUST NOT derive VaultKey directly from a TOTP credential.
+The following construction is prohibited:
+VaultKey = Argon2id(Credential)
+The correct construction is:
+VaultKey = random 32-byte secret
+UnlockKey = Argon2id(Credential, Salt, Parameters)
+WrappedVaultKey =
+    XChaCha20-Poly1305(
+        UnlockKey,
+        WrapNonce,
+        VaultKey,
+        AssociatedData
+    )
+======================================================================
+57. NO TOTP-AS-VAULTKEY
+======================================================================
+The TOTP value MUST NOT be used directly as:
+- VaultKey;
+- AES key;
+- ChaCha20 key;
+- HKDF IKM;
+- MAC key.
+The TOTP value is only an input credential.
+It MUST first pass through the defined credential-processing and
+Argon2id process.
+======================================================================
+58. NO STATIC TOTP DERIVED KEY
+======================================================================
+The ASTBOX container MUST NOT store a static key derived only from the
+TOTP secret.
+The container stores the wrapped VaultKey instead.
+This ensures that changing a credential can be performed by replacing
+the wrapping slot without re-encrypting the entire container.
+======================================================================
+59. CRYPTOGRAPHIC VERSIONING
+======================================================================
+All cryptographic domain labels contain:
+v1
+This identifies the ASTBOX v1 cryptographic domain.
+A future incompatible cryptographic construction MUST use a different
+format version and corresponding domain separation.
+An implementation MUST NOT reinterpret an existing v1 domain label
+with different cryptographic semantics.
+======================================================================
+60. ALGORITHM SUBSTITUTION
+======================================================================
+The following substitutions are NOT valid ASTBOX v1:
+SHA-256 instead of HMAC-SHA-1 for TOTP.
+SHA-256 TOTP instead of SHA-1 TOTP.
+SHA-512 TOTP instead of SHA-1 TOTP.
+AES-GCM instead of XChaCha20-Poly1305.
+ChaCha20-Poly1305 with a 12-byte nonce instead of XChaCha20-Poly1305.
+PBKDF2 instead of Argon2id.
+scrypt instead of Argon2id.
+BLAKE2 instead of SHA-256 for HKDF.
+A different HKDF context.
+A different Argon2 profile.
+A different nonce size.
+======================================================================
+61. SECURITY PROPERTIES
+======================================================================
+The cryptographic design provides:
+- 256-bit random VaultKey;
+- authenticated encryption;
+- independent credential wrapping;
+- memory-hard credential processing;
+- cryptographic domain separation;
+- independent encryption keys for logical container regions;
+- tamper detection;
+- protection against direct exposure of the VaultKey;
+- support for multiple independent unlock credentials.
+The design does NOT provide:
+- unlimited entropy from a 6-digit TOTP;
+- unlimited entropy from an 8-digit TOTP;
+- reliable offline attempt counting;
+- protection against a compromised authenticator;
+- protection against an attacker who obtains the TOTP secret;
+- protection against a compromised endpoint;
+- guaranteed resistance to denial-of-service through intentionally
+  expensive KDF parameters.
+======================================================================
+62. TOTP SECURITY LIMITATION
+======================================================================
+The use of a 6-digit or 8-digit TOTP as a Key Slot credential creates
+a finite offline search space.
+For a stolen container, an attacker can enumerate candidate TOTP
+values.
+Argon2id increases the cost of each candidate.
+The effective security therefore depends on:
+- TOTP digit count;
+- Argon2id parameters;
+- attacker hardware;
+- number of available Key Slots;
+- implementation correctness.
+An 8-digit TOTP provides a larger search space than a 6-digit TOTP.
+Neither is equivalent to a random high-entropy key.
+======================================================================
+63. RECOMMENDED CREDENTIAL CONFIGURATION
+======================================================================
+TOTP is the sole credential type of ASTBOX v1.
+For convenience-oriented containers:
+TOTP:
+    6 digits
+KDF:
+    ARGON2ID_HIGH
+For stronger TOTP-based protection:
+TOTP:
+    8 digits
+KDF:
+    ARGON2ID_HIGH
+Every container MUST be understood as TOTP-credentialed with offline
+brute-force exposure proportional to the TOTP digit count; Argon2id
+provides cost amplification rather than unlimited entropy.
+======================================================================
+64. FIXED CRYPTOGRAPHIC PARAMETERS
+======================================================================
+ASTBOX v1 fixes:
+VaultKey:
+    32 bytes
+Hash:
+    SHA-256
+HKDF:
+    HKDF-SHA-256
+Data AEAD:
+    XChaCha20-Poly1305
+Metadata AEAD:
+    XChaCha20-Poly1305
+VaultKey wrapping:
+    XChaCha20-Poly1305
+AEAD authentication tag:
+    16 bytes
+TOTP:
+    RFC 6238
+TOTP hash:
+    HMAC-SHA-1
+TOTP period:
+    30 seconds
+TOTP T0:
+    0
+TOTP digits:
+    6 or 8
+Argon2:
+    Argon2id
+ARGON2ID_HIGH:
+    262144 KiB / 3 / 1
+ARGON2ID_MEMORY_CONSTRAINED:
+    65536 KiB / 3 / 1
+Argon2 output:
+    32 bytes
+Salt:
+    32 bytes
+WrapNonce:
+    24 bytes
+VaultID:
+    16 bytes
+SlotID:
+    16 bytes
+HeaderMAC:
+    HMAC-SHA-256 truncated to 16 bytes
+SlotMAC:
+    HMAC-SHA-256 truncated to 16 bytes
+FooterMAC:
+    HMAC-SHA-256 truncated to 16 bytes
+Integer byte order:
+    big-endian
+======================================================================
+65. NON-CONFIGURABLE CRYPTOGRAPHIC PARAMETERS
+======================================================================
+The following MUST NOT be configurable per container:
+- TOTP algorithm;
+- TOTP period;
+- TOTP T0;
+- TOTP truncation;
+- supported TOTP digit counts;
+- AEAD algorithm;
+- authentication tag length;
+- HKDF hash;
+- Argon2 algorithm;
+- Argon2 profile definitions;
+- VaultKey size;
+- Salt size;
+- WrapNonce size;
+- HKDF domain labels;
+- MAC domain labels;
+- integer byte order.
+The purpose of fixing these values is interoperability and avoidance
+of downgrade or algorithm-confusion vulnerabilities.
+======================================================================
+66. IMPLEMENTATION REQUIREMENT
+======================================================================
+A conforming implementation MUST implement the cryptographic
+operations exactly as specified.
+It MUST NOT:
+- invent missing cryptographic fields;
+- reinterpret reserved fields;
+- change field encoding;
+- use locale-dependent encoding;
+- truncate credential values;
+- convert TOTP values to binary integers before KDF processing;
+- reuse nonces;
+- derive VaultKey from a low-entropy credential;
+- use a credential as a cryptographic key without Argon2id;
+- silently downgrade Argon2 parameters;
+- silently accept unsupported TOTP parameters.
+======================================================================
+66a. REVISION HISTORY - ASTBOX V2.0.1
+======================================================================
+ASTBOX V2.0.1 revises the Key Slot credential semantics:
+
+- The Argon2id credential input is now the decoded byte sequence of
+  the Base32 TOTP secret (stable, high-entropy).
+- The displayed TOTP value is demoted to an interactive authorization
+  factor verified by constant-time comparison against active window
+  candidates before any unwrapping attempt.
+- Motivation: under the v1.0 rule a container was mathematically
+  bound to the 30-second creation window, because the wrapping
+  credential changed every period. Secret-based credentials remove
+  this time lock entirely.
+- Legacy v1.0 containers remain readable only with codes inside
+  their creation-time neighbourhood; this is a permanent property of
+  already-written files and cannot be retro-fixed.
+
+======================================================================
+67. END OF DOCUMENT
+======================================================================
+Document:
+    ASTBOX-v1.0-02-Key-Crypto.txt
+Format:
+    ASTBOX v1.0
+End of ASTBOX-v1.0-02-Key-Crypto.txt

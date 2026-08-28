@@ -1,0 +1,1758 @@
+ASTBOX-v1.0-04-Lifecycle-Security.txt
+ASTBOX v1.0
+BINARY ENCRYPTED CONTAINER FORMAT SPECIFICATION
+Document: ASTBOX-v1.0-04-Lifecycle-Security.txt
+Part: Lifecycle, Error Codes, Version Compatibility, and Security
+Status: Final Draft for Cryptographic Specification
+Format Name: ASTBOX
+File Extension: .astbox
+Integer Byte Order: Big-endian
+Metadata Encoding: Deterministic CBOR
+======================================================================
+1. SCOPE
+This document defines the normative operational, lifecycle, error
+handling, version compatibility, and security requirements of ASTBOX
+v1.
+This document specifies:
+- creation;
+- opening;
+- unlocking;
+- reading;
+- modification;
+- credential management;
+- commit;
+- crash handling;
+- error codes;
+- version compatibility;
+- resource limits;
+- authentication behavior;
+- TOTP security considerations;
+- offline attack considerations;
+- implementation security requirements;
+- interoperability requirements.
+The binary structures are defined in:
+ASTBOX-v1.0-01-Core-Format.txt
+Key derivation, wrapping, TOTP integration, and AEAD construction are
+defined in:
+ASTBOX-v1.0-02-Key-Crypto.txt
+Metadata, Data Records, Footer, and physical layout are defined in:
+ASTBOX-v1.0-03-Data-Container.txt
+======================================================================
+2. NORMATIVE LANGUAGE
+======================================================================
+The key words:
+MUST
+MUST NOT
+REQUIRED
+SHALL
+SHALL NOT
+SHOULD
+SHOULD NOT
+MAY
+OPTIONAL
+are to be interpreted as normative requirements.
+An implementation claiming ASTBOX v1 conformance MUST satisfy all
+MUST and MUST NOT requirements.
+======================================================================
+3. FORMAT IDENTITY
+======================================================================
+The format name is:
+ASTBOX
+The required file extension is:
+.astbox
+The primary file Magic value is:
+ASTBOX
+The Magic value is ASCII encoded.
+Hexadecimal representation:
+41 53 54 42 4F 58
+No NUL terminator is included.
+The Magic value is FIXED.
+======================================================================
+4. VERSION MODEL
+======================================================================
+ASTBOX uses explicit major and minor format versions.
+ASTBOX v1 is identified by:
+Major = 1
+Minor = 0
+The major version determines the fundamental binary and cryptographic
+interpretation.
+The minor version determines compatible additions within the same
+major version.
+======================================================================
+5. VERSION COMPATIBILITY
+======================================================================
+An ASTBOX v1.0 reader MUST accept ASTBOX v1.0 containers.
+A v1.0 reader MUST NOT interpret an unknown major version.
+A v1.x reader MAY accept later minor versions only when the later
+minor version explicitly declares backward-compatible interpretation.
+A reader MUST NOT guess compatibility.
+If a later version changes:
+- binary structure;
+- cryptographic primitive;
+- key derivation semantics;
+- authentication semantics;
+- CBOR interpretation;
+- nonce interpretation;
+then a new major version is REQUIRED.
+======================================================================
+6. STRICT VERSION RULE
+======================================================================
+ASTBOX v1 implementations MUST reject:
+- Major > 1;
+- unsupported minor versions;
+- malformed version fields.
+They MUST return:
+ASTBOX_E_UNSUPPORTED_VERSION
+unless a more specific structural error is applicable.
+======================================================================
+7. NO SILENT DOWNGRADE
+======================================================================
+An implementation MUST NOT downgrade a container to an older format
+version merely because the newer version is unsupported.
+An implementation MUST NOT reinterpret a newer container as v1.
+======================================================================
+8. CREATION
+======================================================================
+Creation produces a complete cryptographically self-consistent
+container.
+Creation MUST generate fresh:
+- VaultID;
+- VaultKey;
+- SlotID;
+- KDF salt;
+- wrapping nonce;
+- metadata nonce;
+- data nonces.
+No cryptographic random value may be copied from another container.
+======================================================================
+9. VAULTID
+======================================================================
+VaultID is exactly 16 bytes.
+It MUST be generated using a cryptographically secure random number
+generator.
+VaultID is public container metadata.
+VaultID MUST NOT be treated as a secret.
+VaultID MUST NOT be derived from a TOTP value, filename, timestamp,
+or file content.
+======================================================================
+10. VAULTKEY
+======================================================================
+VaultKey is the root secret of the container.
+VaultKey MUST be generated randomly using a CSPRNG.
+VaultKey MUST NOT be derived directly from:
+- TOTP;
+- filename;
+- VaultID;
+- timestamp.
+VaultKey MUST have the cryptographic length specified by the
+key-cryptography document.
+VaultKey is never stored in plaintext in the container.
+======================================================================
+11. KEY SLOT MODEL
+======================================================================
+Each unlock credential is represented by an independent Key Slot.
+A Key Slot contains the information necessary to derive an
+UnlockKey and authenticate a wrapped VaultKey.
+Each Key Slot has:
+- SlotID;
+- CredentialType;
+- KDF parameters;
+- KDF salt;
+- wrapping nonce;
+- wrapped VaultKey;
+- Slot authentication value.
+The exact byte-level structure is defined in:
+ASTBOX-v1.0-01-Core-Format.txt
+======================================================================
+12. PASSWORD CREDENTIAL (REMOVED)
+======================================================================
+This section was removed in the corrected revision.
+ASTBOX v1 defines TOTP as the sole credential type;
+no password credential exists in the format.
+======================================================================
+13. TOTP CREDENTIAL
+======================================================================
+ASTBOX v1 supports TOTP credentials according to the cryptographic
+rules in:
+ASTBOX-v1.0-02-Key-Crypto.txt
+The default TOTP configuration is:
+Digits:
+    6
+Period:
+    30 seconds
+ASTBOX v1 also permits:
+Digits:
+    8
+Period:
+    30 seconds
+No other digit count or period is valid in ASTBOX v1.
+======================================================================
+14. TOTP ROLE
+======================================================================
+REVISED IN ASTBOX V2.0.1:
+A TOTP value MUST NOT be treated as the VaultKey itself, and MUST NOT
+be used as the Key Slot KDF credential.
+The TOTP value is an interactive authorization factor: it is verified
+by constant-time comparison against active window candidates, and a
+successful comparison only authorizes the unwrapping attempt.
+The actual Key Slot credential is the decoded byte sequence of the
+Base32 TOTP secret (see ASTBOX-v1.0-02-Key-Crypto.txt Section 8).
+The VaultKey remains a randomly generated independent secret.
+======================================================================
+15. TOTP SECURITY LIMITATION
+======================================================================
+A standard 6-digit TOTP has only:
+1,000,000
+possible values.
+An 8-digit TOTP has:
+100,000,000
+possible values.
+Therefore TOTP alone MUST NOT be treated as equivalent to a
+high-entropy random encryption key.
+The ASTBOX cryptographic design MUST use the TOTP as an authentication
+factor rather than as the sole raw encryption key.
+======================================================================
+16. TOTP PERIOD
+======================================================================
+ASTBOX v1 fixes the TOTP period at:
+30 seconds
+The period is NOT a per-container customization parameter.
+A TOTP credential with another period MUST NOT be accepted by an
+ASTBOX v1 conforming implementation.
+======================================================================
+17. TOTP DIGITS
+======================================================================
+ASTBOX v1 permits:
+6 digits
+8 digits
+The Key Slot MUST explicitly identify the selected digit count.
+A reader MUST reject unsupported values.
+======================================================================
+18. TOTP AUTHENTICATOR COMPATIBILITY
+======================================================================
+The ASTBOX container format does not require a proprietary
+Authenticator application.
+The TOTP construction SHOULD remain compatible with standard
+RFC 6238-compatible Authenticators when the selected configuration is
+supported by the Authenticator.
+For the default configuration:
+6 digits
+30-second period
+compatibility with conventional Authenticator applications is the
+primary interoperability target.
+======================================================================
+19. TOTP SECRET
+======================================================================
+REVISED IN ASTBOX V2.0.1:
+The TOTP secret is the source of the Key Slot credential: its Base32
+decoded bytes are passed to Argon2id for wrapping and unwrapping.
+It MUST be stored or provisioned independently from the encrypted file
+data. A conforming reader keeps the secret in a local protected store
+(for example an OS-user-scoped encrypted registry) and MUST fail
+closed: without a locally registered secret for the VaultID, unlock
+MUST be refused even if the supplied verification code is correct.
+The ASTBOX container MUST NOT require the TOTP secret itself to be
+stored in plaintext inside the encrypted container.
+A TOTP credential MUST NOT be reconstructed from VaultID or other public
+container data.
+======================================================================
+20. OFFLINE ATTACK MODEL
+======================================================================
+ASTBOX assumes the attacker may possess a complete copy of the
+.astbox file.
+The attacker may therefore:
+- copy the file indefinitely;
+- inspect every byte;
+- modify arbitrary bytes;
+- perform unlimited offline computation;
+- attempt cryptographic validation;
+- attempt TOTP guesses;
+- compare multiple copies of a container;
+- automate all of the above.
+The container MUST therefore be secure without relying on an online
+server.
+======================================================================
+21. ATTEMPT LIMITATION
+======================================================================
+The ASTBOX file format itself cannot enforce a reliable global limit on
+offline TOTP attempts.
+An attacker controlling a copy of the file can duplicate it and test
+guesses independently.
+Therefore:
+"Maximum attempts"
+is NOT a cryptographic security boundary of ASTBOX.
+Any attempt counter stored inside the container can be rolled back by
+an attacker who has an earlier copy.
+======================================================================
+22. TOTP OFFLINE ENUMERATION
+======================================================================
+A 6-digit TOTP provides 20 bits of nominal search space.
+An 8-digit TOTP provides approximately 26.6 bits.
+If a TOTP-derived unlock construction permits cheap offline validation,
+an attacker with a complete container may enumerate the TOTP space.
+Therefore the TOTP authentication construction MUST include the
+specified expensive KDF / key derivation construction where defined by
+ASTBOX-v1.0-02-Key-Crypto.txt.
+======================================================================
+23. MEMORY-HARD KDF
+======================================================================
+The ASTBOX TOTP unlock path MUST use the fixed memory-hard
+KDF profile defined by:
+ASTBOX-v1.0-02-Key-Crypto.txt
+The purpose is to increase the computational and memory cost of each
+offline guess.
+KDF parameters are protocol parameters and MUST NOT be silently
+weakened.
+======================================================================
+24. KDF PARAMETER INTEGRITY
+======================================================================
+KDF parameters stored in a Key Slot are authenticated.
+An attacker MUST NOT be able to modify:
+- memory cost;
+- iteration count;
+- parallelism;
+- salt;
+- KDF profile;
+without causing authentication failure.
+The implementation MUST NOT trust unauthenticated KDF parameters.
+======================================================================
+25. NO SECURITY THROUGH CLOSED SOURCE
+======================================================================
+ASTBOX security MUST NOT depend on the implementation being closed
+source.
+The security model assumes the attacker knows:
+- this specification;
+- the algorithms;
+- the binary layout;
+- the KDF;
+- the TOTP construction;
+- the authentication process.
+Only cryptographic secrets are required to remain secret.
+======================================================================
+26. CRYPTOGRAPHIC ALGORITHM IDENTIFIERS
+======================================================================
+ASTBOX v1 uses fixed cryptographic algorithms.
+An implementation MUST NOT silently substitute:
+- another AEAD;
+- another hash;
+- another KDF;
+- another MAC;
+- another nonce length.
+Algorithm agility requires an explicitly defined future format version.
+======================================================================
+27. AEAD REQUIREMENT
+======================================================================
+ASTBOX v1 uses:
+XChaCha20-Poly1305
+for authenticated encryption.
+AEAD authentication failure MUST be treated as a cryptographic failure.
+Ciphertext MUST NEVER be returned as plaintext after authentication
+failure.
+======================================================================
+28. HASH REQUIREMENT
+======================================================================
+ASTBOX v1 uses:
+SHA-256
+for the defined structural digests.
+No TOTP credential hashing is performed using SHA-256 alone.
+SHA-256 structural digests do not replace AEAD authentication.
+======================================================================
+29. MAC REQUIREMENT
+======================================================================
+ASTBOX v1 uses:
+HMAC-SHA-256
+for FooterMAC.
+The output is truncated to 16 bytes.
+======================================================================
+30. CONSTANT-TIME COMPARISON
+======================================================================
+All comparisons involving:
+- authentication tags;
+- MACs;
+- cryptographic digests where attacker-controlled equality is relevant;
+- derived authentication values;
+SHOULD use constant-time comparison functions.
+======================================================================
+31. RANDOM NUMBER GENERATION
+======================================================================
+All cryptographic random values MUST be generated using a CSPRNG.
+This includes:
+- VaultKey;
+- VaultID;
+- SlotID;
+- KDF salts;
+- wrapping nonces;
+- metadata nonces;
+- data nonces.
+The operating system CSPRNG SHOULD be used.
+Predictable PRNGs MUST NOT be used.
+======================================================================
+32. NONCE REUSE
+======================================================================
+Nonce reuse with the same encryption key is prohibited.
+In particular:
+A MetadataNonce MUST NOT be reused with MetadataKey.
+A DataNonce MUST NOT be reused with DataKey.
+A WrapNonce MUST NOT be reused with the same wrapping key.
+Nonce uniqueness MUST be enforced by construction rather than by
+assuming randomness is sufficient.
+======================================================================
+33. KEY SEPARATION
+======================================================================
+ASTBOX MUST derive independent subkeys for independent cryptographic
+purposes.
+At minimum, distinct keys are required for:
+- metadata encryption;
+- data encryption;
+- footer authentication;
+- key-slot authentication;
+- key wrapping where applicable.
+The same key MUST NOT be reused across unrelated cryptographic
+operations.
+======================================================================
+34. DOMAIN SEPARATION
+======================================================================
+HKDF context strings and cryptographic domain labels MUST be
+ASCII-defined constants.
+The following labels are FIXED:
+ASTBOX-METADATA-v1
+ASTBOX-DATA-v1
+ASTBOX-FOOTER-MAC-v1
+Any additional labels defined in the key-cryptography document are
+equally fixed.
+Labels are protocol identifiers, not secrets.
+======================================================================
+35. CONTEXT STRING RULE
+======================================================================
+Protocol context strings:
+- use US-ASCII;
+- contain no NUL byte;
+- contain no trailing whitespace;
+- are case-sensitive;
+- are encoded exactly as specified;
+- MUST NOT be localized;
+- MUST NOT be translated.
+An implementation MUST NOT replace them with human-readable localized
+strings.
+======================================================================
+36. KEY ZEROIZATION
+======================================================================
+Implementations SHOULD zero sensitive buffers after use.
+Sensitive values include:
+- VaultKey;
+- derived encryption keys;
+- UnlockKey;
+- decrypted TOTP-derived intermediate secrets;
+- plaintext file data where practical.
+Because managed runtimes may not guarantee memory zeroization,
+implementations SHOULD use secure native primitives where appropriate.
+======================================================================
+37. PASSWORD HANDLING (REMOVED)
+======================================================================
+This section was removed in the corrected revision.
+ASTBOX v1 defines TOTP as the sole credential type;
+no password handling applies.
+======================================================================
+38. TOTP HANDLING
+======================================================================
+TOTP values MUST NOT be logged.
+TOTP values SHOULD be treated as short-lived secrets.
+TOTP values MUST NOT be persisted in plaintext unless required by the
+Authenticator's own secure credential storage.
+======================================================================
+39. USER INTERFACE
+======================================================================
+An implementation MUST clearly distinguish:
+- invalid TOTP;
+- malformed container;
+- corrupted container;
+- unsupported version.
+However, implementations SHOULD avoid unnecessarily revealing whether
+a particular Key Slot exists when responding to an unauthenticated
+attacker.
+======================================================================
+40. ERROR CODE DESIGN
+======================================================================
+ASTBOX errors are represented as symbolic names.
+The canonical numeric error code is a UINT16.
+Error code ranges:
+0000-00FF:
+    General and success
+0100-01FF:
+    Format and parsing
+0200-02FF:
+    Cryptographic failures
+0300-03FF:
+    Authentication and credentials
+0400-04FF:
+    Integrity failures
+0500-05FF:
+    Storage and I/O
+0600-06FF:
+    Resource limitations
+0700-07FF:
+    State and transaction errors
+======================================================================
+41. GENERAL ERROR CODES
+======================================================================
+0000 = ASTBOX_OK
+0001 = ASTBOX_E_INVALID_ARGUMENT
+0002 = ASTBOX_E_INVALID_STATE
+0003 = ASTBOX_E_NOT_INITIALIZED
+0004 = ASTBOX_E_ALREADY_EXISTS
+0005 = ASTBOX_E_NOT_FOUND
+0006 = ASTBOX_E_OPERATION_CANCELLED
+======================================================================
+42. FORMAT ERROR CODES
+======================================================================
+0100 = ASTBOX_E_INVALID_MAGIC
+0101 = ASTBOX_E_UNSUPPORTED_VERSION
+0102 = ASTBOX_E_INVALID_HEADER
+0103 = ASTBOX_E_INVALID_FOOTER
+0104 = ASTBOX_E_INVALID_LENGTH
+0105 = ASTBOX_E_INVALID_OFFSET
+0106 = ASTBOX_E_INTEGER_OVERFLOW
+0107 = ASTBOX_E_INVALID_CBOR
+0108 = ASTBOX_E_NON_CANONICAL_CBOR
+0109 = ASTBOX_E_DUPLICATE_CBOR_KEY
+010A = ASTBOX_E_UNKNOWN_FIELD
+010B = ASTBOX_E_RESERVED_FIELD
+010C = ASTBOX_E_INVALID_ENTRY
+010D = ASTBOX_E_INVALID_DIRECTORY_TREE
+010E = ASTBOX_E_INVALID_FILE_NAME
+010F = ASTBOX_E_INVALID_DATA_RECORD
+======================================================================
+43. CRYPTOGRAPHIC ERROR CODES
+======================================================================
+0200 = ASTBOX_E_CRYPTO_FAILURE
+0201 = ASTBOX_E_AEAD_FAILURE
+0202 = ASTBOX_E_MAC_FAILURE
+0203 = ASTBOX_E_KDF_FAILURE
+0204 = ASTBOX_E_KEY_DERIVATION_FAILURE
+0205 = ASTBOX_E_KEY_WRAP_FAILURE
+0206 = ASTBOX_E_NONCE_FAILURE
+======================================================================
+44. AUTHENTICATION ERROR CODES
+======================================================================
+0300 = ASTBOX_E_AUTHENTICATION_FAILED
+0301 = ASTBOX_E_INVALID_TOTP
+0302 = ASTBOX_E_NO_VALID_CREDENTIAL
+0303 = ASTBOX_E_CREDENTIAL_NOT_FOUND
+0304 = ASTBOX_E_LAST_CREDENTIAL
+0305 = ASTBOX_E_UNSUPPORTED_CREDENTIAL
+0306 = ASTBOX_E_INVALID_TOTP_DIGITS
+0307 = ASTBOX_E_INVALID_TOTP_PERIOD
+======================================================================
+45. INTEGRITY ERROR CODES
+======================================================================
+0400 = ASTBOX_E_INTEGRITY_FAILURE
+0401 = ASTBOX_E_HEADER_MAC_FAILURE
+0402 = ASTBOX_E_FOOTER_MAC_FAILURE
+0403 = ASTBOX_E_METADATA_DIGEST_FAILURE
+0404 = ASTBOX_E_DATA_DIGEST_FAILURE
+0405 = ASTBOX_E_METADATA_AEAD_FAILURE
+0406 = ASTBOX_E_DATA_AEAD_FAILURE
+0407 = ASTBOX_E_GENERATION_MISMATCH
+0408 = ASTBOX_E_CONTAINER_LENGTH_MISMATCH
+======================================================================
+46. STORAGE ERROR CODES
+======================================================================
+0500 = ASTBOX_E_IO
+0501 = ASTBOX_E_READ
+0502 = ASTBOX_E_WRITE
+0503 = ASTBOX_E_FLUSH
+0504 = ASTBOX_E_SYNC
+0505 = ASTBOX_E_ATOMIC_REPLACE
+0506 = ASTBOX_E_TEMP_FILE
+0507 = ASTBOX_E_STORAGE_FULL
+======================================================================
+47. RESOURCE ERROR CODES
+======================================================================
+0600 = ASTBOX_E_RESOURCE_LIMIT
+0601 = ASTBOX_E_METADATA_TOO_LARGE
+0602 = ASTBOX_E_FILE_TOO_LARGE
+0603 = ASTBOX_E_TOO_MANY_ENTRIES
+0604 = ASTBOX_E_DIRECTORY_DEPTH
+0605 = ASTBOX_E_MEMORY_LIMIT
+0606 = ASTBOX_E_KDF_RESOURCE_LIMIT
+======================================================================
+48. TRANSACTION ERROR CODES
+======================================================================
+0700 = ASTBOX_E_TRANSACTION_FAILED
+0701 = ASTBOX_E_TRANSACTION_ABORTED
+0702 = ASTBOX_E_COMMIT_FAILED
+0703 = ASTBOX_E_ROLLBACK_FAILED
+0704 = ASTBOX_E_STALE_GENERATION
+0705 = ASTBOX_E_CONCURRENT_MODIFICATION
+======================================================================
+49. ERROR SEMANTICS
+======================================================================
+An error code identifies the class of failure.
+An implementation MAY provide human-readable diagnostic text.
+Diagnostic text is NOT part of the ASTBOX binary format.
+Diagnostic text MUST NOT contain:
+- TOTP values;
+- VaultKey;
+- derived keys;
+- plaintext file contents;
+- secret material.
+======================================================================
+50. AUTHENTICATION FAILURE ORACLE
+======================================================================
+An implementation SHOULD avoid exposing unnecessary distinctions
+between invalid credentials.
+For an external attacker, the preferred public behavior is:
+ASTBOX_E_AUTHENTICATION_FAILED
+when the distinction is not required for legitimate operation.
+Internally, an implementation MAY use internal diagnostics to identify
+the failing verification step.
+======================================================================
+51. CORRUPTION HANDLING
+======================================================================
+Any authenticated integrity failure MUST cause the affected data to be
+considered untrusted.
+The implementation MUST NOT attempt heuristic repair.
+The implementation MUST NOT:
+- guess missing bytes;
+- silently skip invalid records;
+- substitute zero bytes;
+- accept invalid authentication tags;
+- reconstruct missing metadata from filenames.
+======================================================================
+52. PARTIAL RECOVERY
+======================================================================
+ASTBOX v1 does not define partial recovery of corrupted containers.
+A container failing structural or cryptographic validation MUST be
+considered invalid.
+An application MAY offer a forensic recovery tool outside the core
+ASTBOX specification, but recovered data MUST NOT be represented as
+authenticated ASTBOX data unless it passes the normal validation
+rules.
+======================================================================
+53. VERSIONED READER POLICY
+======================================================================
+Reader behavior:
+Major version = 1
+Minor version = 0
+    MUST accept.
+Major version = 1
+Minor version > 0
+    MUST reject unless explicitly declared compatible by a future
+    specification.
+Major version != 1
+    MUST reject.
+======================================================================
+54. VERSIONED WRITER POLICY
+======================================================================
+A v1 writer MUST create only ASTBOX v1.0 containers.
+It MUST NOT create containers containing undocumented future fields.
+======================================================================
+55. MIGRATION
+======================================================================
+A migration from ASTBOX v1 to a future major version MUST be performed
+as an explicit conversion operation.
+The migration SHOULD:
+1. authenticate the source;
+2. decrypt logical content;
+3. create a new container using the destination specification;
+4. generate new cryptographic state;
+5. verify the destination container;
+6. only then report successful migration.
+======================================================================
+56. BACKWARD COMPATIBILITY
+======================================================================
+Backward compatibility means a newer implementation can correctly read
+an older container.
+It does not mean that an older implementation can safely read every
+newer container.
+A v1 implementation MUST prioritize rejection over ambiguous
+interpretation.
+======================================================================
+57. FORWARD COMPATIBILITY
+======================================================================
+ASTBOX v1 is intentionally not forward-compatible with unknown
+cryptographic semantics.
+Unknown cryptographic algorithms or structures MUST cause rejection.
+======================================================================
+58. RESOURCE EXHAUSTION
+======================================================================
+An attacker may construct malformed containers designed to exhaust:
+- memory;
+- CPU;
+- disk space;
+- file descriptors;
+- recursion depth;
+- thread count.
+Implementations MUST validate lengths before allocation.
+Implementations SHOULD impose configurable operational resource limits.
+These limits MUST NOT alter the wire format.
+======================================================================
+59. KDF RESOURCE LIMIT
+======================================================================
+The implementation MUST verify KDF parameters before invoking the KDF.
+It MUST reject parameters exceeding its local resource policy.
+It MUST NOT silently reduce KDF parameters.
+Silently reducing KDF cost would create a security downgrade.
+======================================================================
+60. TIMING CONSIDERATIONS
+======================================================================
+Cryptographic verification SHOULD use constant-time primitives.
+However, ASTBOX does not require all parsing operations to execute in
+constant time.
+Public structural parsing may legitimately have variable execution
+time.
+Secret-dependent cryptographic comparisons SHOULD be constant-time.
+======================================================================
+61. SIDE-CHANNEL CONSIDERATIONS
+======================================================================
+Implementations SHOULD consider:
+- timing;
+- cache behavior;
+- branch prediction;
+- memory access patterns;
+- power analysis on mobile/embedded hardware;
+- swap files;
+- crash dumps.
+ASTBOX itself cannot eliminate all hardware-level side channels.
+======================================================================
+62. TEMPORARY FILES
+======================================================================
+Temporary ASTBOX files created during commit MUST NOT be interpreted
+as valid current containers.
+Temporary files SHOULD use:
+- unpredictable names;
+- restrictive permissions;
+- the same directory as the destination where required for atomic
+  replacement.
+======================================================================
+63. FILE PERMISSIONS
+======================================================================
+The implementation SHOULD create newly generated ASTBOX containers
+using restrictive operating-system permissions.
+On systems supporting owner-only permissions, an implementation SHOULD
+use owner-only access unless the user explicitly requests otherwise.
+The ASTBOX format itself does not encode operating-system ACLs.
+======================================================================
+64. BACKUP AND SNAPSHOT RISK
+======================================================================
+Users MUST understand that encrypted containers may remain in:
+- backups;
+- snapshots;
+- cloud synchronization histories;
+- filesystem journals;
+- temporary files;
+- deleted-file recovery areas.
+Deleting the current .astbox file does not guarantee destruction of
+previous copies.
+======================================================================
+65. PLAINTEXT HANDLING
+======================================================================
+Implementations SHOULD avoid writing decrypted plaintext to disk unless
+explicitly required.
+If plaintext must be materialized:
+- temporary locations SHOULD have restrictive permissions;
+- plaintext SHOULD be deleted after use;
+- temporary names SHOULD be unpredictable;
+- sensitive applications SHOULD consider secure temporary storage.
+ASTBOX does not guarantee secure deletion from all storage media.
+======================================================================
+66. MEMORY LOCKING
+======================================================================
+Where supported, implementations SHOULD consider memory locking for:
+- VaultKey;
+- derived keys;
+- TOTP values.
+Memory locking is an implementation security feature and is not
+required for binary compatibility.
+======================================================================
+67. TOTP CLOCK HANDLING
+======================================================================
+TOTP verification requires a local time source.
+ASTBOX v1 uses a 30-second TOTP period.
+Implementations SHOULD allow a small clock-skew window appropriate to
+normal Authenticator operation.
+The exact acceptance window is an implementation policy and is NOT
+part of the ASTBOX container cryptographic format.
+The implementation MUST NOT encode an arbitrary acceptance window as a
+container security parameter in v1.
+======================================================================
+68. TOTP REPLAY
+======================================================================
+Because ASTBOX is offline, conventional server-side replay prevention
+cannot be guaranteed.
+A TOTP value that is valid for its time step may be reused against
+multiple copies of the same container during that time step.
+The TOTP should therefore be regarded as an authentication factor, not
+as a replay-protected transaction authorization token.
+======================================================================
+69. TOTP BRUTE FORCE
+======================================================================
+6-digit TOTP:
+1,000,000 possible values.
+8-digit TOTP:
+100,000,000 possible values.
+The security of the container MUST NOT rely exclusively on the
+difficulty of enumerating these values.
+The KDF and cryptographic construction are responsible for increasing
+the cost of each offline candidate.
+======================================================================
+70. TOTP AND AUTHENTICATOR INTEROPERABILITY
+======================================================================
+ASTBOX v1 intentionally targets standard TOTP behavior.
+The primary interoperable configuration is:
+Algorithm:
+    HMAC-SHA-1
+Digits:
+    6
+Period:
+    30 seconds
+The optional ASTBOX v1 configuration is:
+Algorithm:
+    HMAC-SHA-1
+Digits:
+    8
+Period:
+    30 seconds
+The TOTP algorithm is fixed and is not a user-selectable container
+parameter.
+======================================================================
+71. TOTP SECRET ENCODING
+======================================================================
+Where an ASTBOX implementation provisions a TOTP secret to an external
+Authenticator, the provisioning representation SHOULD use standard
+Base32 representation without padding unless the provisioning protocol
+explicitly requires padding.
+The binary container itself stores the credential material according
+to the Key Slot specification.
+======================================================================
+72. NO PROPRIETARY AUTHENTICATOR REQUIREMENT
+======================================================================
+ASTBOX v1 does not require a proprietary Authenticator.
+A compatible standard TOTP Authenticator MAY participate in unlocking
+when it supports the ASTBOX-selected TOTP configuration.
+ASTBOX does not require the Authenticator application to know the
+ASTBOX file format.
+======================================================================
+73. SECRET ENTROPY REQUIREMENT
+======================================================================
+TOTP secrets SHOULD be generated randomly and have sufficient entropy
+for the underlying TOTP provisioning standard.
+======================================================================
+74. SECURITY BOUNDARY
+======================================================================
+The security boundary of ASTBOX consists of:
+- secrecy of the credential(s);
+- secrecy of VaultKey;
+- security of the KDF;
+- correctness of AEAD;
+- correctness of key separation;
+- quality of the CSPRNG;
+- correctness of implementation.
+The following are NOT security boundaries:
+- file extension;
+- Magic value;
+- closed-source implementation;
+- filename obfuscation;
+- encrypted filenames alone;
+- hidden application logic;
+- an internal attempt counter;
+- obscurity of the binary layout.
+======================================================================
+75. CLOSED-SOURCE IMPLEMENTATION
+======================================================================
+An ASTBOX implementation MAY be closed source.
+However, ASTBOX v1 security MUST remain valid if an attacker has full
+knowledge of the implementation and specification.
+Closed source may reduce casual discovery of implementation details but
+MUST NOT be considered cryptographic protection.
+======================================================================
+76. KERCKHOFFS PRINCIPLE
+======================================================================
+ASTBOX follows the principle that cryptographic security MUST depend
+on secret keys rather than secrecy of algorithms.
+Therefore:
+- algorithms are public;
+- formats are public;
+- constants are public;
+- protocol identifiers are public;
+- keys and credentials remain secret.
+======================================================================
+77. KEY COMPROMISE
+======================================================================
+If an attacker obtains the VaultKey, the encrypted data of that
+container is compromised regardless of the security of the TOTP
+credential.
+Credential changes cannot repair an already exposed VaultKey.
+To recover from VaultKey compromise, a new container MUST be created
+with a newly generated VaultKey and the logical contents re-encrypted.
+======================================================================
+78. CREDENTIAL COMPROMISE
+======================================================================
+If one credential is compromised but the VaultKey remains secret, the
+credential MAY be revoked by removing its Key Slot.
+The VaultKey does not need to change.
+All remaining credentials continue to reference the same VaultKey.
+======================================================================
+79. MULTIPLE CREDENTIALS
+======================================================================
+A container MAY contain multiple independent Key Slots.
+Each Slot MUST independently authenticate access to the same VaultKey.
+Adding or removing credentials MUST NOT require re-encrypting file
+contents.
+======================================================================
+80. KEY SLOT INDEPENDENCE
+======================================================================
+Each Key Slot MUST have an independent:
+- SlotID;
+- salt;
+- wrapping nonce;
+- derived UnlockKey.
+Two Key Slots MUST NOT share a derived UnlockKey unless explicitly
+specified by the key-cryptography construction.
+======================================================================
+81. NO KEY STORAGE IN PLAINTEXT
+======================================================================
+The following MUST NOT appear in plaintext in an ASTBOX container:
+- VaultKey;
+- DataKey;
+- MetadataKey;
+- FooterKey;
+- UnlockKey;
+- TOTP secret.
+Public identifiers and nonces are not secret and MAY appear in
+plaintext.
+======================================================================
+82. KEY WRAPPING
+======================================================================
+The VaultKey is protected by Key Slots.
+The exact key wrapping construction is defined in
+ASTBOX-v1.0-02-Key-Crypto.txt.
+A reader MUST authenticate the Key Slot before accepting its recovered
+VaultKey.
+======================================================================
+83. WRONG CREDENTIAL BEHAVIOR
+======================================================================
+An invalid credential MUST NOT cause:
+- plaintext release;
+- key-slot modification;
+- Generation increment;
+- metadata modification;
+- credential deletion.
+A failed unlock is a read-only operation.
+======================================================================
+84. AUTHENTICATED MODIFICATION
+======================================================================
+A container MUST be fully unlocked and authenticated before modification.
+An implementation MUST NOT permit unauthenticated metadata or data
+modification.
+======================================================================
+85. CONCURRENT ACCESS
+======================================================================
+ASTBOX v1 does not define distributed concurrency control.
+An implementation SHOULD use an operating-system file lock during
+modification.
+If the underlying file changed since it was opened, the writer SHOULD
+abort with:
+ASTBOX_E_STALE_GENERATION
+The implementation MUST NOT overwrite a newer container state based on
+a stale copy.
+======================================================================
+86. STALE GENERATION
+======================================================================
+Before commit, the writer SHOULD verify that the source Generation
+still matches the Generation observed when the transaction began.
+If it does not match:
+The transaction MUST be aborted.
+The writer MUST return:
+ASTBOX_E_STALE_GENERATION
+======================================================================
+87. ATOMIC COMMIT INVARIANT
+======================================================================
+At every externally observable point, an ASTBOX file MUST be either:
+- a complete valid container; or
+- an invalid/uncommitted temporary artifact.
+It MUST NOT be a partially valid mixture of two generations.
+======================================================================
+88. VALIDATION LEVELS
+======================================================================
+An implementation SHOULD distinguish:
+LEVEL 1:
+    Structural validation
+LEVEL 2:
+    Cryptographic container validation
+LEVEL 3:
+    Metadata validation
+LEVEL 4:
+    Individual Data Record validation
+LEVEL 5:
+    Full-container validation
+Opening a container for metadata operations requires at least Levels
+1 through 3.
+Returning file plaintext requires Level 4 for every returned chunk.
+A full backup verification SHOULD perform Level 5.
+======================================================================
+89. FULL-CONTAINER VERIFICATION
+======================================================================
+A full verification operation MUST:
+1. Validate Header.
+2. Validate Key Slots.
+3. Recover VaultKey.
+4. Verify HeaderMAC.
+5. Verify Footer.
+6. Verify FooterMAC.
+7. Verify MetadataDigest.
+8. Authenticate Metadata.
+9. Validate CBOR.
+10. Validate directory tree.
+11. Validate every Data Record.
+12. Authenticate every Data Record.
+13. Verify every file size.
+14. Verify every chunk sequence.
+15. Verify DataDigest.
+======================================================================
+90. SECURITY FAILURE POLICY
+======================================================================
+If any cryptographic verification fails, the implementation MUST fail
+closed.
+Fail closed means:
+- do not return plaintext;
+- do not trust metadata;
+- do not continue with partial authentication;
+- do not silently repair;
+- do not downgrade algorithms;
+- do not retry with weaker parameters.
+======================================================================
+91. IMPLEMENTATION-DEFINED VALUES
+======================================================================
+The following MAY be implementation-defined without changing the
+ASTBOX v1 binary format:
+- UI behavior;
+- file picker behavior;
+- temporary file naming;
+- filesystem locking;
+- maximum operational file size below protocol maximum;
+- maximum number of entries supported locally;
+- maximum directory depth supported locally;
+- memory limits;
+- TOTP clock-skew acceptance window;
+- clipboard handling;
+- automatic locking timeout.
+Such implementation policies MUST NOT change the interpretation of an
+ASTBOX v1 container.
+======================================================================
+92. FIXED PARAMETERS
+======================================================================
+The following parameters are FIXED by ASTBOX v1:
+Format name:
+    ASTBOX
+File extension:
+    .astbox
+Primary Magic:
+    ASTBOX
+Major version:
+    1
+Minor version:
+    0
+Byte order:
+    Big-endian
+Metadata encoding:
+    Deterministic CBOR
+AEAD:
+    XChaCha20-Poly1305
+Hash:
+    SHA-256
+MAC:
+    HMAC-SHA-256
+TOTP algorithm:
+    HMAC-SHA-1
+TOTP default digits:
+    6
+TOTP optional digits:
+    8
+TOTP period:
+    30 seconds
+Maximum plaintext chunk:
+    1048576 bytes
+Root FileID:
+    16 zero bytes
+======================================================================
+93. FIXED STRING CONSTANTS
+======================================================================
+The only public protocol strings defined by this specification are
+protocol identifiers and domain-separation labels.
+Primary file Magic:
+ASTBOX
+Footer Magic:
+ASTBOXF1
+Metadata domain:
+ASTBOX-METADATA-v1
+Data domain:
+ASTBOX-DATA-v1
+Footer MAC domain:
+ASTBOX-FOOTER-MAC-v1
+These strings are FIXED.
+They are not secrets.
+======================================================================
+94. USER-CONFIGURABLE PARAMETERS
+======================================================================
+ASTBOX v1 does NOT permit arbitrary cryptographic customization.
+The user may choose, where supported by the implementation:
+- TOTP credential (sole credential type);
+- TOTP digits: 6 or 8;
+- files and directories;
+- filenames;
+- logical directory structure.
+The following are NOT user-configurable:
+- AEAD algorithm;
+- hash algorithm;
+- MAC algorithm;
+- TOTP algorithm;
+- TOTP period;
+- chunk size;
+- nonce lengths;
+- tag lengths;
+- CBOR rules;
+- byte order;
+- protocol strings.
+======================================================================
+95. SECURITY PARAMETERS
+======================================================================
+KDF parameters are protocol-fixed according to the key-cryptography
+document.
+An implementation MUST NOT silently lower them.
+An implementation MAY reject a container whose KDF parameters exceed
+local resource limits.
+======================================================================
+96. RECOMMENDED DEFAULT
+======================================================================
+For broad compatibility and strong practical security, the recommended
+default credential configuration is:
+Credential:
+    TOTP
+TOTP:
+    6 digits
+TOTP period:
+    30 seconds
+TOTP algorithm:
+    HMAC-SHA-1
+KDF:
+    ARGON2ID_HIGH
+TOTP is the sole credential type of ASTBOX v1; the TOTP secret MUST be
+generated randomly and provisioned to the user's Authenticator.
+======================================================================
+97. SECURITY INTERPRETATION OF TOTP
+======================================================================
+TOTP is not intended to replace a high-entropy encryption key.
+Its intended role is:
+credential factor
+    ->
+expensive derivation/authentication
+    ->
+Key Slot authentication
+    ->
+VaultKey recovery
+VaultKey
+    ->
+independent encryption keys
+    ->
+encrypted metadata/data
+This separation prevents the short TOTP value from being directly used
+as the encryption key.
+======================================================================
+98. PROTECTION AGAINST OFFLINE ENUMERATION
+======================================================================
+ASTBOX cannot make a 6-digit or 8-digit TOTP mathematically
+high-entropy.
+It can, however, make each candidate expensive through the specified
+KDF construction.
+Therefore security against offline enumeration depends on:
+1. KDF cost;
+2. KDF memory requirement;
+3. KDF parallelism;
+4. TOTP entropy;
+5. secure TOTP secret generation;
+6. VaultKey randomness.
+======================================================================
+99. PASSWORD + TOTP COMBINATION (REMOVED)
+======================================================================
+This section was removed in the corrected revision.
+ASTBOX v1 defines TOTP as the sole credential type;
+no combined-factor construction exists.
+======================================================================
+100. FACTOR INDEPENDENCE
+======================================================================
+Compromise of a TOTP value alone MUST NOT reveal the VaultKey.
+The TOTP value is an authentication input processed through the
+specified Argon2id / wrapping construction; it is never the encryption
+key itself.
+======================================================================
+101. PASSWORD-ONLY MODE (REMOVED)
+======================================================================
+This section was removed in the corrected revision.
+ASTBOX v1 defines TOTP as the sole credential type;
+no password-only mode exists.
+======================================================================
+102. TOTP CREDENTIAL SECURITY
+======================================================================
+TOTP is the sole credential type of ASTBOX v1.
+Because 6- and 8-digit TOTP values have limited entropy, the container
+provides limited offline resistance: Argon2id amplifies the cost of each
+candidate but cannot add entropy beyond the TOTP digit count.
+An 8-digit TOTP provides a larger search space than a 6-digit TOTP.
+======================================================================
+103. TOTP SECRET RECOMMENDATION
+======================================================================
+TOTP secrets SHOULD be generated randomly with sufficient entropy for
+the RFC 6238 provisioning standard.
+The TOTP secret MUST be provisioned to the user's Authenticator and
+MUST NOT be reconstructed from public container data.
+======================================================================
+104. ZIP INTEROPERABILITY
+======================================================================
+ASTBOX v1 does not require ZIP compatibility.
+A ZIP archive MAY be stored as plaintext input and then encrypted as
+ASTBOX file data.
+Alternatively, a ZIP archive may itself contain encrypted data before
+being stored in ASTBOX.
+ASTBOX does not inherit ZIP's cryptographic limitations when ASTBOX
+encryption is applied outside the ZIP archive.
+======================================================================
+105. NESTED ENCRYPTION
+======================================================================
+An implementation MAY store an encrypted ZIP archive inside ASTBOX.
+This creates independent cryptographic layers.
+However, nested encryption does not automatically provide additional
+security if both layers use the same weak credential.
+The outer ASTBOX layer SHOULD use an independent strong credential.
+======================================================================
+106. FILE EXTENSION SECURITY
+======================================================================
+The .astbox extension provides file identification only.
+Changing:
+example.astbox
+to:
+example.bin
+does not change cryptographic security.
+Likewise, renaming another file to .astbox does not make it a valid
+ASTBOX container.
+======================================================================
+107. MAGIC VALUE SECURITY
+======================================================================
+The Magic value is not secret.
+An attacker can trivially reproduce:
+ASTBOX
+This value exists solely to identify the format.
+======================================================================
+108. SECURITY THROUGH OBSCURITY
+======================================================================
+ASTBOX MUST NOT rely on:
+- secret file extensions;
+- hidden headers;
+- proprietary Magic values;
+- undocumented algorithms;
+- closed-source decryptors.
+Cryptographic secrets are the security boundary.
+======================================================================
+109. IMPLEMENTATION AUDITABILITY
+======================================================================
+A conforming implementation SHOULD provide:
+- deterministic test vectors;
+- parser tests;
+- serializer tests;
+- cryptographic test vectors;
+- malformed-input tests;
+- fuzz testing;
+- differential testing between independent implementations.
+The format specification itself MUST remain sufficient to implement a
+reader without access to proprietary source code.
+======================================================================
+110. FUZZING
+======================================================================
+Implementations SHOULD fuzz:
+- Header;
+- Key Slots;
+- Metadata CBOR;
+- filenames;
+- directory relationships;
+- Data Records;
+- Footer;
+- offsets;
+- lengths;
+- generation values.
+The parser MUST NOT crash on malformed input.
+======================================================================
+111. MALFORMED INPUT INVARIANT
+======================================================================
+Any malformed container MUST result in an error.
+It MUST NOT result in:
+- undefined behavior;
+- memory corruption;
+- arbitrary code execution;
+- uncontrolled resource allocation;
+- plaintext release.
+======================================================================
+112. CRYPTOGRAPHIC LIBRARY REQUIREMENT
+======================================================================
+Implementations SHOULD use mature, independently reviewed
+cryptographic libraries.
+Implementations SHOULD NOT implement:
+- XChaCha20;
+- Poly1305;
+- HMAC;
+- SHA-256;
+- Argon2id;
+from scratch unless there is a compelling expert-level reason.
+======================================================================
+113. KEY MANAGEMENT INVARIANT
+======================================================================
+The most important cryptographic invariant is:
+VaultKey is random and independent.
+Credentials protect VaultKey.
+VaultKey-derived keys protect content.
+Changing credentials does not require content re-encryption.
+Compromise of credentials does not automatically imply compromise of
+the encryption keys if the credential has not been used successfully
+to recover VaultKey.
+======================================================================
+114. NONCE MANAGEMENT INVARIANT
+======================================================================
+The most important AEAD invariant is:
+No nonce reuse under the same key.
+This MUST be treated as a correctness requirement, not merely a
+recommendation.
+======================================================================
+115. AUTHENTICATION INVARIANT
+======================================================================
+No decrypted value becomes trusted until its corresponding
+authentication mechanism has succeeded.
+This applies to:
+- Header;
+- Key Slot;
+- Footer;
+- Metadata;
+- Data Record.
+======================================================================
+116. PARSER INVARIANT
+======================================================================
+No untrusted length may be used directly for memory allocation without
+bounds checking.
+All offset arithmetic MUST be overflow checked.
+All lengths MUST be checked against the physical file size.
+======================================================================
+117. CANONICALIZATION INVARIANT
+======================================================================
+Equivalent logical metadata MUST serialize identically.
+Therefore deterministic CBOR is mandatory.
+This prevents multiple byte-level encodings of the same logical
+metadata object.
+======================================================================
+118. VERSIONING INVARIANT
+======================================================================
+Unknown semantics MUST result in rejection.
+An implementation MUST never guess how to interpret an unknown field
+or algorithm identifier.
+======================================================================
+119. FAIL-CLOSED INVARIANT
+======================================================================
+Any security-relevant uncertainty MUST cause the operation to fail.
+Examples:
+- invalid authentication;
+- unsupported version;
+- invalid CBOR;
+- inconsistent lengths;
+- invalid directory tree;
+- invalid nonce;
+- unknown cryptographic algorithm.
+======================================================================
+120. SECURITY CLAIM BOUNDARY
+======================================================================
+ASTBOX v1 provides cryptographic confidentiality and integrity against
+an attacker who possesses the container but does not possess the
+required credential(s), subject to:
+- correct implementation;
+- secure credential management;
+- secure random generation;
+- secure KDF parameters;
+- uncompromised cryptographic primitives;
+- uncompromised host system.
+ASTBOX does not guarantee:
+- secure deletion from physical media;
+- resistance to malware on an unlocked system;
+- resistance to memory extraction from a compromised process;
+- resistance to keylogging;
+- resistance to compromised Authenticators;
+- resistance to compromised operating systems;
+- prevention of offline copying;
+- prevention of offline credential guessing.
+======================================================================
+121. FINAL V1 PROFILE
+======================================================================
+ASTBOX v1.0 is defined by the following mandatory profile:
+Container:
+    .astbox
+Magic:
+    ASTBOX
+Byte order:
+    Big-endian
+Metadata:
+    deterministic CBOR
+Content encryption:
+    XChaCha20-Poly1305
+Structural hash:
+    SHA-256
+Footer authentication:
+    HMAC-SHA-256
+TOTP:
+    RFC 6238-compatible construction
+TOTP algorithm:
+    HMAC-SHA-1
+TOTP period:
+    30 seconds
+TOTP digits:
+    6 by default
+    8 optionally
+Maximum plaintext chunk:
+    1048576 bytes
+Root directory:
+    implicit FileID of 16 zero bytes
+Key model:
+    random VaultKey protected by independent Key Slots
+Offline model:
+    fully offline attacker is assumed
+Attempt counter:
+    not a cryptographic security boundary
+Source-code secrecy:
+    not a security requirement
+======================================================================
+122. CONFORMANCE STATEMENT
+======================================================================
+An implementation MAY claim:
+"ASTBOX v1.0 conformant"
+only if it implements all mandatory requirements in:
+ASTBOX-v1.0-01-Core-Format.txt
+ASTBOX-v1.0-02-Key-Crypto.txt
+ASTBOX-v1.0-03-Data-Container.txt
+ASTBOX-v1.0-04-Lifecycle-Security.txt
+and passes the official ASTBOX v1.0 conformance test suite.
+Passing application-level tests alone is insufficient for a
+cryptographic conformance claim.
+======================================================================
+123. OFFICIAL TESTING REQUIREMENT
+======================================================================
+The following testing artifacts are separate from this specification:
+1. ASTBOX v1.0 Test Vectors
+2. ASTBOX v1.0 Parser Test Suite
+3. ASTBOX v1.0 Cryptographic Test Suite
+4. ASTBOX v1.0 Malformed Input Suite
+5. ASTBOX v1.0 Interoperability Suite
+These materials define exact byte-level expected results.
+They are not included in this document.
+======================================================================
+124. FINAL SECURITY PRINCIPLE
+======================================================================
+ASTBOX security is based on:
+random high-entropy VaultKey
++
+strong key derivation
++
+authenticated encryption
++
+strict binary parsing
++
+deterministic CBOR
++
+fresh nonces
++
+independent Key Slots
++
+fail-closed validation
++
+atomic state transitions.
+It is NOT based on:
+secret file extensions
++
+secret Magic values
++
+closed-source decryptors
++
+hidden algorithms
++
+limited offline attempts.
+======================================================================
+125. END OF DOCUMENT
+======================================================================
+Document:
+    ASTBOX-v1.0-04-Lifecycle-Security.txt
+Format:
+    ASTBOX v1.0
+End of ASTBOX-v1.0-04-Lifecycle-Security.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Auto
+
+======================================================================
+REVISION HISTORY - ASTBOX V2.0.1
+======================================================================
+ASTBOX V2.0.1 revises lifecycle semantics:
+
+1. SECRET-BASED UNLOCK
+   The Key Slot credential is the decoded byte sequence of the Base32
+   TOTP secret; the displayed TOTP code is an interactive authorization
+   factor only (constant-time window comparison).
+
+2. FAIL-CLOSED LOCAL REGISTRY
+   Unlock requires a locally registered secret for the container's
+   VaultID (OS-user-scoped protected store). A correct code without a
+   registered secret MUST be refused with the generic authentication
+   error; implementations MUST NOT reveal which of the two failed.
+
+3. PORT PREFERENCE
+   The reference manager binds its local UI in priority order:
+   11920, 21524, 6583, 8466, 7988, then an OS-assigned port.
+
+4. PROPAGATION PACKAGE (.passbox)
+   A single-file bundle containing the full container bytes and the
+   Base32 secret, optionally sealed under a passphrase
+   (XChaCha20-Poly1305 over Argon2id, domain ASTBOX-PASSBOX-v1),
+   with whole-file SHA-256 integrity tail. Import copies the secret
+   into the target device registry; it is duplication, not transfer.
+
+5. ASSOCIATION GOVERNANCE (detection - self-heal - guidance)
+   File associations for .astbox/.passbox are governed as a two-layer
+   system: install-time clearing provides the floor (first-run works
+   with zero friction), runtime confirmation provides the ceiling
+   (long-term resistance to hijacking).
+
+   5.1 REGISTRY CONTRACT (normative)
+       RegisteredApplications value name MUST be the ASCII string
+       "ASTBOX" so that the deep link
+       ms-settings:defaultapps?registeredAppUser=ASTBOX
+       resolves for every conforming line. Legacy non-ASCII value
+       names MUST be removed at install time. ProgIds are fixed:
+       Astbox.Container / Astbox.Passbox.
+
+   5.2 FLOOR: INSTALL-TIME CLEARING
+       Installers MUST delete FileExts UserChoice keys for both
+       extensions whose ProgId no longer exists (dangling residue),
+       restoring the Classes-default fallback. Both lines implement
+       this: C# runtime at startup, python installer in Pascal [Code]
+       and cmd script.
+
+   5.3 CEILING: RUNTIME MISMATCH DETECTION (C# line)
+       At every interactive startup the C# server checks UserChoice
+       ownership of both extensions. Taken-over associations raise a
+       native prompt at most once per epoch (marker persisted in the
+       registry; epoch resets on version upgrade) and offer the
+       settings deep link. Headless (--no-browser) runs log only and
+       MUST NOT mutate state. Heartbeat telemetry AssocNudgeLastRun
+       records last execution for support diagnostics.
+       The python reference does not implement 5.3; its headless web
+       UI has no native dialog channel. This is a documented
+       line-specific divergence under rule 4.7.
+
+   5.4 BEHAVIOR MATRIX (normative outcomes)
+       clean machine            : silent pass, no side effects.
+       dangling UserChoice      : deleted at startup/install;
+                                  fallback restored.
+       foreign live choice,
+       headless                 : logged only, foreign key preserved.
+       foreign live choice,
+       interactive              : one prompt per epoch, then deep
+                                  link to the app entry.
+
+   4.1 BINARY LAYOUT (normative)
+      MAGIC       16B   "ASTPASSBX1" + 6x 0x00
+      HDRLEN       4B   big-endian byte count of HEADER
+      HEADER      JSON   sorted keys; fields:
+                         v            format version (integer)
+                         name         original container file name
+                         digits       TOTP digits (integer)
+                         created      unix seconds or null
+                         wrap         "none" | "pass"
+                         csha         lowercase hex SHA-256 of the
+                                      embedded container bytes
+                                      (see 4.5 HARDENING H1)
+                         salt/snonce/kdf   present iff wrap="pass"
+      SECRETLEN    4B   big-endian
+      SECRET_BLK        wrap=none: Base32 ASCII secret;
+                        wrap=pass: XChaCha20-Poly1305 ciphertext of
+                        the Base32 secret, key = Argon2id(
+                        "ASTBOX-PASSBOX-v1" || passphrase, salt,
+                        constrained profile), aad = MAGIC
+      CONTAINER         the complete .astbox container bytes
+      TRAILER      32B  SHA-256 over all preceding bytes
+
+   4.2 IMPORT PROCEDURE (normative order)
+      The importer MUST perform, in this exact order:
+        a) verify the whole-file TRAILER;
+        b) parse HEADER; unwrap the SECRET_BLK (passphrase prompt,
+           at most three attempts, cancel-safe at each attempt);
+        c) validate the unwrapped Base32 secret;
+        d) compare SHA-256(CONTAINER) against HEADER.csha when
+           present (H1); mismatch MUST abort with no side effects;
+        e) materialize CONTAINER to <pack dir>/<pack stem>.astbox
+           (overwriting an existing same-name file is permitted and
+           idempotent);
+        f) trial-unlock the materialized container with the secret;
+        g) register the secret (vault id, Base32, digits, created)
+           into the local registry; an existing record for the same
+           vault id is merged, preserving its original timestamp;
+        h) only after a)-g) all succeeded, delete the pack itself
+           (H3).
+      A failure at any step before e) MUST leave the filesystem
+      untouched: no container file, no temporary files, and no
+      registry entry (H2). A wrong passphrase therefore produces
+      zero filesystem artifacts.
+
+   4.3 CROSS-DEVICE SEMANTICS
+      The package is fully self-contained: it embeds the complete
+      container and carries NO host-specific data (no machine id,
+      user SID, or absolute path). Import writes a FRESH local
+      registry entry on the target device; nothing from the source
+      device's registry is transferred. One file is sufficient to
+      propagate to any device running a conforming implementation.
+      Recipients SHOULD duplicate the pack before first import:
+      a successful import consumes the pack (H3).
+
+   4.4 PASSPHRASE PROTECTION
+      wrap="pass" seals ONLY the secret block; the embedded
+      container remains protected by its own cryptography. Offline
+      guessing cost is bounded by the Argon2id constrained profile.
+      Three consecutive wrong passphrases MUST abort the import;
+      cancellation at the prompt MUST abort cleanly.
+
+   4.5 HARDENING REGISTER (binding for all conforming
+       implementations; introduced by the C# line)
+      H1  CONTAINER DIGEST: writers MUST emit HEADER.csha; readers
+          MUST verify it when present (pre-materialization, in
+          memory). Packs lacking csha remain importable for
+          backward compatibility; readers MAY flag them.
+      H2  ALL-OR-NOTHING MATERIALIZATION: every fallible check
+          (trailer, secret unwrap, csha) precedes the single
+          filesystem write; the write itself is the last fallible-
+          by-content step.
+      H3  CONSUME ON SUCCESS: after a)-g) succeed the pack is
+          hard-deleted (direct unlink; MUST NOT go to the recycle
+          bin). Deletion failure is non-fatal and logged as a
+          warning; the import result is unaffected.
+      H4  ATTEMPT BOUND: passphrase retries are capped at three;
+          every failure path is side-effect free (see 4.2).
+      H5  NO HOST BINDING BY CONSTRUCTION: no field in the layout
+          may carry host identity; implementations MUST NOT add
+          machine-bound metadata to this format.
+
+   4.6 STATUS (per line)
+      C# line    : Layout, procedure 4.2, semantics 4.3-4.4, and
+                   hardening H1-H5 implemented; covered by the native
+                   test suite and a verified cross-device simulation
+                   (orphan-pack import on a clean directory:
+                   container materialized, pack consumed, registry
+                   entry created, graceful exit).
+                   Association governance 5.1-5.4 fully implemented
+                   (startup detection, dangling self-heal, epoch
+                   nudge with deep link, headless logging, heartbeat
+                   telemetry); native suite 36/36 green.
+                   Installer channels: Inno slim/kernel plus
+                   per-user WiX MSI with S2 seamless migration
+                   (6.2), E2E verified on real machine.
+      rust line   : Layout (4.1), procedure 4.2 a)-h), semantics
+                    4.3-4.4, and hardening H1-H5 implemented as the
+                    astbox-core crate; byte-compat against the C#
+                    line verified by oracle replay (create, modify
+                    and passbox flows re-encrypted with extracted
+                    randomness, compared byte-for-byte) plus the
+                    shared fixture suite (cargo test). Desktop
+                    shell: Tauri v2 + typed specta IPC (C# /api
+                    surface port) with a TypeScript port of the
+                    three-language GUI; headless CLI with
+                    server-identical output (info/unlock/extract/
+                    create/add/verify/selftest).
+                    secrets store keeps the cross-version ASTBOX1
+                    layout (DPAPI CurrentUser) for zero-cost
+                    takeover.
+                    Association governance 5.1-5.4 fully implemented
+                    (HKCU contract rewritten at startup, dangling
+                    self-heal, epoch nudge with deep link, heartbeat
+                    telemetry; headless row: the CLI performs no
+                    association code - documented divergence under
+                    rule 4.7).
+                    Installer channels: NSIS dual-channel
+                    (embedBootstrapper default plus offlineInstaller
+                    for offline/LTSC) with S2 migration per 6.2
+                    sequenced at first run, after InstallFiles and
+                    before association writes; install/uninstall
+                    smoke verified on a real machine.
+      python ref : Layout (4.1), procedure 4.2 a)-h), semantics
+                   4.3-4.4, and hardening H1-H5 implemented (H3
+                   consume-on-success and the 4.2 g) timestamp merge
+                   aligned in V2.0.1; merge preserves the original
+                   registry timestamp on re-import). Covered by the
+                   passbox end-to-end suite including pack-consumption
+                   and registry-merge assertions.
+                   Association governance: floor 5.1/5.2 implemented
+                   in installer assets (ASCII "ASTBOX" registration
+                   with legacy-value cleanup; UserChoice clearing for
+                   dangling keys at install time); ceiling 5.3 not
+                   implemented - documented divergence under rule 4.7.
+                   Installer channels: Inno/cmd only; no MSI
+                   channel (see 6.3).
+
+   4.7 DUAL-TRACK RULE
+      This document is the single source of truth for every
+      implementation line. Lines evolve independently in code but
+      MUST NOT fork this text: line-specific behaviour is expressed
+      only through conformance entries in 4.6. Wording elsewhere
+      that characterizes any active line as retired is superseded
+      by this section.
+
+   6. WINDOWS INSTALLER CHANNELS & S2 MIGRATION
+      Two installer channels exist on the C# line: Inno Setup
+      (slim / kernel) targeting Programs\Astbox, and a per-user
+      WiX MSI (kernel; WiX 6.0.2 toolchain pinned) targeting
+      Programs\AstboxMSI. The directories are intentionally
+      disjoint so both channels can coexist without file conflict.
+
+      6.1 SHARED ASSOCIATION CONTRACT
+          Both channels register the ProgIds and Capabilities
+          defined in 5.1; the last-installed channel owns the
+          association command. UserChoice governance (5.2-5.4)
+          applies identically regardless of channel.
+
+      6.2 S2 SEAMLESS MIGRATION (normative for MSI)
+          On first install the MSI MUST detect a legacy Inno
+          installation (ARP _is1 key), silently run its uninstaller
+          (/SILENT /SUPPRESSMSGBOXES /NORESTART, wait for exit),
+          sequenced strictly AFTER InstallFiles and BEFORE any
+          association writes, so shared keys never dangle during
+          migration. msiexec uninstall MUST remove its own tree and
+          the association keys it wrote.
+
+      6.3 CHANNEL CONFORMANCE
+          python reference ships Inno/cmd channels only; no MSI
+          channel. Both lines' Inno builds target the same default
+          directory by convention - installing one line's Inno
+          build over the other's is not a supported configuration.

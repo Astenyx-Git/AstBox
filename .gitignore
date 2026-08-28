@@ -1,0 +1,39 @@
+# ==== 构建产物 / 发布输出 ====
+installer/dist/
+installer/stage/
+.server-publish/
+.cli-publish/
+.tests-publish/
+
+# ==== 离线构建环境缓存(本机,可重建)====
+.dotnet-home/
+.local-feed/
+.nuget-appdata/
+.nuget-packages/
+
+# ==== 便携浏览器内核(417MB 不入库;目录内 README.txt 保留)====
+chromium/*
+!chromium/README.txt
+chromium-profile/
+
+# ==== .NET 中间物 ====
+bin/
+obj/
+*.user
+
+# ==== 日志与临时文件 ====
+*.log
+*.tmp
+.tmp*/
+
+# ==== Rust 工具链与构建产物 ====
+rust/target/
+node_modules/
+dist-web/
+.npm-cache/
+.wv2data/
+
+# ==== Python 工具链缓存(scripts/ 下工具脚本仍为 python)====
+__pycache__/
+*.pyc
+.venv/

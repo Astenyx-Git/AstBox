@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Astbox.Cli</RootNamespace>
+    <AssemblyName>astbox-cli</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <!-- 应用本体图标(exe 嵌入):与文件关联图标(astbox.ico)分离 -->
+    <ApplicationIcon>..\..\installer\assets\app.ico</ApplicationIcon>
+    <!-- NFC 归一化(CBOR 规范文本)依赖 ICU,禁止不变全球化 -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Astbox.Core\Astbox.Core.csproj" />
+  </ItemGroup>
+
+</Project>

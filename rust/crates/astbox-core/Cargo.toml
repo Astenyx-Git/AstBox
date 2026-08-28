@@ -1,0 +1,37 @@
+[package]
+name = "astbox-core"
+description = "ASTBOX v1.0 core: crypto, deterministic CBOR, container format (Rust port of C# Astbox.Core)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+# Argon2id (RFC 9106) — replaces Konscious/NSec dual path; single compliant impl
+argon2 = "0.5"
+# XChaCha20-Poly1305 (draft-irtf-cfrg-xchacha) — replaces libsodium P/Invoke
+chacha20poly1305 = "0.10"
+# HChaCha20 primitive (selftest vector cross-check; also XChaCha building block)
+chacha20 = "0.9"
+# HKDF-SHA-256 (RFC 5869)
+hkdf = "0.12"
+hmac = "0.12"
+sha2 = "0.10"
+sha1 = "0.10"
+# NFC normalization (CBOR metadata text) — replaces System.Text.Json FormC
+unicode-normalization = "0.1"
+# zeroize on VaultKey / derived key paths
+zeroize = { version = "1", features = ["derive"] }
+# constant-time comparison
+subtle = "2"
+# OS randomness (Crypto.RandomBytes)
+getrandom = "0.3"
+# passbox JSON header parsing (writing is hand-rolled for byte-compat with Utf8JsonWriter)
+serde_json = "1"
+# QR matrix (replaces QRCoder)
+qrcode = "0.14"
+# PNG writing for QrPngBytes
+png = "0.17"
+
+[dev-dependencies]
+tempfile = "3"

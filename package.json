@@ -1,0 +1,21 @@
+{
+  "name": "astbox-port",
+  "private": true,
+  "description": "ASTBOX v1.0 — Rust+TS port workspace (Tauri v2 desktop shell)",
+  "scripts": {
+    "tauri": "tauri",
+    "icon": "tauri icon gui/icon.png",
+    "i18n": "node scripts/extract-i18n.mjs",
+    "build:frontend": "node scripts/build-frontend.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.9.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.6",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
