@@ -91,15 +91,17 @@ const deLines = dedupeLang(i18n, "de");
 const frLines = dedupeLang(i18n, "fr");
 const koLines = dedupeLang(i18n, "ko");
 const zhHantLines = dedupeLang(i18n, "zh-Hant");
+const esLines = dedupeLang(i18n, "es");
+const ptBrLines = dedupeLang(i18n, "pt-BR");
 
 const out = `// Copyright 2026 Astenyx-Git
 // SPDX-License-Identifier: MPL-2.0 OR AGPL-3.0-only
 /* i18n 数据 —— 由 scripts/extract-i18n.mjs 从 gui/app.js 提取生成。
    键序与键值逐字保留;唯一格式差异:zh/en 的重复键 copied(同值)
    已按 JS 语义去重留档。禁止手工编辑本文件:改 gui/app.js 后重新生成。
-   de/fr/ko/zh-Hant 为 Rust 线扩展语言(_I18N 中对应块由本移植新增,
-   非 C# 谱系逐字资产;zh-Hant 自简体源块平移, 台湾用语);四者的
-   服务器消息走透传(与 zh/en 同策略, _srv 仅 ja 生效)。 */
+   de/fr/ko/zh-Hant/es/pt-BR 为 Rust 线扩展语言(_I18N 中对应块由本
+   移植新增, 非 C# 谱系逐字资产;zh-Hant 自简体源块平移, 台湾用语);
+   六者的服务器消息走透传(与 zh/en 同策略, _srv 仅 ja 生效)。 */
 
 export const I18N = {
   zh: {
@@ -123,15 +125,21 @@ ${koLines.join("\n")}
   "zh-Hant": {
 ${zhHantLines.join("\n")}
   },
+  es: {
+${esLines.join("\n")}
+  },
+  "pt-BR": {
+${ptBrLines.join("\n")}
+  },
 };
 
 export const SRV_EXACT = ${srvExact};
 
 export const SRV_PAT = ${srvPat};
 
-export const LANGS = ["zh", "en", "ja", "de", "fr", "ko", "zh-Hant"];
-export const LANG_CODES = { zh: "中", en: "EN", ja: "あ", de: "DE", fr: "FR", ko: "한", "zh-Hant": "繁" };          // 按钮代码(各语言自称)
-export const LANG_MENU = { zh: "中文(简体)", en: "English", ja: "日本語", de: "Deutsch", fr: "Français", ko: "한국어", "zh-Hant": "中文(繁體)" }; // 菜单项(各自语言, 不走翻译)
+export const LANGS = ["zh", "en", "ja", "de", "fr", "ko", "zh-Hant", "es", "pt-BR"];
+export const LANG_CODES = { zh: "中", en: "EN", ja: "あ", de: "DE", fr: "FR", ko: "한", "zh-Hant": "繁", es: "ES", "pt-BR": "BR" };          // 按钮代码(各语言自称)
+export const LANG_MENU = { zh: "中文(简体)", en: "English", ja: "日本語", de: "Deutsch", fr: "Français", ko: "한국어", "zh-Hant": "中文(繁體)", es: "Español", "pt-BR": "Português (Brasil)" }; // 菜单项(各自语言, 不走翻译)
 `;
 writeFileSync("frontend/src/i18n/dict.ts", out, "utf8");
 console.log("written frontend/src/i18n/dict.ts");
