@@ -11,12 +11,7 @@ installer/stage/
 .nuget-appdata/
 .nuget-packages/
 
-# ==== 便携浏览器内核(417MB 不入库;目录内 README.txt 保留)====
-chromium/*
-!chromium/README.txt
-chromium-profile/
-
-# ==== .NET 中间物 ====
+# ==== .NET 中间物(src/ 为字节兼容 oracle 源,保留)====
 bin/
 obj/
 *.user
@@ -32,8 +27,3 @@ node_modules/
 dist-web/
 .npm-cache/
 .wv2data/
-
-# ==== Python 工具链缓存(scripts/ 下工具脚本仍为 python)====
-__pycache__/
-*.pyc
-.venv/
