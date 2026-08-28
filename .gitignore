@@ -1,4 +1,5 @@
-# ==== 构建产物 / 发布输出(参照 C# 分支;.tests-publish2 见 C# 40320cb)====
+# ==== 构建产物 / 发布输出(参照 C# 分支;src/ 删除后为防御性条目,
+#      本地 .server-publish/.cli-publish 存量 oracle exe 不入库)====
 installer/dist/
 installer/stage/
 .server-publish/
@@ -19,7 +20,7 @@ chromium/*
 !chromium/README.txt
 chromium-profile/
 
-# ==== .NET 中间物(src/ 为字节兼容 oracle 源,保留)====
+# ==== .NET 中间物(防御性:src/ 已删除,oracle 重建源 = 远端 C# 分支)====
 bin/
 obj/
 *.user
