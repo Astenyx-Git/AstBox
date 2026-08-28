@@ -1,7 +1,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="ASTBOX 容器管理器 V3.0.0C# (MSI)"
+  <Package Name="ASTBOX 容器管理器 V3.0.1C# (MSI)"
            Manufacturer="ASTBOX"
-           Version="3.0.0"
+           Version="3.0.1"
            UpgradeCode="B7E3A2D1-4C5F-46E8-9A21-D0F3B6C8E512"
            Scope="perUser"
            Compressed="yes"
