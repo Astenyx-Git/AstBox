@@ -33,6 +33,7 @@
 | 安装版启动 → 契约自愈指向安装路径 | ✅(幂等重写实证) |
 | 卸载 → 关联键清理 + secrets.bin 保留 | ✅(NSIS 钩子 + 实证) |
 | offline 包(251.76 MB, WebView2 standalone) | ✅ 产出;装机验证待签名产物人工项 |
+| **MSI 通道(per-machine, WiX)** | ✅ 产出 + 签名;卸载 HKCU 清理 Fragment;装机矩阵待人工(需管理员) |
 | S2′ 检测/静默卸载/密钥库接管 | ✅ 代码就绪(spec §6.2 精确旗标);全矩阵待人工 |
 
 ## 4. 关联矩阵(spec §5.4)
@@ -54,6 +55,9 @@
   受信 CA 链,SAC 只认信誉积累或受信链。签名价值在内部分发(目标机导入
   `Astbox.cer` 进 Trusted Root/Trusted People 后可校验来源);SAC 侧仍靠
   「等待-重试」攒信誉,或换 CA 签发证书。
+- **MSI 通道的 SAC 语义**:`.msi` 非 PE,入口走微软签名的 msiexec,安装
+  入口顺于裸 exe;但装出的 `astbox-gui.exe` 落盘后仍被 SAC 独立评估 ——
+  风险从装时挪到首运行时,MSI 不是 SAC 解药。
 - build_rs.ps1:新增 `ASTBOX_SIGN_CN`(库内签名模式);签名启用时默认带
   TSA(`ASTBOX_SIGN_TS=''` 可关闭)。
 

@@ -1702,7 +1702,11 @@ ASTBOX V2.0.1 revises lifecycle semantics:
                     rule 4.7).
                     Installer channels: NSIS dual-channel
                     (embedBootstrapper default plus offlineInstaller
-                    for offline/LTSC) with S2 migration per 6.2
+                    for offline/LTSC) and a per-machine MSI
+                    (enterprise push; the association contract stays
+                    a first-run, HKCU single point and MSI uninstall
+                    removes runtime-written association keys via a
+                    WiX fragment) with S2 migration per 6.2
                     sequenced at first run, after InstallFiles and
                     before association writes; install/uninstall
                     smoke verified on a real machine.

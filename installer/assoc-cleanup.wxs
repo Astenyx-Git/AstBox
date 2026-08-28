@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ASTBOX per-machine MSI: HKCU 关联清理(WiX Fragment)。
+
+  契约单点写入原则不变(spec 5.1):安装器不写任何关联键,
+  HKCU 契约由应用首跑重写。本 Fragment 只负责**卸载时清理**
+  运行期写出的键(exp.md §2.2-4,与 NSIS hooks 对等)。
+
+  依据(tauri-cli 2.11.4 实证):
+  - 主模板含 <Directory Id="TARGETDIR">(注册表专用组件挂靠)
+  - bundler 链接 WixUtilExtension(util:RemoveRegistryKey 可用)
+  - componentGroupRefs 注入 <ComponentGroupRef> 至 Feature
+
+  已知边界:per-machine 卸载只能清"执行卸载的那个用户"的 HKCU
+  (Windows Installer 结构性限制);其他用户的残留由任一符合行
+  的首跑自愈兜底(spec 5.2/5.3 floor+ceiling)。
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <ComponentGroup Id="AstboxAssocCleanup">
+      <Component Id="AstboxAssocCleanupKeys"
+                 Guid="{93567A7F-2150-4F33-A150-A3C71DD3A955}"
+                 Directory="TARGETDIR">
+        <RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="Software\Classes\.astbox" />
+        <RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="Software\Classes\Astbox.Container" />
+        <RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="Software\Classes\.passbox" />
+        <RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="Software\Classes\Astbox.Passbox" />
+        <RemoveRegistryKey Action="removeOnUninstall" Root="HKCU" Key="Software\Astbox\Capabilities" />
+        <RemoveRegistryValue Root="HKCU"
+                             Key="Software\RegisteredApplications"
+                             Name="ASTBOX" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

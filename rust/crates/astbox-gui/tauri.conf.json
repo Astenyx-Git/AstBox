@@ -22,7 +22,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": ["nsis", "msi"],
     "icon": ["icons/icon.ico"],
     "licenseFile": "../../../installer/EULA.rtf",
     "resources": {
@@ -42,6 +42,10 @@
         "languages": ["SimpChinese", "English"],
         "displayLanguageSelector": true,
         "installerHooks": "../../../installer/hooks.nsh"
+      },
+      "wix": {
+        "fragmentPaths": ["../../../installer/assoc-cleanup.wxs"],
+        "componentGroupRefs": ["AstboxAssocCleanup"]
       }
     }
   },

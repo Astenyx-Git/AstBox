@@ -114,6 +114,19 @@ function Save-Setup([string]$name) {
     return $dst
 }
 
+# MSI 通道(per-machine, WiX): 默认通道随 NSIS 一并产出; 离线通道仍 NSIS-only
+# (--bundles nsis 覆盖 targets, 避免巨型内嵌 MSI)。
+function Save-Msi([string]$name) {
+    $msiDir = Join-Path $root 'rust\target\release\bundle\msi'
+    $f = Get-ChildItem $msiDir -Filter "ASTBOX_*.msi" -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $f) { Fail "msi artifact not found in $msiDir" }
+    $dst = Join-Path $dist $name
+    Copy-Item $f.FullName $dst -Force
+    Sign-File $dst
+    return $dst
+}
+
 # --- collect ------------------------------------------------------------------
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 $artifacts = @()
@@ -121,15 +134,16 @@ $artifacts = @()
 # --- build: default channel (embedBootstrapper) ------------------------------
 Invoke-TauriBuild @() 'default embedBootstrapper'
 $artifacts += (Split-Path -Leaf (Save-Setup "ASTBOX_$semver-setup.exe"))
+$artifacts += (Split-Path -Leaf (Save-Msi "ASTBOX_${semver}-x64.msi"))
 
 # --- build: offline channel (offlineInstaller) -------------------------------
 if (-not $SkipOffline) {
-    Invoke-TauriBuild @('-c', 'tauri.offline.json') 'offlineInstaller'
+    Invoke-TauriBuild @('-c', 'tauri.offline.json', '--bundles', 'nsis') 'offlineInstaller'
     $artifacts += (Split-Path -Leaf (Save-Setup "ASTBOX_${semver}-offline-setup.exe"))
 }
 
 # --- manifest -----------------------------------------------------------------
-$channels = @('nsis')
+$channels = @('nsis', 'msi')
 if (-not $SkipOffline) { $channels += 'offline' }
 $manifest = [ordered]@{
     app_version = "V$semver"
