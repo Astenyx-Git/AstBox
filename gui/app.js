@@ -281,7 +281,7 @@ const _I18N = {
     lblKdfLow: "Minimal RAM (64 MiB)",
     lblKdfNote: "A QR code will appear after packing. Scan it with your authenticator app to import the secret.",
     digitsNote6: "6 digits: compatible with all authenticators (Google / Microsoft / ZOHO / Proton, etc.)",
-    digitsNote8: "⚠ 8 digits recommended for Google、ZOHO、Proton Authenticator. Windows Authenticator supports 6 digits only.",
+    digitsNote8: "⚠ 8 digits recommended for Google、ZOHO、Proton Authenticator. Microsoft Authenticator supports 6 digits only.",
     digitsShort: "dig",
     lblSave: "Save location",
     lblEntries: "entries",
@@ -470,7 +470,7 @@ const _I18N = {
     lblKdfLow: "Minimaler RAM (64 MiB)",
     lblKdfNote: "Nach dem Packen erscheint ein QR-Code. Scannen Sie ihn mit Ihrer Authenticator-App, um das Geheimnis zu importieren.",
     digitsNote6: "6 Ziffern: kompatibel mit allen Authenticatoren (Google / Microsoft / ZOHO / Proton usw.)",
-    digitsNote8: "⚠ 8 Ziffern werden für Google-, ZOHO- und Proton-Authenticator empfohlen. Der Windows-Authenticator unterstützt nur 6 Ziffern.",
+    digitsNote8: "⚠ 8 Ziffern werden für Google-, ZOHO- und Proton-Authenticator empfohlen. Der Microsoft-Authenticator unterstützt nur 6 Ziffern.",
     digitsShort: "Ziff.",
     lblSave: "Speicherort",
     lblEntries: "Einträge",
@@ -658,7 +658,7 @@ const _I18N = {
     lblKdfLow: "RAM minimale (64 MiB)",
     lblKdfNote: "Un code QR apparaîtra après l'empaquetage. Scannez-le avec votre application Authenticator pour importer le secret.",
     digitsNote6: "6 chiffres : compatible avec tous les Authenticators (Google / Microsoft / ZOHO / Proton, etc.)",
-    digitsNote8: "⚠ 8 chiffres recommandés pour Google, ZOHO et Proton Authenticator. Windows Authenticator ne prend en charge que 6 chiffres.",
+    digitsNote8: "⚠ 8 chiffres recommandés pour Google, ZOHO et Proton Authenticator. Microsoft Authenticator ne prend en charge que 6 chiffres.",
     digitsShort: "chiff.",
     lblSave: "Emplacement d'enregistrement",
     lblEntries: "entrées",
@@ -846,7 +846,7 @@ const _I18N = {
     lblKdfLow: "최소 RAM (64 MiB)",
     lblKdfNote: "패키징 후 QR 코드가 나타납니다. Authenticator 앱으로 스캔하여 시크릿을 가져오세요.",
     digitsNote6: "6자리: 모든 Authenticator와 호환 (Google / Microsoft / ZOHO / Proton 등)",
-    digitsNote8: "⚠ Google, ZOHO, Proton Authenticator에는 8자리를 권장합니다. Windows Authenticator는 6자리만 지원합니다.",
+    digitsNote8: "⚠ Google, ZOHO, Proton Authenticator에는 8자리를 권장합니다. Microsoft Authenticator는 6자리만 지원합니다.",
     digitsShort: "자릿수",
     lblSave: "저장 위치",
     lblEntries: "항목",
@@ -1223,7 +1223,7 @@ const _I18N = {
     lblKdfLow: "RAM mínima (64 MiB)",
     lblKdfNote: "Tras el empaquetado aparecerá un código QR. Escanéalo con tu app de autenticación para importar el secreto.",
     digitsNote6: "6 dígitos: compatible con todas las apps de autenticación (Google / Microsoft / ZOHO / Proton, etc.)",
-    digitsNote8: "⚠ Se recomiendan 8 dígitos para Google, ZOHO y Proton Authenticator. Windows Authenticator solo admite 6 dígitos.",
+    digitsNote8: "⚠ Se recomiendan 8 dígitos para Google, ZOHO y Proton Authenticator. Microsoft Authenticator solo admite 6 dígitos.",
     digitsShort: "díg.",
     lblSave: "Ubicación de guardado",
     lblEntries: "entradas",
@@ -1411,7 +1411,7 @@ const _I18N = {
     lblKdfLow: "RAM mínima (64 MiB)",
     lblKdfNote: "Um código QR aparecerá após o empacotamento. Escaneie-o com seu aplicativo autenticador para importar o segredo.",
     digitsNote6: "6 dígitos: compatível com todos os aplicativos autenticadores (Google / Microsoft / ZOHO / Proton etc.)",
-    digitsNote8: "⚠ Recomendam-se 8 dígitos para Google, ZOHO e Proton Authenticator. O Windows Authenticator só é compatível com 6 dígitos.",
+    digitsNote8: "⚠ Recomendam-se 8 dígitos para Google, ZOHO e Proton Authenticator. O Microsoft Authenticator só é compatível com 6 dígitos.",
     digitsShort: "díg.",
     lblSave: "Local para salvar",
     lblEntries: "entradas",
@@ -1730,10 +1730,10 @@ function _applyStatic() {
   document.querySelectorAll("[data-i18n-aria]").forEach(n => {
     n.setAttribute("aria-label", _t(n.dataset.i18nAria));
   });
-  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.7",
-                      en: "ASTBOX Container Manager · V3.1.7",
-                      ja: "ASTBOX コンテナマネージャー · V3.1.7" })[_lang]
-                   || "ASTBOX 容器管理器 · V3.1.7";
+  document.title = ({ zh: "ASTBOX 容器管理器 · V3.1.8",
+                      en: "ASTBOX Container Manager · V3.1.8",
+                      ja: "ASTBOX コンテナマネージャー · V3.1.8" })[_lang]
+                   || "ASTBOX 容器管理器 · V3.1.8";
   const lc = document.getElementById("langCode");
   if (lc) lc.textContent = _LANG_CODES[_lang] || _lang;
 }
@@ -2742,7 +2742,7 @@ function showAbout() {
     '<svg viewBox="0 0 64 64"><rect x="10" y="20" width="44" height="32" rx="9" fill="#fff" opacity=".95"/>' +
     '<path d="M18 22 L26 10 h12 l8 12 z" fill="#fff" opacity=".7"/></svg></div>' +
     "<h2>" + _t("shAbout") + "</h2>" +
-    '<p class="sheet-sub" style="text-align:center"><b>V3.1.7</b><br>' +
+    '<p class="sheet-sub" style="text-align:center"><b>V3.1.8</b><br>' +
     _t("aboutBody") + '</p>' +
     '<div class="sheet-actions"><button class="btn btn-primary" id="pDone">' + _t("btnOk") + '</button></div>');
   sheet.querySelector("#pDone").addEventListener("click", closeSheet);
