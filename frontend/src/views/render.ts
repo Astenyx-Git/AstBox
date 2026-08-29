@@ -41,6 +41,7 @@ export function renderAll(): void {
   ($("#btnAdd") as HTMLButtonElement).disabled = state.phase !== "unlocked";
   ($("#btnExtractSel") as HTMLButtonElement).disabled = state.phase !== "unlocked";
   ($("#btnVerify") as HTMLButtonElement).disabled = state.phase !== "unlocked";
+  ($("#opLock") as HTMLButtonElement).disabled = state.phase !== "unlocked";
 }
 
 export function renderNavButtons(): void {

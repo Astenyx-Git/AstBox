@@ -136,6 +136,7 @@ function bind(): void {
   ($("#opExtractAll") as HTMLElement).addEventListener("click", () => extractFiles(null));
   ($("#opVerify") as HTMLElement).addEventListener("click", doVerify);
   ($("#opSelftest") as HTMLElement).addEventListener("click", doSelftest);
+  ($("#opLock") as HTMLElement).addEventListener("click", doLock);
   ($("#qRoot") as HTMLElement).addEventListener("click", () => nav({ dir: "root" }));
 
   let outTimer: ReturnType<typeof setTimeout> | null = null;

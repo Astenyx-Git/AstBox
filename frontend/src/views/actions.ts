@@ -61,8 +61,8 @@ export async function doExportPassbox(): Promise<void> {
 
 export async function doVerify(): Promise<void> {
   try {
-    const r = await api("/api/verify", {});
-    toast(r.message || _t("shVerify"), "ok");
+    await api("/api/verify", {});
+    toast(_t("tVerifyOk"), "ok");
   } catch { /* ignore */ }
 }
 

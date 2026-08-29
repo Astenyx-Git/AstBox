@@ -41,6 +41,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "容器已解锁",
     tLocked: "已锁定",
+    tVerifyOk: "完整性验证通过",
     tCopied: "已复制",
     file: "文件",
     tExtracted: "已提取 %d 个文件 → %s",
@@ -230,6 +231,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "Container unlocked",
     tLocked: "Container locked",
+    tVerifyOk: "Integrity verification passed",
     tCopied: "Copied",
     file: "File",
     tExtracted: "Extracted %d files → %s",
@@ -419,6 +421,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "Container entsperrt",
     tLocked: "Container gesperrt",
+    tVerifyOk: "Integritätsprüfung bestanden",
     tCopied: "Kopiert",
     file: "Datei",
     tExtracted: "%d Dateien extrahiert → %s",
@@ -607,6 +610,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "Conteneur déverrouillé",
     tLocked: "Conteneur verrouillé",
+    tVerifyOk: "Vérification d'intégrité réussie",
     tCopied: "Copié",
     file: "Fichier",
     tExtracted: "%d fichiers extraits → %s",
@@ -795,6 +799,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "컨테이너 잠금 해제됨",
     tLocked: "컨테이너 잠금됨",
+    tVerifyOk: "무결성 검증 통과",
     tCopied: "복사됨",
     file: "파일",
     tExtracted: "파일 %d개를 추출했습니다 → %s",
@@ -983,6 +988,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "容器已解鎖",
     tLocked: "已鎖定",
+    tVerifyOk: "完整性驗證通過",
     tCopied: "已複製",
     file: "檔案",
     tExtracted: "已擷取 %d 個檔案 → %s",
@@ -1172,6 +1178,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "Contenedor desbloqueado",
     tLocked: "Contenedor bloqueado",
+    tVerifyOk: "Verificación de integridad superada",
     tCopied: "Copiado",
     file: "Archivo",
     tExtracted: "%d archivos extraídos → %s",
@@ -1360,6 +1367,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "Contêiner desbloqueado",
     tLocked: "Contêiner bloqueado",
+    tVerifyOk: "Verificação de integridade bem-sucedida",
     tCopied: "Copiado",
     file: "Arquivo",
     tExtracted: "%d arquivos extraídos → %s",
@@ -1547,6 +1555,7 @@ const _I18N = {
     // Toast/确认
     tUnlocked: "コンテナのロックを解除しました",
     tLocked: "ロックしました",
+    tVerifyOk: "整合性検証に合格しました",
     tCopied: "コピーしました",
     file: "ファイル",
     tExtracted: "%d 個のファイルを展開しました → %s",
@@ -2713,8 +2722,8 @@ function showGenerateResult(d) {
 /* 验证 / 自检 / 关于 */
 async function doVerify() {
   try {
-    const r = await api("/api/verify", {});
-    toast(r.message || _t("shVerify"), "ok");
+    await api("/api/verify", {});
+    toast(_t("tVerifyOk"), "ok");
   } catch { /* ignore */ }
 }
 

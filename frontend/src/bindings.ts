@@ -255,7 +255,7 @@ export type SelftestResult = { lines: string[] }
  * Fields and key names exactly mirror C# WriteSnapshot (frontend contract).
  */
 export type Snapshot = { phase: string; info: Info | null; path: string; can_back: boolean; can_forward: boolean; can_up: boolean; items: Item[]; out_dir: string; home: string; qr_ok: boolean }
-export type TAURI_CHANNEL<TSend> = import("@tauri-apps/api/core").Channel<TSend>
+export type TAURI_CHANNEL<TSend> = null
 export type TotpResult = { code: string; state: Snapshot }
 export type VerifyResult = { message: string; state: Snapshot }
 
@@ -263,7 +263,7 @@ export type VerifyResult = { message: string; state: Snapshot }
 
 import {
 	invoke as TAURI_INVOKE,
-	Channel as TAURI_CHANNEL_VALUE,
+	Channel as TAURI_CHANNEL,
 } from "@tauri-apps/api/core";
 import * as TAURI_API_EVENT from "@tauri-apps/api/event";
 import { type WebviewWindow as __WebviewWindow__ } from "@tauri-apps/api/webviewWindow";

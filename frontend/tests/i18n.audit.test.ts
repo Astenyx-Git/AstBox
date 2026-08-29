@@ -8,10 +8,10 @@ import { I18N, SRV_EXACT, SRV_PAT, LANGS, LANG_CODES, LANG_MENU } from "../src/i
 import { _t, _fmt, _srv, setLang, lang } from "../src/i18n/index";
 
 describe("i18n 字典完整性", () => {
-  it("九种语言各 184 键(179 平移 + 5 导入;其余为 Rust 线扩展)", () => {
+  it("九种语言各 185 键(180 平移 + 5 导入;其余为 Rust 线扩展)", () => {
     expect(LANGS).toEqual(["zh", "en", "ja", "de", "fr", "ko", "zh-Hant", "es", "pt-BR"]);
     for (const l of LANGS) {
-      expect(Object.keys(I18N[l]).length).toBe(184);
+      expect(Object.keys(I18N[l]).length).toBe(185);
     }
   });
 
