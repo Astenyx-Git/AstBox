@@ -92,13 +92,18 @@ function Invoke-TauriBuild([string[]]$extra, [string]$label) {
 
 # SAC 防御: 任何会重链 build.rs 的变更(如 tauri.conf.json 版本)都会产生
 # 未签名的新 build-script-build.exe, Smart App Control 首见即拦(os 4551)。
-# 有签名环境时预签全部中间构建脚本(Invoke-AppSign 无环境时静默跳过)。
+# 有签名环境时预签"尚未有效签名"的构建脚本 —— 跳过已签文件至关重要:
+# 重签会改写哈希, cargo 重新指纹, SAC 逐轮重掷, 收敛被破坏。
 function Sign-BuildScripts {
     if (-not $env:ASTBOX_SIGN_PFX) { return }
     $n = 0
     Get-ChildItem (Join-Path $root 'rust\target\release\build') -Recurse -Filter 'build-script-build*.exe' -ErrorAction SilentlyContinue |
-        ForEach-Object { Invoke-AppSign $_.FullName | Out-Null; $n++ }
-    Log "build scripts signed: $n"
+        ForEach-Object {
+            if ((Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid') {
+                Invoke-AppSign $_.FullName | Out-Null; $n++
+            }
+        }
+    if ($n -gt 0) { Log "build scripts signed: $n (skip already-valid)" }
 }
 
 # 两通道产物同名(bundle\nsis\ASTBOX_<v>_x64-setup.exe, offline 构建会覆盖
